@@ -1,68 +1,43 @@
 # coding:utf-8
-from fabkit import sudo, env, Service, api, filer, user, run
+
+import time
+from fabkit import sudo, api, filer, user, run
 from fablib import python
+from fablib.base import SimpleBase
 import openstack_util
 
 
-class Keystone():
-    data = {
-        'user': 'keystone',
-        'admin_token': 'ADMIN',
-        'token': {
-            'provider': 'keystone.token.providers.uuid.Provider'
-        },
-    }
-
+class Keystone(SimpleBase):
     def __init__(self, data=None):
-        if data:
-            self.data.update(data)
-        else:
-            self.data.update(env.cluster.get('keystone', {}))
+        self.data_key = 'keystone'
+        self.data = {
+            'user': 'keystone',
+            'admin_token': 'ADMIN',
+            'token': {
+                'provider': 'keystone.token.providers.uuid.Provider'
+            },
+        }
 
+        self.services = ['openstack-keystone']
+
+    def init_data(self):
+        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
             'tmp_admin_token': 'admin_token = {0}'.format(self.data['admin_token']),
             'database': {
-                'data': self.data['database'],
-                'connection': openstack_util.convert_mysql_connection(self.data['database'])
+                'connection': self.connection['str']
             },
         })
-        self.service = Service('openstack-keystone')
 
     def setup(self):
-        data = self.data
-        is_updated = self.install()
-        self.db_sync()
-        self.service.enable().start(pty=False)
-        if is_updated:
-            self.service.restart(pty=False)
+        data = self.get_init_data()
 
-        self.create_tenant('admin', 'Admin Tenant')
-        self.create_tenant('service', 'Service Tenant')
-        self.create_role('admin')
-        self.create_role('_member_')
-        self.create_user(data['admin_user'], data['admin_password'],
-                         [['admin', 'admin'], ['admin', '_member_']])
-        self.create_user(data['service_user'], data['service_password'], [['service', 'admin']])
+        user.add(data['user'])
+        openstack_util.setup_common()
 
-        for name, service in data['services'].items():
-            self.create_service(name, service)
-
-        self.disable_admin_token()
-
-    def disable_admin_token(self):
-        self.data.update({
-            'tmp_admin_token': '# admin_token ='
-        })
-        filer.template(
-            '/etc/keystone/keystone.conf',
-            data=self.data,
-        )
-        self.service.restart(pty=False)
-
-    def install(self):
-        openstack_util.setup_init()
-
-        user.add(self.data['user'])
+        # keystoneのrequirements.txtには、lxml>=2.3,<=3.4.2 となっているが、
+        # 3.4系はインストールに失敗するため、先に3.4以前のバージョンをインストールしておく
+        sudo('pip install "lxml>=2.3,<3.4"')
 
         keystone = python.install_from_git(
             'keystone', 'https://github.com/openstack/keystone.git -b stable/icehouse')
@@ -72,7 +47,7 @@ class Keystone():
 
         is_updated = filer.template(
             '/etc/keystone/keystone.conf',
-            data=self.data,
+            data=data,
         )
 
         filer.mkdir('/var/log/keystone', owner='keystone:keystone')
@@ -86,17 +61,45 @@ class Keystone():
                                     },
                                     src_target='initscript') or is_updated
 
-        return is_updated
+        self.db_sync()
+
+        self.enable_services().start_services(pty=False)
+        if is_updated:
+            self.restart_services(pty=False)
+
+        time.sleep(3)  # 立ち上げてすぐにはLISTENしないので、3秒待つ
+
+        self.create_tenant('admin', 'Admin Tenant')
+        self.create_role('admin')
+        self.create_role('_member_')
+        self.create_user(data['admin_user'], data['admin_password'],
+                         [['admin', 'admin'], ['admin', '_member_']])
+
+        self.create_tenant(data['service_tenant_name'], 'Service Tenant')
+        self.create_user(data['service_user'], data['service_password'], [['service', 'admin']])
+
+        for name, service in data['services'].items():
+            self.create_service(name, service)
+
+        self.disable_admin_token()
+
+    def disable_admin_token(self):
+        data = self.get_init_data()
+        data.update({
+            'tmp_admin_token': '# admin_token ='
+        })
+        filer.template(
+            '/etc/keystone/keystone.conf',
+            data=data,
+        )
+        self.restart_services(pty=False)
 
     def db_sync(self):
         # db_sync
-        if not openstack_util.show_tables(self.data['database']['data']) == sorted([
-            'assignment', 'credential', 'domain',
-            'endpoint', 'group', 'migrate_version',
-            'policy', 'project', 'region',
-            'role', 'service', 'token',
-            'trust', 'trust_role', 'user',
-            'user_group_membership'
+        if not openstack_util.show_tables(self.connection) == sorted([
+            'assignment', 'credential', 'domain', 'endpoint', 'group', 'migrate_version',
+            'policy', 'project', 'region', 'role', 'service', 'token',
+            'trust', 'trust_role', 'user', 'user_group_membership'
         ]):
             sudo('keystone-manage db_sync')
 
@@ -143,4 +146,5 @@ class Keystone():
             --adminurl={1[adminurl]}'''.format(service_id, service))
 
     def dump_openstackrc(self):
-        openstack_util.dump_openstackrc(self.data)
+        data = self.get_init_data()
+        openstack_util.dump_openstackrc(data)

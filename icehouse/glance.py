@@ -1,66 +1,47 @@
 # coding: utf-8
 
-from fabkit import env, sudo, user, Service, filer
+from fabkit import env, sudo, user, filer
 from fablib import python
 import openstack_util
+from fablib.base import SimpleBase
 
 
-class Glance():
-    data = {
-        'user': 'glance',
-        'paste_deploy': {
-            'flavor': 'keystone'
+class Glance(SimpleBase):
+    def __init__(self):
+        self.data_key = 'glance'
+        self.data = {
+            'user': 'glance',
+            'paste_deploy': {
+                'flavor': 'keystone'
+            }
         }
-    }
 
-    def __init__(self, data=None):
-        if data:
-            self.data.update(data)
-        else:
-            self.data.update(env.cluster['glance'])
+        self.services = [
+            'openstack-glance-api',
+            'openstack-glance-registry',
+        ]
 
-        self.keystone_data = env.cluster['keystone']
-
-        self.user = user
+    def init_data(self):
+        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
-            'keystone_authtoken': self.keystone_data,
+            'keystone': env.cluster['keystone'],
             'database': {
-                'data': self.data['database'],
-                'connection': openstack_util.convert_mysql_connection(self.data['database'])
+                'connection': self.connection['str']
             },
         })
-        self.api_service = Service('openstack-glance-api')
-        self.registry_service = Service('openstack-glance-registry')
 
     def setup(self):
-        is_updated = self.install()
-        self.db_sync()
+        data = self.get_init_data()
 
-        self.api_service.enable().start(pty=False)
-        self.registry_service.enable().start(pty=False)
-        if is_updated:
-            self.api_service.restart(pty=False)
-            self.registry_service.restart(pty=False)
-
-        self.cmd('image-list')
-
-        return 0
-
-    def cmd(self, cmd):
-        return openstack_util.client_cmd('glance {0}'.format(cmd), self.keystone_data)
-
-    def install(self):
-        data = self.data
-        openstack_util.setup_init()
+        openstack_util.setup_common()
 
         user.add(data['user'])
-
         sudo('pip install python-glanceclient')
 
         pkg = python.install_from_git(
             'glance',
             'https://github.com/openstack/glance.git -b stable/icehouse')
-        filer.mkdir('/var/log/glance/', owner='{0}:{0}'.format(self.data['user']))
+        filer.mkdir('/var/log/glance/', owner='{0}:{0}'.format(data['user']))
 
         if not filer.exists('/etc/glance'):
             sudo('cp -r {0}/etc/ /etc/glance/'.format(pkg['git_dir']))
@@ -92,10 +73,19 @@ class Glance():
                                     },
                                     src_target='initscript') or is_updated
 
-        return is_updated
+        self.db_sync()
+
+        self.enable_services().start_services(pty=False)
+        if is_updated:
+            self.restart_services(pty=False)
+
+        self.cmd('image-list')
+
+    def cmd(self, cmd):
+        return openstack_util.client_cmd('glance {0}'.format(cmd))
 
     def db_sync(self):
-        if not openstack_util.show_tables(self.data['database']['data']) == sorted([
+        if not openstack_util.show_tables(self.connection) == sorted([
             'image_locations', 'image_members', 'image_properties',
             'image_tags', 'images', 'migrate_version',
             'task_info', 'tasks'
