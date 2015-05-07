@@ -1,62 +1,53 @@
 # coding: utf-8
 
-from fabkit import sudo, env, Service, user, Package, filer
+from fabkit import sudo, env, user, Package, filer
 from fablib import python
 import openstack_util
 
 
 class Nova():
-    data = {
-        'user': 'nova',
-        'novncproxy_base_url': 'http://127.0.0.1:6080/vnc_auto.html',
-    }
+    def __init__(self):
+        self.data_key = 'nova'
+        self.data = {
+            'user': 'nova',
+            'novncproxy_base_url': 'http://127.0.0.1:6080/vnc_auto.html',
+        }
 
-    def __init__(self, data=None):
-        if data:
-            self.data.update(data)
-        else:
-            self.data.update(env.cluster['nova'])
+        self.services = [
+            'openstack-nova-api'
+            'openstack-nova-cert'
+            'openstack-nova-consoleauth'
+            'openstack-nova-scheduler'
+            'openstack-nova-conductor'
+            'openstack-nova-novncproxy'
+        ]
 
-        self.keystone_data = env.cluster['keystone']
+        # self.services = [
+        #     'libvirtd',
+        #     'messagebus',
+        #     'openstack-nova-compute',
+        # ]
+
+    def init_data(self):
+        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
-            'keystone_authtoken': self.keystone_data,
+            'keystone': env.cluster['keystone'],
             'database': {
-                'data': self.data['database'],
-                'connection': openstack_util.convert_mysql_connection(self.data['database'])
+                'connection': self.connection['str']
             },
         })
 
-        # api services
-        self.nova_api = Service('openstack-nova-api')
-        self.nova_cert = Service('openstack-nova-cert')
-        self.nova_consoleauth = Service('openstack-nova-consoleauth')
-        self.nova_scheduler = Service('openstack-nova-scheduler')
-        self.nova_conductor = Service('openstack-nova-conductor')
-        self.nova_novncproxy = Service('openstack-nova-novncproxy')
-
-        # compute services
-        self.libvirtd = Service('libvirtd')
-        self.messagebus = Service('messagebus')
-        self.nova_compute = Service('openstack-nova-compute')
-
     def setup(self):
         is_updated = self.install()
+
+        return
+
         self.db_sync()
 
-        self.nova_api.start(pty=False).enable()
-        self.nova_cert.start(pty=False).enable()
-        self.nova_consoleauth.start(pty=False).enable()
-        self.nova_scheduler.start(pty=False).enable()
-        self.nova_conductor.start(pty=False).enable()
-        self.nova_novncproxy.start(pty=False).enable()
+        self.enable_services().start_services(pty=False)
 
         if is_updated:
-            self.nova_api.restart(pty=False)
-            self.nova_cert.restart(pty=False)
-            self.nova_consoleauth.restart(pty=False)
-            self.nova_scheduler.restart(pty=False)
-            self.nova_conductor.restart(pty=False)
-            self.nova_novncproxy.restart(pty=False)
+            self.restart_services(pty=False)
 
         self.cmd('image-list')
 
@@ -79,11 +70,10 @@ class Nova():
         return openstack_util.client_cmd('nova {0}'.format(cmd), self.keystone_data)
 
     def install(self):
-        openstack_util.setup_init()
+        openstack_util.setup_common()
 
         user.add(self.data['user'])
 
-        # Package('novnc').install()
         sudo('pip install python-novaclient')
 
         pkg = python.install_from_git(
