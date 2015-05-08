@@ -1,46 +1,42 @@
 # coding: utf-8
 
-from fabkit import sudo, env, Service, user, filer
+from fabkit import sudo, env, user, filer
 from fablib import python
 import openstack_util
+from fablib.base import SimpleBase
 
 
-class Neutron():
-    data = {
-        'user': 'neutron',
-        'auth_strategy': 'keystone',
-        'rpc_backend': 'neutron.openstack.common.rpc.impl_kombu',
-        'core_plugin': 'ml2',
-    }
-
+class Neutron(SimpleBase):
     def __init__(self, data=None):
-        if data:
-            self.data.update(data)
-        else:
-            self.data.update(env.cluster['neutron'])
+        self.data_key = 'neutron'
+        self.data = {
+            'user': 'neutron',
+            'auth_strategy': 'keystone',
+            'rpc_backend': 'neutron.openstack.common.rpc.impl_kombu',
+            'core_plugin': 'ml2',
+        }
 
-        self.keystone_data = env.cluster['keystone']
-        self.data.update({
-            'keystone_authtoken': self.keystone_data,
-            'database': {
-                'data': self.data['database'],
-                'connection': openstack_util.convert_mysql_connection(self.data['database'])
-            },
-        })
-
-        # controller
-        self.neutron_server = Service('openstack-neutron-server')
+        self.services = ['openstack-neutron-server']
 
         # compute
-        self.neutron_linuxbridge_agent = Service('openstack-neutron-linuxbridge-agent')
+        # self.neutron_linuxbridge_agent = Service('openstack-neutron-linuxbridge-agent')
+
+    def init_data(self):
+        self.connection = openstack_util.get_mysql_connection(self.data)
+        self.data.update({
+            'keystone': env.cluster['keystone'],
+            'database': {
+                'connection': self.connection['str'],
+            },
+        })
 
     def setup(self):
         is_updated = self.install()
 
-        self.neutron_server.enable().start(pty=False)
+        self.enable_services().start_services(pty=False)
 
         if is_updated:
-            self.neutron_server.restart(pty=False)
+            self.restart_services(pty=False)
 
         return 0
 
@@ -52,12 +48,14 @@ class Neutron():
         return 0
 
     def cmd(self, cmd):
-        return openstack_util.client_cmd('neutron {0}'.format(cmd), self.keystone_data)
+        return openstack_util.client_cmd('neutron {0}'.format(cmd))
 
     def install(self):
-        openstack_util.setup_init()
+        data = self.get_init_data()
 
-        user.add(self.data['user'])
+        openstack_util.setup_common()
+
+        user.add(data['user'])
 
         sudo('pip install python-neutronclient')
 
@@ -72,19 +70,18 @@ class Neutron():
             sudo('cp -r {0}/etc/neutron/plugins/ /etc/neutron/plugins/'.format(pkg['git_dir']))
 
         nova_tenant_id = openstack_util.client_cmd(
-            'keystone tenant-list | awk \'/ service / { print $2 }\'',
-            self.keystone_data)
+            'keystone tenant-list | awk \'/ service / { print $2 }\'')
         nova_tenant_id = nova_tenant_id.split('\r\n')[-1]
-        self.data['nova_admin_tenant_id'] = nova_tenant_id
+        data['nova_admin_tenant_id'] = nova_tenant_id
 
         is_updated = filer.template(
             '/etc/neutron/neutron.conf',
-            data=self.data,
+            data=data,
         )
 
         is_updated = filer.template(
             '/etc/neutron/plugins/ml2/ml2_conf.ini',
-            data=self.data,
+            data=data,
         ) or is_updated
 
         filer.mkdir('/var/log/neutron', owner='neutron:neutron')
@@ -94,13 +91,15 @@ class Neutron():
                                         'prog': 'neutron-server',
                                         'option': option,
                                         'config': '/etc/neutron/neutron.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
         return is_updated
 
     def install_compute(self):
+        data = self.get_init_data()
+
         filer.mkdir('/var/log/neutron', owner='neutron:neutron')
         option = '--config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --log-file /var/log/neuton/neutron-linuxbridge-agent'  # noqa
         is_updated = filer.template('/etc/init.d/openstack-neutron-linuxbridge-agent', '755',
@@ -108,7 +107,7 @@ class Neutron():
                                         'prog': 'neutron-linuxbridge-agent',
                                         'option': option,
                                         'config': '/etc/neutron/neutron.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript')
 

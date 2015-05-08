@@ -3,9 +3,10 @@
 from fabkit import sudo, env, user, Package, filer
 from fablib import python
 import openstack_util
+from fablib.base import SimpleBase
 
 
-class Nova():
+class Nova(SimpleBase):
     def __init__(self):
         self.data_key = 'nova'
         self.data = {
@@ -14,12 +15,12 @@ class Nova():
         }
 
         self.services = [
-            'openstack-nova-api'
-            'openstack-nova-cert'
-            'openstack-nova-consoleauth'
-            'openstack-nova-scheduler'
-            'openstack-nova-conductor'
-            'openstack-nova-novncproxy'
+            'openstack-nova-api',
+            'openstack-nova-cert',
+            'openstack-nova-consoleauth',
+            'openstack-nova-scheduler',
+            'openstack-nova-conductor',
+            'openstack-nova-novncproxy',
         ]
 
         # self.services = [
@@ -31,6 +32,10 @@ class Nova():
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
+            'lock_path': '/var/lock/subsys/nova',
+            'my_ip': env.node['ip'],
+            'vncserver_listen': env.node['ip'],
+            'vncserver_proxyclient_address': env.node['ip'],
             'keystone': env.cluster['keystone'],
             'database': {
                 'connection': self.connection['str']
@@ -39,8 +44,6 @@ class Nova():
 
     def setup(self):
         is_updated = self.install()
-
-        return
 
         self.db_sync()
 
@@ -67,27 +70,30 @@ class Nova():
         return 0
 
     def cmd(self, cmd):
-        return openstack_util.client_cmd('nova {0}'.format(cmd), self.keystone_data)
+        return openstack_util.client_cmd('nova {0}'.format(cmd))
 
     def install(self):
+        data = self.get_init_data()
+
         openstack_util.setup_common()
 
-        user.add(self.data['user'])
+        user.add(data['user'])
 
         sudo('pip install python-novaclient')
 
+        sudo('easy_install numpy==1.9.2')  # numpyをpipでインストールしようとすると失敗するため
         pkg = python.install_from_git(
             'nova',
             'https://github.com/openstack/nova.git -b stable/icehouse')
 
-        filer.mkdir(self.data['lock_path'], owner='nova:nova')
+        filer.mkdir(data['lock_path'], owner='nova:nova')
 
         if not filer.exists('/etc/nova'):
             sudo('cp -r {0}/etc/nova/ /etc/nova/'.format(pkg['git_dir']))
 
         is_updated = filer.template(
             '/etc/nova/nova.conf',
-            data=self.data,
+            data=data,
         )
 
         filer.mkdir('/var/log/nova', owner='nova:nova')
@@ -98,7 +104,7 @@ class Nova():
                                         'prog': 'nova-api',
                                         'option': option,
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -107,7 +113,7 @@ class Nova():
                                         'prog': 'nova-cert',
                                         'option': option,
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -116,7 +122,7 @@ class Nova():
                                         'prog': 'nova-consoleauth',
                                         'option': option,
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -124,7 +130,7 @@ class Nova():
                                     data={
                                         'prog': 'nova-scheduler',
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -133,7 +139,7 @@ class Nova():
                                         'prog': 'nova-conductor',
                                         'option': option,
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -142,7 +148,7 @@ class Nova():
                                         'prog': 'nova-novncproxy',
                                         'option': option,
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -151,7 +157,7 @@ class Nova():
                                         'prog': 'nova-compute',
                                         'option': option,
                                         'config': '/etc/nova/nova.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -172,7 +178,7 @@ class Nova():
         Package('dbus').install()
 
     def db_sync(self):
-        if not openstack_util.show_tables(self.data['database']['data']) == sorted([
+        if not openstack_util.show_tables(self.connection) == sorted([
             'agent_builds',
             'aggregate_hosts',
             'aggregate_metadata',
@@ -214,7 +220,7 @@ class Nova():
             'quota_usages',
             'quotas',
             'reservations',
-            's',
+            's3_images',
             'security_group_default_rules',
             'security_group_instance_association',
             'security_group_rules',
@@ -261,7 +267,7 @@ class Nova():
             'shadow_quota_usages',
             'shadow_quotas',
             'shadow_reservations',
-            'shadow_s',
+            'shadow_s3_images',
             'shadow_security_group_default_rules',
             'shadow_security_group_instance_association',
             'shadow_security_group_rules',

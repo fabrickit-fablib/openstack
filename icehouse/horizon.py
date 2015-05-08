@@ -1,43 +1,37 @@
 # coding: utf-8
 
-from fabkit import sudo, env, Service, Package, filer
+from fabkit import sudo, env, filer
 from fablib import python
 import openstack_util
+from fablib.base import SimpleBase
 
 
-class Horizon():
-    data = {
-        'auth_strategy': 'keystone',
-        'allowed_hosts': "['*']",
-    }
-
+class Horizon(SimpleBase):
     def __init__(self, data=None):
-        if data:
-            self.data.update(data)
-        else:
-            self.data.update(env.cluster['horizon'])
+        self.data_key = 'horizon'
+        self.data = {
+            'auth_strategy': 'keystone',
+            'allowed_hosts': "['*']",
+        }
 
-        self.keystone_data = env.cluster['keystone']
+        self.services = ['httpd']
+        self.packages = ['httpd', 'mod_wsgi']
+
+    def init_data(self):
+        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
-            'keystone_authtoken': self.keystone_data,
+            'keystone': env.cluster['keystone'],
+            # 'database': {
+            #     'connection': self.connection,
+            # },
         })
 
-        self.httpd = Service('httpd')
-
     def setup(self):
-        is_updated = self.install()
-        self.httpd.enable().start(pty=False)
+        data = self.get_init_data()
 
-        if is_updated:
-            self.httpd.restart(pty=False)
+        openstack_util.setup_common()
 
-        return 0
-
-    def install(self):
-        openstack_util.setup_init()
-
-        Package('httpd').install()
-        Package('mod_wsgi').install()
+        self.install_packages()
 
         pkg = python.install_from_git(
             'horizon',
@@ -50,12 +44,14 @@ class Horizon():
 
         is_updated = filer.template(
             '/var/lib/horizon/openstack_dashboard/local/local_settings.py',
-            data=self.data,
+            data=data,
         )
 
         is_updated = filer.template(
             '/etc/httpd/conf.d/horizon_httpd.conf',
-            data=self.data,
+            data=data,
         ) or is_updated
 
-        return is_updated
+        self.enable_services().start_services(pty=False)
+        if is_updated:
+            self.restart_services(pty=False)
