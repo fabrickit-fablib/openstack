@@ -79,8 +79,6 @@ class Glance(SimpleBase):
         if is_updated:
             self.restart_services(pty=False)
 
-        self.cmd('image-list')
-
     def cmd(self, cmd):
         return openstack_util.client_cmd('glance {0}'.format(cmd))
 

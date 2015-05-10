@@ -167,7 +167,7 @@ class Nova(SimpleBase):
         self.nova_conductor.status()
         self.nova_novncproxy.status()
 
-    def enable_services(self):
+    def enable_nova_services(self):
         result = sudo("nova-manage service list 2>/dev/null | grep disabled | awk '{print $1,$2}'")
         services = result.split('\r\n')
         services = map(lambda s: s.split(' '), services)
