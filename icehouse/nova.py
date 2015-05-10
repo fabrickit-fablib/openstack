@@ -1,33 +1,40 @@
 # coding: utf-8
 
+import os
 from fabkit import sudo, env, user, Package, filer
 from fablib import python
 import openstack_util
 from fablib.base import SimpleBase
 
+MODE_CONTROLLER = 1
+MODE_COMPUTE = 2
+
 
 class Nova(SimpleBase):
-    def __init__(self):
+    def __init__(self, mode=MODE_CONTROLLER):
         self.data_key = 'nova'
+        self.mode = mode
         self.data = {
             'user': 'nova',
             'novncproxy_base_url': 'http://127.0.0.1:6080/vnc_auto.html',
         }
 
-        self.services = [
-            'openstack-nova-api',
-            'openstack-nova-cert',
-            'openstack-nova-consoleauth',
-            'openstack-nova-scheduler',
-            'openstack-nova-conductor',
-            'openstack-nova-novncproxy',
-        ]
+        if mode == MODE_CONTROLLER:
+            self.services = [
+                'openstack-nova-api',
+                'openstack-nova-cert',
+                'openstack-nova-consoleauth',
+                'openstack-nova-scheduler',
+                'openstack-nova-conductor',
+                'openstack-nova-novncproxy',
+            ]
 
-        # self.services = [
-        #     'libvirtd',
-        #     'messagebus',
-        #     'openstack-nova-compute',
-        # ]
+        elif mode == MODE_COMPUTE:
+            self.services = [
+                'libvirtd',
+                'messagebus',
+                'openstack-nova-compute',
+            ]
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
@@ -43,41 +50,18 @@ class Nova(SimpleBase):
         })
 
     def setup(self):
-        is_updated = self.install()
-
-        self.db_sync()
-
-        self.enable_services().start_services(pty=False)
-
-        if is_updated:
-            self.restart_services(pty=False)
-
-        self.cmd('image-list')
-
-        return 0
-
-    def setup_compute(self):
-        is_updated = self.install()
-        is_updated = self.install_compute() or is_updated
-        self.libvirtd.enable().start(pty=False)
-        self.messagebus.enable().start(pty=False)
-        self.nova_compute.enable().start(pty=False)
-        if is_updated:
-            self.libvirtd.restart(pty=False)
-            self.messagebus.restart(pty=False)
-            self.nova_compute.restart(pty=False)
-
-        return 0
-
-    def cmd(self, cmd):
-        return openstack_util.client_cmd('nova {0}'.format(cmd))
-
-    def install(self):
         data = self.get_init_data()
+        user.add(data['user'])
 
         openstack_util.setup_common()
+        if self.mode == MODE_COMPUTE:
+            Package('novnc').install()
 
-        user.add(data['user'])
+        if self.mode == MODE_COMPUTE:
+            Package('libvirt').install()
+            Package('python-virtinst').install()
+            Package('qemu-kvm').install()
+            Package('dbus').install()
 
         sudo('pip install python-novaclient')
 
@@ -87,6 +71,8 @@ class Nova(SimpleBase):
             'https://github.com/openstack/nova.git -b stable/icehouse')
 
         filer.mkdir(data['lock_path'], owner='nova:nova')
+        filer.mkdir(data['state_path'])
+        filer.mkdir(os.path.join(data['state_path'], 'instances'))
 
         if not filer.exists('/etc/nova'):
             sudo('cp -r {0}/etc/nova/ /etc/nova/'.format(pkg['git_dir']))
@@ -129,6 +115,7 @@ class Nova(SimpleBase):
         is_updated = filer.template('/etc/init.d/openstack-nova-scheduler', '755',
                                     data={
                                         'prog': 'nova-scheduler',
+                                        'option': option,
                                         'config': '/etc/nova/nova.conf',
                                         'user': data['user'],
                                     },
@@ -161,7 +148,17 @@ class Nova(SimpleBase):
                                     },
                                     src_target='initscript') or is_updated
 
-        return is_updated
+        if self.mode == MODE_CONTROLLER:
+            self.db_sync()
+
+        self.enable_services().start_services(pty=False)
+        if is_updated:
+            self.restart_services(pty=False)
+
+        return 0
+
+    def cmd(self, cmd):
+        return openstack_util.client_cmd('nova {0}'.format(cmd))
 
     def check(self):
         self.nova_api.status()
@@ -170,12 +167,6 @@ class Nova(SimpleBase):
         self.nova_scheduler.status()
         self.nova_conductor.status()
         self.nova_novncproxy.status()
-
-    def install_compute(self):
-        Package('libvirt').install()
-        Package('python-virtinst').install()
-        Package('qemu-kvm').install()
-        Package('dbus').install()
 
     def db_sync(self):
         if not openstack_util.show_tables(self.connection) == sorted([
