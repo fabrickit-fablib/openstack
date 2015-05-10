@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from fabkit import env, sudo, user, filer
+from fabkit import env, sudo, user, filer, run
 from fablib import python
 import openstack_util
 from fablib.base import SimpleBase
@@ -83,6 +83,25 @@ class Glance(SimpleBase):
 
     def cmd(self, cmd):
         return openstack_util.client_cmd('glance {0}'.format(cmd))
+
+    def register_images(self):
+        data = self.get_init_data()
+
+        result = self.cmd("image-list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
+        image_list = result.split('\r\n')
+
+        for image_name, image in data['images'].items():
+            if image_name in image_list:
+                continue
+
+            image_file = '/tmp/{0}'.format(image_name)
+            if not filer.exists(image_file):
+                run('wget {0} -O {1}'.format(image['url'], image_file))
+
+            create_cmd = 'image-create --name "{0}" --disk-format {1[disk-format]}' \
+                + ' --container-format {1[container-format]}' \
+                + ' --is-public {1[is-public]} < {2}'
+            self.cmd(create_cmd.format(image_name, image, image_file))
 
     def db_sync(self):
         if not openstack_util.show_tables(self.connection) == sorted([

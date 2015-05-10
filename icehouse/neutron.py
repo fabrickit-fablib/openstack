@@ -105,7 +105,30 @@ class Neutron(SimpleBase):
         if is_updated:
             self.restart_services(pty=False)
 
+        self.create_nets()
+
         return 0
 
     def cmd(self, cmd):
         return openstack_util.client_cmd('neutron {0}'.format(cmd))
+
+    def create_nets(self):
+        data = self.get_init_data()
+
+        result = self.cmd("net-list 2>/dev/null | grep '| ' | grep -v '| id' | awk '{print $4}'")
+        net_list = result.split('\r\n')
+        result = self.cmd("subnet-list 2>/dev/null | grep '| ' | grep -v '| id' | awk '{print $4}'")
+        subnet_list = result.split('\r\n')
+
+        for network_name, network in data['networks'].items():
+            if network_name not in net_list:
+                tmp_options = map(lambda opt: '--' + opt, network['options'])
+                options = ' '.join(tmp_options)
+                self.cmd('net-create {0} {1}'.format(options, network_name))
+
+            for subnet_name, subnet in network['subnets'].items():
+                if subnet_name not in subnet_list:
+                    tmp_options = map(lambda opt: '--' + opt, subnet['options'])
+                    options = ' '.join(tmp_options)
+                    self.cmd('subnet-create {0} {1} --name {2} {3}'.format(
+                        network_name, subnet['cidr'], subnet_name, options))

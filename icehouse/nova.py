@@ -16,7 +16,6 @@ class Nova(SimpleBase):
         self.mode = mode
         self.data = {
             'user': 'nova',
-            'novncproxy_base_url': 'http://127.0.0.1:6080/vnc_auto.html',
         }
 
         if mode == MODE_CONTROLLER:
@@ -167,6 +166,29 @@ class Nova(SimpleBase):
         self.nova_scheduler.status()
         self.nova_conductor.status()
         self.nova_novncproxy.status()
+
+    def enable_services(self):
+        result = sudo("nova-manage service list 2>/dev/null | grep disabled | awk '{print $1,$2}'")
+        services = result.split('\r\n')
+        services = map(lambda s: s.split(' '), services)
+        for service in services:
+            sudo("nova-manage service enable --service {0} --host {1}".format(
+                service[0], service[1]))
+
+    def sync_flavors(self):
+        data = self.get_init_data()
+
+        result = self.cmd("flavor-list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
+        flavor_list = result.split('\r\n')
+        sub_set = set(flavor_list) - set(data['flavors'].keys())
+        for flavor_name in sub_set:
+            self.cmd("flavor-delete {0}".format(flavor_name))
+
+        for flavor_name, flavor in data['flavors'].items():
+            if flavor_name not in flavor_list:
+                flavor = map(lambda f: str(f), flavor)
+                options = ' '.join(flavor)
+                self.cmd("flavor-create --is-public true {0} auto {1}".format(flavor_name, options))
 
     def db_sync(self):
         if not openstack_util.show_tables(self.connection) == sorted([
