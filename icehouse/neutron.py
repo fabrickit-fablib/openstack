@@ -21,9 +21,13 @@ class Neutron(SimpleBase):
         }
 
         if mode == MODE_CONTROLLER:
-            self.services = ['openstack-neutron-server']
+            self.services = {
+                'CentOS [67].*': ['openstack-neutron-server']
+            }
         elif mode == MODE_COMPUTE:
-            self.services = ['openstack-neutron-linuxbridge-agent']
+            self.services = {
+                'CentOS [67].*': ['openstack-neutron-linuxbridge-agent']
+            }
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)

@@ -1,13 +1,15 @@
 # coding: utf-8
 
 from fabkit import env, sudo, user, filer, run
-from fablib import python
+from fablib.python import Python
 import openstack_util
 from fablib.base import SimpleBase
 
 
 class Glance(SimpleBase):
     def __init__(self):
+        self.prefix = '/opt/glance'
+        self.python = Python(self.prefix, '2.7')
         self.data_key = 'glance'
         self.data = {
             'user': 'glance',
@@ -16,12 +18,10 @@ class Glance(SimpleBase):
             }
         }
 
-        self.services = {
-            'CentOS [67].*': [
-                'openstack-glance-api',
-                'openstack-glance-registry',
-            ]
-        }
+        self.services = [
+            'openstack-glance-api',
+            'openstack-glance-registry',
+        ]
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
@@ -34,47 +34,50 @@ class Glance(SimpleBase):
 
     def setup(self):
         data = self.get_init_data()
-        print '\nDEBUG'
-        print self.services
-        return
 
-        openstack_util.setup_common()
+        openstack_util.setup_common(self.python)
 
         user.add(data['user'])
-        sudo('pip install python-glanceclient')
 
-        pkg = python.install_from_git(
+        pkg = self.python.install_from_git(
             'glance',
-            'https://github.com/openstack/glance.git -b stable/icehouse')
+            'https://github.com/openstack/glance.git -b stable/kilo')
+
         filer.mkdir('/var/log/glance/', owner='{0}:{0}'.format(data['user']))
 
         if not filer.exists('/etc/glance'):
             sudo('cp -r {0}/etc/ /etc/glance/'.format(pkg['git_dir']))
+        if not filer.exists('/usr/bin/glance'):
+            sudo('ln -s {0}/bin/glance /usr/bin/'.format(self.prefix))
+        if not filer.exists('/usr/bin/glance-manage'):
+            sudo('ln -s {0}/bin/glance-manage /usr/bin/'.format(self.prefix))
 
         # setup conf files
         is_updated = filer.template(
             '/etc/glance/glance-api.conf',
-            data=self.data,
+            data=data,
         )
 
         is_updated = filer.template(
             '/etc/glance/glance-registry.conf',
-            data=self.data,
+            data=data,
         ) or is_updated
 
         is_updated = filer.template('/etc/init.d/openstack-glance-api', '755',
                                     data={
+                                        'prefix': self.prefix,
                                         'prog': 'glance-api',
                                         'config': '/etc/glance/$prog.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
         is_updated = filer.template('/etc/init.d/openstack-glance-registry', '755',
                                     data={
+                                        'prefix': self.prefix,
                                         'prog': 'glance-registry',
                                         'config': '/etc/glance/$prog.conf',
-                                        'user': self.data['user'],
+                                        'user': data['user'],
                                     },
                                     src_target='initscript') or is_updated
 
@@ -108,8 +111,26 @@ class Glance(SimpleBase):
 
     def db_sync(self):
         if not openstack_util.show_tables(self.connection) == sorted([
-            'image_locations', 'image_members', 'image_properties',
-            'image_tags', 'images', 'migrate_version',
-            'task_info', 'tasks'
+            'artifact_blob_locations'            # added on kilo
+            'artifact_blobs'                     # added on kilo
+            'artifact_dependencies'              # added on kilo
+            'artifact_properties'                # added on kilo
+            'artifact_tags'                      # added on kilo
+            'artifacts'                          # added on kilo
+            'image_locations',
+            'image_members',
+            'image_properties',
+            'image_tags',
+            'images',
+            'metadef_namespace_resource_types',  # added on juno
+            'metadef_namespaces',                # added on juno
+            'metadef_objects',                   # added on juno
+            'metadef_properties',                # added on juno
+            'metadef_resource_types',            # added on juno
+            'metadef_tags',                      # added on kilo
+            'migrate_version',
+            'task_info',
+            'tasks'
         ]):
-            sudo('glance-manage db_sync')
+
+            sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))

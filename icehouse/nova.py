@@ -19,21 +19,25 @@ class Nova(SimpleBase):
         }
 
         if mode == MODE_CONTROLLER:
-            self.services = [
-                'openstack-nova-api',
-                'openstack-nova-cert',
-                'openstack-nova-consoleauth',
-                'openstack-nova-scheduler',
-                'openstack-nova-conductor',
-                'openstack-nova-novncproxy',
-            ]
+            self.services = {
+                'CentOS [67].*': [
+                    'openstack-nova-api',
+                    'openstack-nova-cert',
+                    'openstack-nova-consoleauth',
+                    'openstack-nova-scheduler',
+                    'openstack-nova-conductor',
+                    'openstack-nova-novncproxy',
+                ]
+            }
 
         elif mode == MODE_COMPUTE:
-            self.services = [
-                'libvirtd',
-                'messagebus',
-                'openstack-nova-compute',
-            ]
+            self.services = {
+                'CentOS [67].*': [
+                    'libvirtd',
+                    'messagebus',
+                    'openstack-nova-compute',
+                ]
+            }
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)

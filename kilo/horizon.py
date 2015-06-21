@@ -14,9 +14,7 @@ class Horizon(SimpleBase):
             'allowed_hosts': "['*']",
         }
 
-        self.services = {
-            'CentOS [67].*': ['httpd']
-        }
+        self.services = ['httpd']
         self.packages = ['httpd', 'mod_wsgi']
 
     def init_data(self):
@@ -37,7 +35,7 @@ class Horizon(SimpleBase):
 
         pkg = python.install_from_git(
             'horizon',
-            'https://github.com/openstack/horizon.git -b stable/icehouse')
+            'https://github.com/openstack/horizon.git -b stable/juno')
 
         if not filer.exists('/var/lib/horizon'):
             sudo('cp -r {0} /var/lib/horizon'.format(pkg['git_dir']))

@@ -1,15 +1,20 @@
 # coding: utf-8
-from fabkit import sudo, run, api, Package, env
-from fablib import python
+from fabkit import run, api, Package, env, filer, sudo
+from fablib.repository import yum
 import re
 
 
-def setup_common():
-    Package('epel-release').install('http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm')  # noqa
+def setup_common(python):
+    yum.install_epel()
     python.setup()
     Package('mysql-devel').install()
     Package('mysql').install()
-    sudo('pip install mysql-python')
+    python.install('mysql-python')
+
+    # kiloからは各種クライアントは非推奨で、openstackclientを利用する
+    python.install('python-openstackclient')
+    if not filer.exists('/usr/bin/openstack'):
+        sudo('ln -s {0}/bin/openstack /usr/bin/'.format(python.get_prefix()))
 
 
 def get_mysql_connection(data):

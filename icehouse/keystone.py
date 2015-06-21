@@ -18,7 +18,9 @@ class Keystone(SimpleBase):
             },
         }
 
-        self.services = ['openstack-keystone']
+        self.services = {
+            'CentOS [67].*': ['openstack-keystone']
+        }
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
