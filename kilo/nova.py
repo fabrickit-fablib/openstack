@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import os
-from fabkit import sudo, env, user, Package, filer
+from fabkit import sudo, env, user, Package, filer, run
 from fablib.python import Python
 import openstack_util
 from fablib.base import SimpleBase
@@ -14,6 +14,8 @@ class Nova(SimpleBase):
     def __init__(self, mode=MODE_CONTROLLER):
         self.prefix = '/opt/nova'
         self.python = Python(self.prefix, '2.7')
+        self.usr_prefix = '/usr'
+        self.usr_python = Python(self.usr_prefix, '2.7')
         self.data_key = 'nova'
         self.mode = mode
         self.data = {
@@ -61,10 +63,20 @@ class Nova(SimpleBase):
                 Package('novnc').install()
 
             if self.mode == MODE_COMPUTE:
+                # self.usr_python.setup()
+                # self.usr_python.install('libvirt-python')
                 Package('libvirt').install()
+                Package('sysfsutils').install()
                 Package('python-virtinst').install()
                 Package('qemu-kvm').install()
                 Package('dbus').install()
+
+                # libvirt-pythonを利用するには、ディストリビューションのものをコピーする必要がある
+                # http://d.hatena.ne.jp/pyde/20130831/p1
+                site_packages = self.python.get_site_packages()
+                libvirt_python = run('rpm -ql libvirt-python | grep site-packages').split('\r\n')
+                for src in libvirt_python:
+                    sudo('cp {0} {1}'.format(src, site_packages))
 
             self.python.install('python-novaclient')
 
