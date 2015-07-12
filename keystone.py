@@ -9,6 +9,7 @@ import openstack_util
 
 class Keystone(SimpleBase):
     def __init__(self, data=None):
+        self.prefix = '/opt/keystone'
         self.data_key = 'keystone'
         self.data = {
             'user': 'keystone',
@@ -18,11 +19,9 @@ class Keystone(SimpleBase):
                 'driver': 'keystone.token.persistence.backends.sql.Token',
             },
         }
-
-        self.services = ['openstack-keystone']
-
-        self.prefix = '/opt/keystone'
         self.python = Python(prefix=self.prefix, version='2.7')
+
+        self.services = ['os-keystone']
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
@@ -34,63 +33,64 @@ class Keystone(SimpleBase):
         })
 
     def setup(self):
-        data = self.get_init_data()
+        data = self.init()
 
         if self.is_package:
             user.add(data['user'])
             openstack_util.setup_common(self.python)
 
-            # keystoneのrequirements.txtには、lxml>=2.3,<=3.4.2 となっているが、
-            # 3.4系はインストールに失敗するため、先に3.4以前のバージョンをインストールしておく
-            # sudo('pip install "lxml>=2.3,<3.4"')
-
             keystone = self.python.install_from_git(
-                'keystone', 'https://github.com/openstack/keystone.git -b {0}'.format(data['branch']))
+                'keystone',
+                'https://github.com/openstack/keystone.git -b {0}'.format(data['branch']))
 
             if not filer.exists('/etc/keystone'):
                 sudo('cp -r {0}/etc/ /etc/keystone/'.format(keystone['git_dir']))
             if not filer.exists('/usr/bin/keystone-manage'):
                 sudo('ln -s {0}/bin/keystone-manage /usr/bin/'.format(self.prefix))
+            if not filer.exists('/usr/bin/keystone'):
+                sudo('ln -s {0}/bin/keystone /usr/bin/'.format(self.prefix))
 
             filer.mkdir('/var/log/keystone', owner='keystone:keystone')
 
         if self.is_conf:
+            is_updated = filer.template(
+                '/etc/keystone/keystone.conf',
+                data=data,
+            )
 
-            filer.mkdir('/var/log/keystone', owner='keystone:keystone')
-            option = ' --log-dir /var/log/keystone'
-            is_updated = filer.template('/etc/init.d/openstack-keystone', '755',
-                                        data={
+            option = '--config-file /etc/keystone/keystone.conf --log-dir /var/log/keystone'
+            is_updated = filer.template('/etc/systemd/system/os-keystone.service',
+                                        '755', data={
+                                            'prefix': self.prefix,
                                             'prog': 'keystone-all',
                                             'option': option,
-                                            'config': '/etc/keystone/keystone.conf',
                                             'user': self.data['user'],
                                         },
-                                        src_target='initscript') or is_updated
+                                        src_target='systemd.service')
 
-        self.db_sync()
+            self.enable_services().start_services(pty=False)
+            if is_updated:
+                self.restart_services(pty=False)
 
-        self.enable_services().start_services(pty=False)
-        if is_updated:
-            self.restart_services(pty=False)
+        if self.is_data:
+            self.db_sync()
 
-        time.sleep(3)  # 立ち上げてすぐにはLISTENしないので、3秒待つ
+            self.create_tenant('admin', 'Admin Tenant')
+            self.create_role('admin')
+            self.create_role('_member_')
+            self.create_user(data['admin_user'], data['admin_password'],
+                             [['admin', 'admin'], ['admin', '_member_']])
 
-        self.create_tenant('admin', 'Admin Tenant')
-        self.create_role('admin')
-        self.create_role('_member_')
-        self.create_user(data['admin_user'], data['admin_password'],
-                         [['admin', 'admin'], ['admin', '_member_']])
+            self.create_tenant(data['service_tenant_name'], 'Service Tenant')
+            self.create_user(data['service_user'], data['service_password'], [['service', 'admin']])
 
-        self.create_tenant(data['service_tenant_name'], 'Service Tenant')
-        self.create_user(data['service_user'], data['service_password'], [['service', 'admin']])
-
-        for name, service in data['services'].items():
-            self.create_service(name, service)
+            for name, service in data['services'].items():
+                self.create_service(name, service)
 
         self.disable_admin_token()
 
     def disable_admin_token(self):
-        data = self.get_init_data()
+        data = self.init()
         data.update({
             'tmp_admin_token': '# admin_token ='
         })
@@ -106,7 +106,7 @@ class Keystone(SimpleBase):
                 OS_SERVICE_TOKEN=self.data['admin_token'],
                 OS_SERVICE_ENDPOINT='http://localhost:35357/v2.0',
                 ):
-            return run('keystone {0}'.format(cmd))
+            return run('{0}/bin/keystone {1}'.format(self.prefix, cmd))
 
     def create_tenant(self, name, description):
         tenant_list = self.cmd('tenant-list')
@@ -143,12 +143,13 @@ class Keystone(SimpleBase):
             --adminurl={1[adminurl]}'''.format(service_id, service))
 
     def dump_openstackrc(self):
-        data = self.get_init_data()
+        data = self.init()
         openstack_util.dump_openstackrc(data)
 
     def db_sync(self):
         # db_sync
         if not openstack_util.show_tables(self.connection) == sorted([
+            'access_token',
             'assignment',
             'credential',
             'domain',
@@ -165,6 +166,10 @@ class Keystone(SimpleBase):
             'trust',
             'trust_role',
             'user',
-            'user_group_membership'
+            'user_group_membership',
         ]):
-            sudo('keystone-manage db_sync')
+
+            # python2.6 だとdb_sync時に以下の様な辞書型の内包表記によりsyntaxerrorとなるので、python2.7以上の必要がある
+            # centos6.x だとpython2.6が入ってる、centos7 だとpython2.7が入っている
+            # kwargs = {k: encodeutils.safe_decode(v) for k, v in six.iteritems(kwargs)}
+            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))

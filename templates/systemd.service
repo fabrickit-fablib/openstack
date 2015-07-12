@@ -1,0 +1,12 @@
+[Unit]
+Description=TEST
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart={{ prefix }}/bin/{{ prog }} {{ option }}
+ExecStop=/bin/kill -WINCH ${MAINPID}
+User={{ user }}
+
+[Install]
+WantedBy=multi-user.target
