@@ -10,6 +10,8 @@ def setup_common(python):
     Package('mysql-devel').install()
     Package('mysql').install()
     python.install('mysql-python')
+    # SQLAlchemy==0.9.10 is bad sql
+    python.install('SQLAlchemy==0.9.9')
 
     # # kiloからは各種クライアントは非推奨で、openstackclientを利用する
     # python.install('python-openstackclient')

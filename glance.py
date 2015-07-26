@@ -75,7 +75,7 @@ class Glance(SimpleBase):
                                         'option': option,
                                         'user': data['user'],
                                     },
-                                    src_target='systemd.service')
+                                    src_target='systemd.service') or is_updated
 
         option = '--config-file /etc/glance/glance-registry.conf'
         is_updated = filer.template('/etc/systemd/system/os-glance-registry.service',
@@ -85,7 +85,7 @@ class Glance(SimpleBase):
                                         'option': option,
                                         'user': data['user'],
                                     },
-                                    src_target='systemd.service')
+                                    src_target='systemd.service') or is_updated
 
         self.db_sync()
 

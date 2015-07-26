@@ -16,6 +16,7 @@ class Neutron(SimpleBase):
         self.mode = mode
         self.data_key = 'neutron'
         self.data = {
+            'sudoers_cmd': 'ALL',
             'debug': True,
             'verbose': True,
             'user': 'neutron',
@@ -61,9 +62,16 @@ class Neutron(SimpleBase):
             filer.mkdir('/var/log/neutron', owner='neutron:neutron')
 
         if self.is_conf:
-            nova_tenant_id = openstack_util.client_cmd(
-                'project list | awk \'/ service / { print $2 }\'')
-            nova_tenant_id = nova_tenant_id.split('\r\n')[-1]
+            is_updated = filer.template(
+                '/etc/sudoers.d/neutron',
+                data=data,
+                src_target='sudoers.j2',
+            )
+
+            nova_tenant_id = 'fe45c11a774049efb6dc08f32e43a837'
+            # openstack_util.client_cmd(
+            #     'project list | awk \'/ service / { print $2 }\'')
+            # nova_tenant_id = nova_tenant_id.split('\r\n')[-1]
             data['nova_admin_tenant_id'] = nova_tenant_id
 
             is_updated = filer.template(
@@ -102,14 +110,23 @@ class Neutron(SimpleBase):
                                         },
                                         src_target='systemd.service')
 
-            is_updated = filer.template('/etc/init.d/os-neutron-linuxbridge-agent',
+            is_updated = filer.template('/etc/systemd/system/os-neutron-linuxbridge-agent.service',
                                         '755', data={
                                             'prefix': self.prefix,
                                             'prog': 'neutron-linuxbridge-agent',
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='initd.sh')
+                                        src_target='systemd.service')
+
+            # is_updated = filer.template('/etc/init.d/os-neutron-linuxbridge-agent',
+            #                             '755', data={
+            #                                 'prefix': self.prefix,
+            #                                 'prog': 'neutron-linuxbridge-agent',
+            #                                 'option': option,
+            #                                 'user': self.data['user'],
+            #                             },
+            #                             src_target='initd.sh')
 
             # neutronはdb_syncなどは行わない
             # サービスの初回立ち上げ時に、プラグインを読み込んで、そのプラグインにそったテーブルを作成する

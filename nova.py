@@ -20,6 +20,8 @@ class Nova(SimpleBase):
         self.mode = mode
         self.data = {
             'user': 'nova',
+            'debug': 'true',
+            'verbose': 'true',
         }
 
         if mode == MODE_CONTROLLER:
@@ -35,17 +37,19 @@ class Nova(SimpleBase):
         elif mode == MODE_COMPUTE:
             self.services = [
                 'libvirtd',
-                # 'messagebus',
+                'messagebus',
                 'os-nova-compute',
             ]
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
+            'timeout_nbd': 1,
+            'sudoers_cmd': '/usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
             'lock_path': '/var/lock/subsys/nova',
-            'my_ip': env.node['ip'],
-            'vncserver_listen': env.node['ip'],
-            'vncserver_proxyclient_address': env.node['ip'],
+            'my_ip': env.node['ip']['default_dev']['ip'],
+            'vncserver_listen': env.node['ip']['default_dev']['ip'],
+            'vncserver_proxyclient_address': env.node['ip']['default_dev']['ip'],
             'keystone': env.cluster['keystone'],
             'database': {
                 'connection': self.connection['str']
@@ -63,12 +67,11 @@ class Nova(SimpleBase):
                 Package('novnc').install()
 
             if self.mode == MODE_COMPUTE:
-                # self.usr_python.setup()
-                # self.usr_python.install('libvirt-python')
                 Package('libvirt').install()
                 Package('sysfsutils').install()
                 Package('qemu-kvm').install()
                 Package('libvirt-python').install()
+                Package('libvirt-devel').install()
                 Package('dbus').install()
 
                 # libvirt-pythonを利用するには、ディストリビューションのものをコピーする必要がある
@@ -84,10 +87,9 @@ class Nova(SimpleBase):
                 'nova',
                 'https://github.com/openstack/nova.git -b {0}'.format(data['branch']))
 
-            sudo('chown -R {0}:{0} /var/lib/nova'.format(data['user']))
             filer.mkdir(data['lock_path'], owner='nova:nova')
-            filer.mkdir(data['state_path'])
-            filer.mkdir(os.path.join(data['state_path'], 'instances'))
+            filer.mkdir(data['state_path'], owner='nova:nova')
+            filer.mkdir(os.path.join(data['state_path'], 'instances'), owner='nova:nova')
 
             if not filer.exists('/etc/nova'):
                 sudo('cp -r {0}/etc/nova/ /etc/nova/'.format(pkg['git_dir']))
@@ -99,10 +101,20 @@ class Nova(SimpleBase):
                 sudo('ln -s {0}/bin/nova-rootwrap /usr/bin/'.format(self.prefix))
 
         if self.is_conf:
+            # sudoersファイルは最後に改行入れないと、シンタックスエラーとなりsudo実行できなくなる
+            # sudo: >>> /etc/sudoers.d/nova: syntax error near line 2 <<<
+            # この場合は以下のコマンドでvisudoを実行し、編集する
+            # $ pkexec visudo -f /etc/sudoers.d/nova
+            is_updated = filer.template(
+                '/etc/sudoers.d/nova',
+                data=data,
+                src_target='sudoers.j2',
+            )
+
             is_updated = filer.template(
                 '/etc/nova/nova.conf',
                 data=data,
-            )
+            ) or is_updated
 
             filer.mkdir('/var/log/nova', owner='nova:nova')
             option = '--log-dir /var/log/nova/'
@@ -114,7 +126,7 @@ class Nova(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src_target='systemd.service') or is_updated
 
             is_updated = filer.template('/etc/systemd/system/os-nova-cert.service',
                                         '755', data={
@@ -123,7 +135,7 @@ class Nova(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src_target='systemd.service') or is_updated
 
             is_updated = filer.template('/etc/systemd/system/os-nova-consoleauth.service',
                                         '755', data={
@@ -132,7 +144,7 @@ class Nova(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src_target='systemd.service') or is_updated
 
             is_updated = filer.template('/etc/systemd/system/os-nova-scheduler.service',
                                         '755', data={
@@ -141,7 +153,7 @@ class Nova(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src_target='systemd.service') or is_updated
 
             is_updated = filer.template('/etc/systemd/system/os-nova-conductor.service',
                                         '755', data={
@@ -150,7 +162,7 @@ class Nova(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src_target='systemd.service') or is_updated
 
             is_updated = filer.template('/etc/systemd/system/os-nova-novncproxy.service',
                                         '755', data={
@@ -159,7 +171,7 @@ class Nova(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src_target='systemd.service') or is_updated
 
             # Centos7において、
             # systemdだと nova.openstack.common.threadgroup HypervisorUnavailable: Connection
