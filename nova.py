@@ -113,6 +113,7 @@ class Nova(SimpleBase):
 
             is_updated = filer.template(
                 '/etc/nova/nova.conf',
+                src_target='{0}/nova.conf.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 

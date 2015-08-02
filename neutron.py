@@ -68,24 +68,31 @@ class Neutron(SimpleBase):
                 src_target='sudoers.j2',
             )
 
-            nova_tenant_id = 'fe45c11a774049efb6dc08f32e43a837'
+            # nova_tenant_id = 'fe45c11a774049efb6dc08f32e43a837'
+
             # openstack_util.client_cmd(
             #     'project list | awk \'/ service / { print $2 }\'')
             # nova_tenant_id = nova_tenant_id.split('\r\n')[-1]
+            # data['nova_admin_tenant_id'] = nova_tenant_id
+            nova_tenant_id = openstack_util.client_cmd(
+                'keystone tenant-list 2> /dev/null | awk \'/ service / { print $2 }\'')
             data['nova_admin_tenant_id'] = nova_tenant_id
 
             is_updated = filer.template(
                 '/etc/neutron/neutron.conf',
+                src_target='{0}/neutron.conf.j2'.format(data['version']),
                 data=data,
             )
 
             is_updated = filer.template(
                 '/etc/neutron/plugins/ml2/ml2_conf.ini',
+                src_target='{0}/ml2_conf.ini.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 
             is_updated = filer.template(
                 '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini',
+                src_target='{0}/linuxbridge_conf.ini.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 

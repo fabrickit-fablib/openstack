@@ -1,17 +1,20 @@
 # coding: utf-8
-from fabkit import run, api, Package, env, filer, sudo
+from fabkit import run, api, Package, env, filer, sudo, Service
 from fablib.repository import yum
 import re
 
 
 def setup_common(python):
+    sudo('setenforce 0')
+    Service('firewalld').stop().disable()
+
     yum.install_epel()
     python.setup()
     Package('mysql-devel').install()
     Package('mysql').install()
     python.install('mysql-python')
     # SQLAlchemy==0.9.10 is bad sql
-    python.install('SQLAlchemy==0.9.9')
+    python.install('SQLAlchemy==0.9.8')
 
     # # kiloからは各種クライアントは非推奨で、openstackclientを利用する
     # python.install('python-openstackclient')

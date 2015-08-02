@@ -55,6 +55,7 @@ class Keystone(SimpleBase):
         if self.is_conf:
             is_updated = filer.template(
                 '/etc/keystone/keystone.conf',
+                src_target='{0}/keystone.conf.j2'.format(data['version']),
                 data=data,
             )
 
@@ -73,7 +74,7 @@ class Keystone(SimpleBase):
                 self.restart_services(pty=False)
 
         if self.is_data:
-            self.db_sync()
+            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
 
             self.create_tenant('admin', 'Admin Tenant')
             self.create_role('admin')
@@ -145,31 +146,3 @@ class Keystone(SimpleBase):
     def dump_openstackrc(self):
         data = self.init()
         openstack_util.dump_openstackrc(data)
-
-    def db_sync(self):
-        # db_sync
-        if not openstack_util.show_tables(self.connection) == sorted([
-            'access_token',
-            'assignment',
-            'credential',
-            'domain',
-            'endpoint',
-            'group',
-            'id_mapping',  # added on juno
-            'migrate_version',
-            'policy',
-            'project',
-            'region',
-            'role',
-            'service',
-            'token',
-            'trust',
-            'trust_role',
-            'user',
-            'user_group_membership',
-        ]):
-
-            # python2.6 だとdb_sync時に以下の様な辞書型の内包表記によりsyntaxerrorとなるので、python2.7以上の必要がある
-            # centos6.x だとpython2.6が入ってる、centos7 だとpython2.7が入っている
-            # kwargs = {k: encodeutils.safe_decode(v) for k, v in six.iteritems(kwargs)}
-            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))

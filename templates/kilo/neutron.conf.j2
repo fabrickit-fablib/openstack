@@ -700,12 +700,19 @@ rpc_backend={{ rpc_backend }}
 [keystone_authtoken]
 auth_uri = {{ keystone.auth_protocol }}://{{ keystone.auth_host }}:5000
 auth_url = {{ keystone.auth_protocol }}://{{ keystone.auth_host }}:35357
-auth_plugin = password
-project_domain_id = default
-user_domain_id = default
+# auth_plugin = password
+# project_domain_id = default
+# user_domain_id = default
 project_name = {{ keystone.service_tenant_name }}
 username = {{ keystone.service_user }}
 password = {{ keystone.service_password }}
+
+auth_host = {{ keystone.auth_host }}
+auth_port = {{ keystone.auth_port }}
+auth_protocol = {{ keystone.auth_protocol }}
+admin_tenant_name = {{ keystone.service_tenant_name }}
+admin_user = {{ keystone.service_user }}
+admin_password = {{ keystone.service_password }}
 
 [database]
 # This line MUST be changed to actually run the plugin.

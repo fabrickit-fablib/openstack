@@ -44,16 +44,17 @@ class Horizon(SimpleBase):
         if not filer.exists('/opt/horizon/lib/horizon'):
             sudo('cp -r {0} /opt/horizon/lib/horizon'.format(pkg['git_dir']))
 
-        sudo('chown -R apache:apache /opt/horizon/lib/horizon')
+        sudo('chown -R apache:apache /opt/horizon')
 
         is_updated = filer.template(
             self.prefix + '/lib/horizon/openstack_dashboard/local/local_settings.py',
+            src_target='{0}/local_settings.py.j2'.format(data['version']),
             data=data,
         )
 
-        return
         is_updated = filer.template(
             '/etc/httpd/conf.d/horizon_httpd.conf',
+            src_target='{0}/horizon_httpd.conf.j2'.format(data['version']),
             data=data,
         ) or is_updated
 
