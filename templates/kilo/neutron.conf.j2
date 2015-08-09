@@ -693,7 +693,7 @@ rpc_backend={{ rpc_backend }}
 # =========== items for agent management extension =============
 # seconds between nodes reporting state to server; should be less than
 # agent_down_time, best if it is half or less than agent_down_time
-# report_interval = 30
+report_interval = 120
 
 # ===========  end of items for agent management extension =====
 
@@ -764,6 +764,15 @@ connection = {{ database.connection }}
 # pool_timeout = 10
 
 [nova]
+auth_url = {{ keystone.identity_uri }}
+auth_plugin = password
+project_domain_id = default
+user_domain_id = default
+region_name = {{ keystone.service_region }}
+project_name = {{ keystone.service_tenant_name }}
+username = {{ keystone.service_user }}
+password = {{ keystone.service_password }}
+
 # Name of the plugin to load
 # auth_plugin =
 
@@ -1009,7 +1018,7 @@ rabbit_password = {{ rabbit_password }}
 rabbit_virtual_host = {{ rabbit_virtual_host }}
 
 # How frequently to retry connecting with RabbitMQ. (integer value)
-# rabbit_retry_interval = 1
+rabbit_retry_interval = 1
 
 # How long to backoff for between retries when connecting to RabbitMQ. (integer
 # value)

@@ -4,8 +4,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from openstack_dashboard import exceptions
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+DEBUG = {{ debug }}
+TEMPLATE_DEBUG = {{ template_debug }}
+
+COMPRESS_OFFLINE = True
 
 
 # WEBROOT is the location relative to Webserver root
@@ -46,11 +48,11 @@ ALLOWED_HOSTS = {{ allowed_hosts }}
 # NOTE: The version should be formatted as it appears in the URL for the
 # service API. For example, The identity service APIs have inconsistent
 # use of the decimal point, so valid options would be 2.0 or 3.
-#OPENSTACK_API_VERSIONS = {
-#    "data-processing": 1.1,
-#    "identity": 3,
-#    "volume": 2,
-#}
+OPENSTACK_API_VERSIONS = {
+    "data-processing": 1.1,
+    "identity": 3,
+    "volume": 2,
+}
 
 # Set this to True if running on multi-domain model. When this is enabled, it
 # will require user to enter the Domain name in addition to username for login.
@@ -77,7 +79,7 @@ HORIZON_CONFIG = {
     'help_url': "http://docs.openstack.org",
     'exceptions': {'recoverable': exceptions.RECOVERABLE,
                    'not_found': exceptions.NOT_FOUND,
-                   'unauthorized': exceptions.UNAUTHORIZED},
+                  'unauthorized': exceptions.UNAUTHORIZED},
     'modal_backdrop': 'static',
     'angular_modules': [],
     'js_files': [],
@@ -151,7 +153,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #]
 
 OPENSTACK_HOST = "{{ keystone.auth_host }}"
-OPENSTACK_KEYSTONE_URL = "http://%s:5000/v2.0" % OPENSTACK_HOST
+OPENSTACK_KEYSTONE_URL = "http://%s:5000/v3" % OPENSTACK_HOST
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 
 # Enables keystone web single-sign-on if set to True.
@@ -171,7 +173,7 @@ OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 #    ("saml2", _("Security Assertion Markup Language")))
 
 # Disable SSL certificate checks (useful for self-signed certificates):
-#OPENSTACK_SSL_NO_VERIFY = True
+OPENSTACK_SSL_NO_VERIFY = True
 
 # The CA certificate to use to verify SSL connections
 #OPENSTACK_SSL_CACERT = '/path/to/cacert.pem'
@@ -228,14 +230,14 @@ OPENSTACK_CINDER_FEATURES = {
 # services provided by neutron. Options currently available are load
 # balancer service, security groups, quotas, VPN service.
 OPENSTACK_NEUTRON_NETWORK = {
-    'enable_router': True,
-    'enable_quotas': True,
-    'enable_ipv6': True,
+    'enable_router': False,
+    'enable_quotas': False,
+    'enable_ipv6': False,
     'enable_distributed_router': False,
     'enable_ha_router': False,
-    'enable_lb': True,
-    'enable_firewall': True,
-    'enable_vpn': True,
+    'enable_lb': False,
+    'enable_firewall': False,
+    'enable_vpn': False,
 
     # The profile_support option is used to detect if an external router can be
     # configured via the dashboard. When using specific plugins the
@@ -316,7 +318,7 @@ DROPDOWN_MAX_ITEMS = 30
 
 # The timezone of the server. This should correspond with the timezone
 # of your entire OpenStack installation, and hopefully be in UTC.
-TIME_ZONE = "UTC"
+TIME_ZONE = "{{ time_zone }}"
 
 # When launching an instance, the menu of available flavors is
 # sorted by RAM usage, ascending. If you would like a different sort order,

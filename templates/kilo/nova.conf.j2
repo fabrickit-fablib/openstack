@@ -1573,7 +1573,7 @@ security_group_api={{ security_group_api }}
 # necessary if the image contains a recent version of cloud-
 # init. Possible mechanisms require the nbd driver (for qcow
 # and raw), or loop (for raw). (boolean value)
-#resize_fs_using_block_device=false
+resize_fs_using_block_device=false
 
 
 #
@@ -1582,7 +1582,7 @@ security_group_api={{ security_group_api }}
 
 # Amount of time, in seconds, to wait for NBD device start up.
 # (integer value)
-#timeout_nbd=10
+timeout_nbd={{ timeout_nbd }}
 
 
 #
@@ -2796,12 +2796,12 @@ virt_type={{ libvirt.virt_type }}
 # Set flag to indicate Neutron will proxy metadata requests
 # and resolve instance ids. (boolean value)
 #service_metadata_proxy=false
-service_metadata_proxy={{ service_neutron_metadata_proxy }}
+#service_metadata_proxy={{ service_neutron_metadata_proxy }}
 
 # Shared secret to validate proxies Neutron metadata requests
 # (string value)
 #metadata_proxy_shared_secret=
-metadata_proxy_shared_secret={{ neutron_metadata_proxy_shared_secret }}
+#metadata_proxy_shared_secret={{ neutron_metadata_proxy_shared_secret }}
 
 
 #
@@ -2844,7 +2844,7 @@ admin_tenant_name={{ keystone.service_tenant_name }}
 
 # Region name for connecting to neutron in admin context
 # (string value)
-#region_name=<None>
+region_name={{ keystone.service_region }}
 
 # Authorization URL for connecting to neutron in admin
 # context. DEPRECATED: specify an auth_plugin and appropriate
@@ -2856,7 +2856,7 @@ admin_auth_url={{ keystone.services.keystone.adminurl }}
 # context. DEPRECATED: specify an auth_plugin and appropriate
 # credentials instead. If an auth_plugin is specified strategy
 # will be ignored. (string value)
-#auth_strategy=keystone
+auth_strategy=keystone
 
 # Name of Integration Bridge used by Open vSwitch (string
 # value)

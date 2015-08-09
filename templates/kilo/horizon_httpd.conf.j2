@@ -1,15 +1,15 @@
 <VirtualHost *:80>
-    WSGIDaemonProcess apache processes=5 threads=1 user=apache group=apache display-name=%{GROUP} python-path=/opt/horizon/lib/python2.7/site-packages
+    WSGIDaemonProcess apache processes=5 threads=1 user=apache group=apache display-name=%{GROUP} python-path={{ prefix }}/lib/python2.7/site-packages
     WSGIProcessGroup apache
-    WSGIScriptAlias / /opt/horizon/lib/horizon/openstack_dashboard/wsgi/django.wsgi
+    WSGIScriptAlias / {{ prefix }}/lib/horizon/openstack_dashboard/wsgi/django.wsgi
     WSGIApplicationGroup %{GLOBAL}
     WSGIPassAuthorization On
-    Alias /media /opt/horizon/lib/horizon/openstack_dashboard/static
+    Alias /media {{ prefix }}/lib/horizon/openstack_dashboard/static
 
     <Directory />
         Require all granted
     </Directory>
-    <Directory /opt/horizon/lib/horizon/>
+    <Directory {{ prefix }}/lib/horizon/>
         Require all granted
     </Directory>
 

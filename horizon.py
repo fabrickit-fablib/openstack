@@ -14,11 +14,16 @@ class Horizon(SimpleBase):
             'allowed_hosts': "['*']",
         }
 
-        self.services = ['httpd']
-        self.packages = ['httpd', 'mod_wsgi']
+        self.services = ['httpd', 'memcached']
+        self.packages = ['httpd', 'mod_wsgi', 'memcached']
 
-        self.prefix = '/opt/horizon'
+        self.prefix = '/usr'
         self.python = Python(self.prefix, '2.7')
+
+        # self.prefix = '/opt/horizon' にすると、インスタンスリスト表示時に以下のエラーが発生
+        # self.prefix = '/usr' にすると発生しないので、OS依存のモジュール読み込みで失敗してそう
+        # /opt/horizon/lib/python2.7/site-packages/_cffi_backend.so: undefined symbol: PyUnicodeUCS2_FromUnicode  # noqa
+        # Exception Location: /opt/horizon/lib/python2.7/site-packages/cffi/api.py in __init__, line 56  # noqa
 
     def init_data(self):
         self.connection = openstack_util.get_mysql_connection(self.data)
@@ -40,11 +45,17 @@ class Horizon(SimpleBase):
         pkg = self.python.install_from_git(
             'horizon',
             'https://github.com/openstack/horizon.git -b {0}'.format(data['branch']))
+        self.python.install('python-memcached==1.57')
 
-        if not filer.exists('/opt/horizon/lib/horizon'):
-            sudo('cp -r {0} /opt/horizon/lib/horizon'.format(pkg['git_dir']))
+        if not filer.exists('{0}/lib/horizon'.format(self.prefix)):
+            sudo('cp -r {0} {1}/lib/horizon'.format(pkg['git_dir'], self.prefix))
 
-        sudo('chown -R apache:apache /opt/horizon')
+        sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py collectstatic --noinput"'.format(
+            self.prefix, self.python.get_cmd()))
+        sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py compress --force"'.format(
+            self.prefix, self.python.get_cmd()))
+
+        sudo('chown -R apache:apache {0}/lib/horizon'.format(self.prefix))
 
         is_updated = filer.template(
             self.prefix + '/lib/horizon/openstack_dashboard/local/local_settings.py',

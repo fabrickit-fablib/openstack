@@ -75,7 +75,9 @@ physical_interface_mappings = {{ linuxbridge.physical_interface_mappings|join(',
 # Firewall driver for realizing neutron security group function
 # firewall_driver = neutron.agent.firewall.NoopFirewallDriver
 # Example: firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
+firewall_driver = neutron.agent.firewall.NoopFirewallDriver
 
 # Controls if neutron security group is enabled or not.
 # It should be false when you use nova security group.
 # enable_security_group = True
+enable_security_group = False

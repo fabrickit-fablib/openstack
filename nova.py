@@ -22,6 +22,7 @@ class Nova(SimpleBase):
             'user': 'nova',
             'debug': 'true',
             'verbose': 'true',
+            'timeout_nbd': 1,
         }
 
         if mode == MODE_CONTROLLER:
@@ -194,6 +195,7 @@ class Nova(SimpleBase):
         if self.is_data:
             if self.mode == MODE_CONTROLLER:
                 self.db_sync()
+                self.sync_flavors()
 
         return 0
 
