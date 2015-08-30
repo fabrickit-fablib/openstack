@@ -25,12 +25,8 @@ class Glance(SimpleBase):
         self.python = Python(self.prefix, '2.7')
 
     def init_data(self):
-        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
             'keystone': env.cluster['keystone'],
-            'database': {
-                'connection': self.connection['str']
-            },
         })
 
     def setup(self):
@@ -59,13 +55,13 @@ class Glance(SimpleBase):
         # setup conf files
         is_updated = filer.template(
             '/etc/glance/glance-api.conf',
-            src_target='{0}/glance-api.conf.j2'.format(data['version']),
+            src='{0}/glance-api.conf.j2'.format(data['version']),
             data=data,
         )
 
         is_updated = filer.template(
             '/etc/glance/glance-registry.conf',
-            src_target='{0}/glance-registry.conf.j2'.format(data['version']),
+            src='{0}/glance-registry.conf.j2'.format(data['version']),
             data=data,
         ) or is_updated
 
@@ -77,7 +73,7 @@ class Glance(SimpleBase):
                                         'option': option,
                                         'user': data['user'],
                                     },
-                                    src_target='systemd.service') or is_updated
+                                    src='systemd.service') or is_updated
 
         option = '--config-file /etc/glance/glance-registry.conf'
         is_updated = filer.template('/etc/systemd/system/os-glance-registry.service',
@@ -87,9 +83,9 @@ class Glance(SimpleBase):
                                         'option': option,
                                         'user': data['user'],
                                     },
-                                    src_target='systemd.service') or is_updated
+                                    src='systemd.service') or is_updated
 
-        self.db_sync()
+        sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))
 
         self.enable_services().start_services(pty=False)
         if is_updated:
@@ -116,29 +112,3 @@ class Glance(SimpleBase):
                 + ' --container-format {1[container-format]}' \
                 + ' --is-public {1[is-public]} < {2}'
             self.cmd(create_cmd.format(image_name, image, image_file))
-
-    def db_sync(self):
-        if not openstack_util.show_tables(self.connection) == sorted([
-            'artifact_blob_locations'            # added on kilo
-            'artifact_blobs'                     # added on kilo
-            'artifact_dependencies'              # added on kilo
-            'artifact_properties'                # added on kilo
-            'artifact_tags'                      # added on kilo
-            'artifacts'                          # added on kilo
-            'image_locations',
-            'image_members',
-            'image_properties',
-            'image_tags',
-            'images',
-            'metadef_namespace_resource_types',  # added on juno
-            'metadef_namespaces',                # added on juno
-            'metadef_objects',                   # added on juno
-            'metadef_properties',                # added on juno
-            'metadef_resource_types',            # added on juno
-            'metadef_tags',                      # added on kilo
-            'migrate_version',
-            'task_info',
-            'tasks'
-        ]):
-
-            sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))

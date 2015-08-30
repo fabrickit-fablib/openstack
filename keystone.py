@@ -23,12 +23,8 @@ class Keystone(SimpleBase):
         self.services = ['os-keystone']
 
     def init_data(self):
-        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
             'tmp_admin_token': 'admin_token = {0}'.format(self.data['admin_token']),
-            'database': {
-                'connection': self.connection['str']
-            },
         })
 
         if self.data['version'] == 'juno':
@@ -66,7 +62,7 @@ class Keystone(SimpleBase):
         if self.is_conf:
             is_updated = filer.template(
                 '/etc/keystone/keystone.conf',
-                src_target='{0}/keystone.conf.j2'.format(version),
+                src='{0}/keystone.conf.j2'.format(version),
                 data=data,
             )
 
@@ -78,7 +74,7 @@ class Keystone(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src='systemd.service')
 
             self.enable_services().start_services(pty=False)
             if is_updated:
@@ -125,7 +121,7 @@ class Keystone(SimpleBase):
         })
         filer.template(
             '/etc/keystone/keystone.conf',
-            src_target='{0}/keystone.conf.j2'.format(data['version']),
+            src='{0}/keystone.conf.j2'.format(data['version']),
             data=data,
         )
         self.restart_services(pty=False)

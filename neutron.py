@@ -31,12 +31,8 @@ class Neutron(SimpleBase):
             self.services = ['os-neutron-linuxbridge-agent']
 
     def init_data(self):
-        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
             'keystone': env.cluster['keystone'],
-            'database': {
-                'connection': self.connection['str'],
-            },
         })
 
     def setup(self):
@@ -65,7 +61,7 @@ class Neutron(SimpleBase):
             is_updated = filer.template(
                 '/etc/sudoers.d/neutron',
                 data=data,
-                src_target='sudoers.j2',
+                src='sudoers.j2',
             )
 
             # nova_tenant_id = 'fe45c11a774049efb6dc08f32e43a837'
@@ -80,19 +76,19 @@ class Neutron(SimpleBase):
 
             is_updated = filer.template(
                 '/etc/neutron/neutron.conf',
-                src_target='{0}/neutron.conf.j2'.format(data['version']),
+                src='{0}/neutron.conf.j2'.format(data['version']),
                 data=data,
             )
 
             is_updated = filer.template(
                 '/etc/neutron/plugins/ml2/ml2_conf.ini',
-                src_target='{0}/ml2_conf.ini.j2'.format(data['version']),
+                src='{0}/ml2_conf.ini.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 
             is_updated = filer.template(
                 '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini',
-                src_target='{0}/linuxbridge_conf.ini.j2'.format(data['version']),
+                src='{0}/linuxbridge_conf.ini.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 
@@ -115,7 +111,7 @@ class Neutron(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src='systemd.service')
 
             is_updated = filer.template('/etc/systemd/system/os-neutron-linuxbridge-agent.service',
                                         '755', data={
@@ -124,7 +120,7 @@ class Neutron(SimpleBase):
                                             'option': option,
                                             'user': self.data['user'],
                                         },
-                                        src_target='systemd.service')
+                                        src='systemd.service')
 
             # is_updated = filer.template('/etc/init.d/os-neutron-linuxbridge-agent',
             #                             '755', data={

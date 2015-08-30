@@ -26,13 +26,9 @@ class Horizon(SimpleBase):
         # Exception Location: /opt/horizon/lib/python2.7/site-packages/cffi/api.py in __init__, line 56  # noqa
 
     def init_data(self):
-        self.connection = openstack_util.get_mysql_connection(self.data)
         self.data.update({
             'keystone': env.cluster['keystone'],
             'prefix': self.prefix,
-            # 'database': {
-            #     'connection': self.connection,
-            # },
         })
 
     def setup(self):
