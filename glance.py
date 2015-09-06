@@ -8,6 +8,9 @@ from fablib.base import SimpleBase
 
 class Glance(SimpleBase):
     def __init__(self):
+        self.prefix = '/opt/glance'
+        self.python = Python(self.prefix, '2.7')
+
         self.data_key = 'glance'
         self.data = {
             'user': 'glance',
@@ -20,9 +23,6 @@ class Glance(SimpleBase):
             'os-glance-api',
             'os-glance-registry',
         ]
-
-        self.prefix = '/opt/glance'
-        self.python = Python(self.prefix, '2.7')
 
     def init_data(self):
         self.data.update({
@@ -37,9 +37,13 @@ class Glance(SimpleBase):
         user.add(data['user'])
 
         self.python.install('python-glanceclient')
+
+        # developインストールだと依存解決できなくてコケる
         pkg = self.python.install_from_git(
             'glance',
-            'https://github.com/openstack/glance.git -b {0}'.format(data['branch']))
+            'https://github.com/openstack/glance.git -b {0}'.format(data['branch']),
+            git_dir='/opt/ossrc/glance',
+            is_develop=False)
 
         filer.mkdir('/var/log/glance/', owner='{0}:{0}'.format(data['user']))
         sudo('chown -R {0}:{0} /var/log/glance/'.format(data['user']))
@@ -90,6 +94,8 @@ class Glance(SimpleBase):
         self.enable_services().start_services(pty=False)
         if is_updated:
             self.restart_services(pty=False)
+
+        self.register_images()
 
     def cmd(self, cmd):
         return openstack_util.client_cmd('glance {0}'.format(cmd))

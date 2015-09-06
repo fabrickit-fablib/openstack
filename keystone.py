@@ -9,6 +9,8 @@ import openstack_util
 class Keystone(SimpleBase):
     def __init__(self, data=None):
         self.prefix = '/opt/keystone'
+        self.python = Python(prefix=self.prefix, version='2.7')
+
         self.data_key = 'keystone'
         self.data = {
             'user': 'keystone',
@@ -18,7 +20,6 @@ class Keystone(SimpleBase):
                 'driver': 'keystone.token.persistence.backends.sql.Token',
             },
         }
-        self.python = Python(prefix=self.prefix, version='2.7')
 
         self.services = ['os-keystone']
 
@@ -42,10 +43,15 @@ class Keystone(SimpleBase):
 
             keystone = self.python.install_from_git(
                 'keystone',
-                'https://github.com/openstack/keystone.git -b {0}'.format(data['branch']))
+                'https://github.com/openstack/keystone.git -b {0}'.format(data['branch']),
+                git_dir='/opt/ossrc/keystone',
+                is_develop=True)
 
             if version == 'kilo':
                 self.python.install('python-openstackclient')
+                self.python.install('oslo.utils<1.5.0,>=1.4.0')
+                self.python.install('oslo.config<1.10.0,>=1.9.3')
+                self.python.install('python-keystoneclient<1.4.0,>=1.2.0')
 
                 if not filer.exists('/usr/bin/openstack'):
                     sudo('ln -s {0}/bin/openstack /usr/bin/'.format(self.prefix))

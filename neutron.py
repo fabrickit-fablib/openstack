@@ -48,7 +48,9 @@ class Neutron(SimpleBase):
 
             pkg = self.python.install_from_git(
                 'neutron',
-                'https://github.com/openstack/neutron.git -b {0}'.format(data['branch']))
+                'https://github.com/openstack/neutron.git -b {0}'.format(data['branch']),
+                git_dir='/opt/ossrc/neutron',
+                is_develop=False)
 
             if not filer.exists('/etc/neutron'):
                 sudo('cp -r {0}/etc/ /etc/neutron/'.format(pkg['git_dir']))

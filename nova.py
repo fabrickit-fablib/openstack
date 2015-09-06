@@ -55,6 +55,7 @@ class Nova(SimpleBase):
 
     def setup(self):
         data = self.init()
+        is_updated = False
 
         if self.is_package:
             user.add(data['user'], 'wheel')
@@ -82,7 +83,9 @@ class Nova(SimpleBase):
 
             pkg = self.python.install_from_git(
                 'nova',
-                'https://github.com/openstack/nova.git -b {0}'.format(data['branch']))
+                'https://github.com/openstack/nova.git -b {0}'.format(data['branch']),
+                git_dir='/opt/ossrc/nova',
+                is_develop=False)
 
             filer.mkdir(data['lock_path'], owner='nova:nova')
             filer.mkdir(data['state_path'], owner='nova:nova')
@@ -184,13 +187,16 @@ class Nova(SimpleBase):
                                         },
                                         src='initd.sh') or is_updated
 
-            self.enable_services().start_services(pty=False)
-            if is_updated:
-                self.restart_services(pty=False)
-
         if self.is_data:
             if self.mode == MODE_CONTROLLER:
                 sudo('nova-manage db sync')
+
+        self.enable_services().start_services(pty=False)
+        if is_updated:
+            self.restart_services(pty=False)
+
+        if self.is_data:
+            if self.mode == MODE_CONTROLLER:
                 self.sync_flavors()
 
         return 0

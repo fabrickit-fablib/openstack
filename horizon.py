@@ -40,7 +40,10 @@ class Horizon(SimpleBase):
 
         pkg = self.python.install_from_git(
             'horizon',
-            'https://github.com/openstack/horizon.git -b {0}'.format(data['branch']))
+            'https://github.com/openstack/horizon.git -b {0}'.format(data['branch']),
+            git_dir='/opt/ossrc/horizon',
+            is_develop=False)
+
         self.python.install('python-memcached==1.57')
 
         if not filer.exists('{0}/lib/horizon'.format(self.prefix)):
@@ -55,13 +58,13 @@ class Horizon(SimpleBase):
 
         is_updated = filer.template(
             self.prefix + '/lib/horizon/openstack_dashboard/local/local_settings.py',
-            src_target='{0}/local_settings.py.j2'.format(data['version']),
+            src='{0}/local_settings.py.j2'.format(data['version']),
             data=data,
         )
 
         is_updated = filer.template(
             '/etc/httpd/conf.d/horizon_httpd.conf',
-            src_target='{0}/horizon_httpd.conf.j2'.format(data['version']),
+            src='{0}/horizon_httpd.conf.j2'.format(data['version']),
             data=data,
         ) or is_updated
 
