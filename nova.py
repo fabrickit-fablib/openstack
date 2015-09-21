@@ -1,9 +1,8 @@
 # coding: utf-8
 
-import os
-from fabkit import sudo, env, user, Package, filer
+from fabkit import sudo, env, Package, filer
 from fablib.python import Python
-import openstack_util
+from tools import Tools
 from fablib.base import SimpleBase
 
 MODE_CONTROLLER = 1
@@ -12,14 +11,9 @@ MODE_COMPUTE = 2
 
 class Nova(SimpleBase):
     def __init__(self, mode=MODE_CONTROLLER):
-        self.prefix = '/usr'
-        self.python = Python(self.prefix, '2.7')
-        self.usr_prefix = '/usr'
-        self.usr_python = Python(self.usr_prefix, '2.7')
         self.data_key = 'nova'
         self.mode = mode
         self.data = {
-            'user': 'nova',
             'debug': 'true',
             'verbose': 'true',
             'timeout_nbd': 1,
@@ -27,23 +21,30 @@ class Nova(SimpleBase):
 
         if mode == MODE_CONTROLLER:
             self.services = [
-                'os-nova-api',
-                'os-nova-cert',
-                'os-nova-consoleauth',
-                'os-nova-scheduler',
-                'os-nova-conductor',
-                'os-nova-novncproxy',
+                'nova-api',
+                'nova-cert',
+                'nova-consoleauth',
+                'nova-scheduler',
+                'nova-conductor',
+                'nova-novncproxy',
             ]
 
         elif mode == MODE_COMPUTE:
             self.services = [
                 'libvirtd',
                 'messagebus',
-                'os-nova-compute',
+                'nova-compute',
             ]
 
-    def init_data(self):
+    def init_before(self):
+        self.package = env['cluster']['os_package_map']['nova']
+        self.prefix = self.package.get('prefix', '/usr')
+        self.python = Python(self.prefix)
+        self.tools = Tools(self.python)
+
+    def init_after(self):
         self.data.update({
+            'user': 'nova',
             'timeout_nbd': 1,
             'sudoers_cmd': '/usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
             'lock_path': '/var/lock/subsys/nova',
@@ -57,10 +58,8 @@ class Nova(SimpleBase):
         data = self.init()
         is_updated = False
 
-        if self.is_package:
-            user.add(data['user'], 'wheel')
-
-            openstack_util.setup_common(self.python)
+        if self.is_tag('package'):
+            self.tools.setup()
             if self.mode == MODE_CONTROLLER:
                 Package('novnc').install()
 
@@ -79,20 +78,8 @@ class Nova(SimpleBase):
                 # for src in libvirt_python:
                 #     sudo('ln -s {0} {1}'.format(src, site_packages))
 
-            self.python.install('python-novaclient')
+            self.python.install_from_git(**self.package)
 
-            pkg = self.python.install_from_git(
-                'nova',
-                'https://github.com/openstack/nova.git -b {0}'.format(data['branch']),
-                git_dir='/opt/ossrc/nova',
-                is_develop=False)
-
-            filer.mkdir(data['lock_path'], owner='nova:nova')
-            filer.mkdir(data['state_path'], owner='nova:nova')
-            filer.mkdir(os.path.join(data['state_path'], 'instances'), owner='nova:nova')
-
-            if not filer.exists('/etc/nova'):
-                sudo('cp -r {0}/etc/nova/ /etc/nova/'.format(pkg['git_dir']))
             if not filer.exists('/usr/bin/nova'):
                 sudo('ln -s {0}/bin/nova /usr/bin/'.format(self.prefix))
             if not filer.exists('/usr/bin/nova-manage'):
@@ -100,7 +87,7 @@ class Nova(SimpleBase):
             if not filer.exists('/usr/bin/nova-rootwrap'):
                 sudo('ln -s {0}/bin/nova-rootwrap /usr/bin/'.format(self.prefix))
 
-        if self.is_conf:
+        if self.is_tag('conf'):
             # sudoersファイルは最後に改行入れないと、シンタックスエラーとなりsudo実行できなくなる
             # sudo: >>> /etc/sudoers.d/nova: syntax error near line 2 <<<
             # この場合は以下のコマンドでvisudoを実行し、編集する
@@ -117,92 +104,24 @@ class Nova(SimpleBase):
                 data=data,
             ) or is_updated
 
-            filer.mkdir('/var/log/nova', owner='nova:nova')
-            option = '--log-dir /var/log/nova/'
-
-            is_updated = filer.template('/etc/systemd/system/os-nova-api.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-api',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service') or is_updated
-
-            is_updated = filer.template('/etc/systemd/system/os-nova-cert.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-cert',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service') or is_updated
-
-            is_updated = filer.template('/etc/systemd/system/os-nova-consoleauth.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-consoleauth',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service') or is_updated
-
-            is_updated = filer.template('/etc/systemd/system/os-nova-scheduler.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-scheduler',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service') or is_updated
-
-            is_updated = filer.template('/etc/systemd/system/os-nova-conductor.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-conductor',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service') or is_updated
-
-            is_updated = filer.template('/etc/systemd/system/os-nova-novncproxy.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-novncproxy',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service') or is_updated
-
-            # Centos7において、
-            # systemdだと nova.openstack.common.threadgroup HypervisorUnavailable: Connection
-            # to the hypervisor is broken on host: localhost.localdomain とエラーがでて起動しない
-            # ので、initdで行う
-            is_updated = filer.template('/etc/init.d/os-nova-compute', '755',
-                                        data={
-                                            'prefix': self.prefix,
-                                            'prog': 'nova-compute',
-                                            'option': option,
-                                            'user': data['user'],
-                                        },
-                                        src='initd.sh') or is_updated
-
-        if self.is_data:
+        if self.is_tag('data'):
             if self.mode == MODE_CONTROLLER:
                 sudo('nova-manage db sync')
 
-        self.enable_services().start_services(pty=False)
-        if is_updated:
-            self.restart_services(pty=False)
+        if self.is_tag('service'):
+            self.enable_services().start_services(pty=False)
+            if is_updated:
+                self.restart_services(pty=False)
 
-        if self.is_data:
+        if self.is_tag('data'):
             if self.mode == MODE_CONTROLLER:
                 self.sync_flavors()
 
         return 0
 
     def cmd(self, cmd):
-        return openstack_util.client_cmd('nova {0}'.format(cmd))
+        self.init()
+        return self.tools.cmd('nova {0}'.format(cmd))
 
     def check(self):
         self.nova_api.status()

@@ -2796,12 +2796,12 @@ virt_type={{ libvirt.virt_type }}
 # Set flag to indicate Neutron will proxy metadata requests
 # and resolve instance ids. (boolean value)
 #service_metadata_proxy=false
-#service_metadata_proxy={{ service_neutron_metadata_proxy }}
+service_metadata_proxy={{ service_neutron_metadata_proxy }}
 
 # Shared secret to validate proxies Neutron metadata requests
 # (string value)
 #metadata_proxy_shared_secret=
-#metadata_proxy_shared_secret={{ neutron_metadata_proxy_shared_secret }}
+metadata_proxy_shared_secret={{ metadata_proxy_shared_secret }}
 
 
 #

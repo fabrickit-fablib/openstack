@@ -1,10 +1,10 @@
 [Unit]
-Description=TEST
+Description={{ description }}
 After=syslog.target network.target
 
 [Service]
 Type=simple
-ExecStart={{ prefix }}/bin/{{ prog }} {{ option }}
+ExecStart={{ exec }}
 ExecStop=/bin/kill -WINCH ${MAINPID}
 User={{ user }}
 

@@ -38,7 +38,7 @@ physical_interface_mappings = {{ linuxbridge.physical_interface_mappings|join(',
 # (BoolOpt) enable VXLAN on the agent
 # VXLAN support can be enabled when agent is managed by ml2 plugin using
 # linuxbridge mechanism driver.
-# enable_vxlan = True
+enable_vxlan = {{ linuxbridge.enable_vxlan }}
 #
 # (IntOpt) use specific TTL for vxlan interface protocol packets
 # ttl =

@@ -1,16 +1,14 @@
 # coding:utf-8
 
-from fabkit import sudo, api, filer, user, run
+import time
+from fabkit import sudo, api, filer, run, env
 from fablib.python import Python
 from fablib.base import SimpleBase
-import openstack_util
+from tools import Tools
 
 
 class Keystone(SimpleBase):
     def __init__(self, data=None):
-        self.prefix = '/opt/keystone'
-        self.python = Python(prefix=self.prefix, version='2.7')
-
         self.data_key = 'keystone'
         self.data = {
             'user': 'keystone',
@@ -21,9 +19,15 @@ class Keystone(SimpleBase):
             },
         }
 
-        self.services = ['os-keystone']
+        self.services = ['keystone']
 
-    def init_data(self):
+    def init_before(self):
+        self.package = env['cluster']['os_package_map']['keystone']
+        self.prefix = self.package.get('prefix', '/opt/keystone')
+        self.python = Python(self.prefix)
+        self.tools = Tools(self.python)
+
+    def init_after(self):
         self.data.update({
             'tmp_admin_token': 'admin_token = {0}'.format(self.data['admin_token']),
         })
@@ -37,59 +41,29 @@ class Keystone(SimpleBase):
         data = self.init()
         version = data['version']
 
-        if self.is_package:
-            user.add(data['user'])
-            openstack_util.setup_common(self.python)
-
-            keystone = self.python.install_from_git(
-                'keystone',
-                'https://github.com/openstack/keystone.git -b {0}'.format(data['branch']),
-                git_dir='/opt/ossrc/keystone',
-                is_develop=True)
-
-            if version == 'kilo':
-                self.python.install('python-openstackclient')
-                self.python.install('oslo.utils<1.5.0,>=1.4.0')
-                self.python.install('oslo.config<1.10.0,>=1.9.3')
-                self.python.install('python-keystoneclient<1.4.0,>=1.2.0')
-
-                if not filer.exists('/usr/bin/openstack'):
-                    sudo('ln -s {0}/bin/openstack /usr/bin/'.format(self.prefix))
-
-            if not filer.exists('/etc/keystone'):
-                sudo('cp -r {0}/etc/ /etc/keystone/'.format(keystone['git_dir']))
+        if self.is_tag('package'):
+            self.tools.setup()
+            self.python.install_from_git(**self.package)
             if not filer.exists('/usr/bin/keystone-manage'):
                 sudo('ln -s {0}/bin/keystone-manage /usr/bin/'.format(self.prefix))
-            if not filer.exists('/usr/bin/keystone'):
-                sudo('ln -s {0}/bin/keystone /usr/bin/'.format(self.prefix))
-
-            filer.mkdir('/var/log/keystone', owner='keystone:keystone')
-
-        if self.is_conf:
+        is_updated = False
+        if self.is_tag('conf'):
             is_updated = filer.template(
                 '/etc/keystone/keystone.conf',
                 src='{0}/keystone.conf.j2'.format(version),
                 data=data,
             )
 
-            option = '--config-file /etc/keystone/keystone.conf --log-dir /var/log/keystone'
-            is_updated = filer.template('/etc/systemd/system/os-keystone.service',
-                                        '755', data={
-                                            'prefix': self.prefix,
-                                            'prog': 'keystone-all',
-                                            'option': option,
-                                            'user': self.data['user'],
-                                        },
-                                        src='systemd.service')
+        if self.is_tag('data'):
+            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
 
+        if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
             if is_updated:
                 self.restart_services(pty=False)
 
-        if self.is_data:
-            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
-            print version
-
+        if self.is_tag('data'):
+            time.sleep(3)
             if version == 'juno':
                 self.create_tenant('admin', 'Admin Tenant')
                 self.create_role('admin')
@@ -118,7 +92,8 @@ class Keystone(SimpleBase):
                 for name, service in data['services'].items():
                     self.create_service(name, service)
 
-        self.disable_admin_token()
+        if self.is_tag('conf'):
+            self.disable_admin_token()
 
     def disable_admin_token(self):
         data = self.init()
@@ -140,7 +115,7 @@ class Keystone(SimpleBase):
                 OS_TOKEN=self.data['admin_token'],
                 OS_URL='http://localhost:35357/v2.0',
                 ):
-            return run('{0}/bin/{1} {2}'.format(self.prefix, self.client, cmd))
+            return run('{0} {1}'.format(self.client, cmd))
 
     def create_tenant(self, name, description):
         if self.client == 'keystone':
@@ -212,4 +187,4 @@ class Keystone(SimpleBase):
 
     def dump_openstackrc(self):
         data = self.init()
-        openstack_util.dump_openstackrc(data)
+        self.tools.dump_openstackrc(data)

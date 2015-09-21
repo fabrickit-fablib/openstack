@@ -1,16 +1,13 @@
 # coding: utf-8
 
-from fabkit import env, sudo, user, filer, run
+from fabkit import env, sudo, filer, run
 from fablib.python import Python
-import openstack_util
+from tools import Tools
 from fablib.base import SimpleBase
 
 
 class Glance(SimpleBase):
     def __init__(self):
-        self.prefix = '/opt/glance'
-        self.python = Python(self.prefix, '2.7')
-
         self.data_key = 'glance'
         self.data = {
             'user': 'glance',
@@ -20,11 +17,17 @@ class Glance(SimpleBase):
         }
 
         self.services = [
-            'os-glance-api',
-            'os-glance-registry',
+            'glance-api',
+            'glance-registry',
         ]
 
-    def init_data(self):
+    def init_before(self):
+        self.package = env['cluster']['os_package_map']['glance']
+        self.prefix = self.package.get('prefix', '/opt/glance')
+        self.python = Python(self.prefix)
+        self.tools = Tools(self.python)
+
+    def init_after(self):
         self.data.update({
             'keystone': env.cluster['keystone'],
         })
@@ -32,73 +35,42 @@ class Glance(SimpleBase):
     def setup(self):
         data = self.init()
 
-        openstack_util.setup_common(self.python)
+        if self.is_tag('package'):
+            self.tools.setup()
 
-        user.add(data['user'])
+            # developインストールだと依存解決できなくてコケる?
+            self.python.install_from_git(**self.package)
 
-        self.python.install('python-glanceclient')
+            if not filer.exists('/usr/bin/glance-manage'):
+                sudo('ln -s {0}/bin/glance-manage /usr/bin/'.format(self.prefix))
 
-        # developインストールだと依存解決できなくてコケる
-        pkg = self.python.install_from_git(
-            'glance',
-            'https://github.com/openstack/glance.git -b {0}'.format(data['branch']),
-            git_dir='/opt/ossrc/glance',
-            is_develop=False)
+        if self.is_tag('conf'):
+            # setup conf files
+            is_updated = filer.template(
+                '/etc/glance/glance-api.conf',
+                src='{0}/glance-api.conf.j2'.format(data['version']),
+                data=data,
+            )
 
-        filer.mkdir('/var/log/glance/', owner='{0}:{0}'.format(data['user']))
-        sudo('chown -R {0}:{0} /var/log/glance/'.format(data['user']))
-        filer.mkdir('/var/lib/glance/images', owner='{0}:{0}'.format(data['user']))
+            is_updated = filer.template(
+                '/etc/glance/glance-registry.conf',
+                src='{0}/glance-registry.conf.j2'.format(data['version']),
+                data=data,
+            ) or is_updated
 
-        if not filer.exists('/etc/glance'):
-            sudo('cp -r {0}/etc/ /etc/glance/'.format(pkg['git_dir']))
-        if not filer.exists('/usr/bin/glance'):
-            sudo('ln -s {0}/bin/glance /usr/bin/'.format(self.prefix))
-        if not filer.exists('/usr/bin/glance-manage'):
-            sudo('ln -s {0}/bin/glance-manage /usr/bin/'.format(self.prefix))
+        if self.is_tag('data'):
+            sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))
 
-        # setup conf files
-        is_updated = filer.template(
-            '/etc/glance/glance-api.conf',
-            src='{0}/glance-api.conf.j2'.format(data['version']),
-            data=data,
-        )
+        if self.is_tag('conf', 'service'):
+            self.enable_services().start_services(pty=False)
+            if is_updated:
+                self.restart_services(pty=False)
 
-        is_updated = filer.template(
-            '/etc/glance/glance-registry.conf',
-            src='{0}/glance-registry.conf.j2'.format(data['version']),
-            data=data,
-        ) or is_updated
-
-        option = '--config-file /etc/glance/glance-api.conf'
-        is_updated = filer.template('/etc/systemd/system/os-glance-api.service',
-                                    '755', data={
-                                        'prefix': self.prefix,
-                                        'prog': 'glance-api',
-                                        'option': option,
-                                        'user': data['user'],
-                                    },
-                                    src='systemd.service') or is_updated
-
-        option = '--config-file /etc/glance/glance-registry.conf'
-        is_updated = filer.template('/etc/systemd/system/os-glance-registry.service',
-                                    '755', data={
-                                        'prefix': self.prefix,
-                                        'prog': 'glance-registry',
-                                        'option': option,
-                                        'user': data['user'],
-                                    },
-                                    src='systemd.service') or is_updated
-
-        sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))
-
-        self.enable_services().start_services(pty=False)
-        if is_updated:
-            self.restart_services(pty=False)
-
-        self.register_images()
+        if self.is_tag('data'):
+            self.register_images()
 
     def cmd(self, cmd):
-        return openstack_util.client_cmd('glance {0}'.format(cmd))
+        return self.tools.cmd('glance {0}'.format(cmd))
 
     def register_images(self):
         data = self.init()
@@ -116,5 +88,6 @@ class Glance(SimpleBase):
 
             create_cmd = 'image-create --name "{0}" --disk-format {1[disk-format]}' \
                 + ' --container-format {1[container-format]}' \
-                + ' --is-public {1[is-public]} < {2}'
+                + ' --property "is-public=True"' \
+                + ' --file {2}'
             self.cmd(create_cmd.format(image_name, image, image_file))
