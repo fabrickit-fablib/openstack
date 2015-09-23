@@ -18,6 +18,7 @@ class Tools(SimpleBase):
     def setup(self):
         self.init()
         yum.install_epel()
+        yum.install_rdo()
 
         if self.is_tag('package'):
             self.setup_python(self.python)

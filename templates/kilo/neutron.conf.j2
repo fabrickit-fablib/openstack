@@ -69,6 +69,7 @@ core_plugin = {{ core_plugin }}
 #
 # service_plugins =
 # Example: service_plugins = router,firewall,lbaas,vpnaas,metering
+service_plugins = {{ service_plugins }}
 
 # Paste configuration file
 # api_paste_config = api-paste.ini
@@ -79,6 +80,7 @@ core_plugin = {{ core_plugin }}
 # The default value is hostname of the machine.
 #
 # host =
+host = {{ my_ip }}
 
 # The strategy to be used for auth.
 # Supported values are 'keystone'(default), 'noauth'.
@@ -121,6 +123,7 @@ auth_strategy = {{ auth_strategy }}
 # Attention: the following parameter MUST be set to False if Neutron is
 # being used in conjunction with nova security groups
 # allow_overlapping_ips = False
+allow_overlapping_ips = True
 # Ensure that configured gateway is on subnet. For IPv6, validate only if
 # gateway is not a link local address. Deprecated, to be removed during the
 # K release, at which point the check will be mandatory.
@@ -667,6 +670,7 @@ rpc_backend={{ rpc_backend }}
 # root filter facility.
 # Change to "sudo" to skip the filtering and just run the command directly
 # root_helper = sudo
+root_helper =
 
 # Set to true to add comments to generated iptables rules that describe
 # each rule's purpose. (System must support the iptables comments module.)

@@ -25,7 +25,7 @@ class Horizon(SimpleBase):
     def init_before(self):
         self.package = env['cluster']['os_package_map']['horizon']
         self.prefix = self.package.get('prefix', '/usr')
-        self.python = Python(self.prefix, self.package.get('python', '2.7'))
+        self.python = Python(self.prefix)
         self.tools = Tools(self.python)
 
     def init_after(self):

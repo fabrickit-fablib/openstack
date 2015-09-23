@@ -1,0 +1,11 @@
+DEVICE={{ ovs_interface }}
+DEVICETYPE=ovs
+TYPE=OVSBridge
+BOOTPROTO=static
+NM_CONTROLLED=yes
+IPV6INIT=no
+PEERDNS=no
+ONBOOT=yes
+IPADDR={{ default_dev.ip }}
+NETMASK={{ default_dev.netmask }}
+GATEWAY={{ default_dev.gateway }}

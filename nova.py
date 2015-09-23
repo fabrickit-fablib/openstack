@@ -5,8 +5,8 @@ from fablib.python import Python
 from tools import Tools
 from fablib.base import SimpleBase
 
-MODE_CONTROLLER = 1
-MODE_COMPUTE = 2
+MODE_CONTROLLER = 'controller'
+MODE_COMPUTE = 'compute'
 
 
 class Nova(SimpleBase):

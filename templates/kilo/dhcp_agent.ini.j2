@@ -30,6 +30,7 @@ interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
 # The agent can use other DHCP drivers.  Dnsmasq is the simplest and requires
 # no additional setup of the DHCP server.
 # dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq
+dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq
 
 # Allow overlapping IP (Must have kernel build with CONFIG_NET_NS=y and
 # iproute2 package that supports namespaces). This option is deprecated and
@@ -85,6 +86,7 @@ interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
 # you are sure that your version of iproute does not suffer from the problem.
 # If True, namespaces will be deleted when a dhcp server is disabled.
 # dhcp_delete_namespaces = False
+dhcp_delete_namespaces = True
 
 # Timeout for ovs-vsctl commands.
 # If the timeout expires, ovs commands will fail with ALARMCLOCK error.
