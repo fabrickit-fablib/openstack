@@ -23,6 +23,7 @@ class Nova(SimpleBase):
             self.services = [
                 'nova-api',
                 'nova-cert',
+                'nova-console',
                 'nova-consoleauth',
                 'nova-scheduler',
                 'nova-conductor',

@@ -14,9 +14,9 @@ class Cinder(SimpleBase):
         }
 
         self.services = [
-            'os-cinder-api',
-            'os-cinder-volume',
-            'os-cinder-scheduler',
+            'cinder-api',
+            'cinder-volume',
+            'cinder-scheduler',
         ]
 
     def init_before(self):
@@ -37,8 +37,8 @@ class Cinder(SimpleBase):
 
         self.python.install_from_git(**self.package)
 
-        if not filer.exists('/usr/bin/cinder-manage'):
-            sudo('ln -s {0}/bin/cinder-manage /usr/bin/'.format(self.prefix))
+        # if not filer.exists('/usr/bin/cinder-manage'):
+        #     sudo('ln -s {0}/bin/cinder-manage /usr/bin/'.format(self.prefix))
 
         # setup conf files
         is_updated = filer.template(
@@ -52,8 +52,6 @@ class Cinder(SimpleBase):
         self.enable_services().start_services(pty=False)
         if is_updated:
             self.restart_services(pty=False)
-
-        self.register_images()
 
     def cmd(self, cmd):
         return self.tools.cmd('cinder {0}'.format(cmd))

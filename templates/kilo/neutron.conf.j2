@@ -80,7 +80,7 @@ service_plugins = {{ service_plugins }}
 # The default value is hostname of the machine.
 #
 # host =
-host = {{ my_ip }}
+host = {{ node.host }}
 
 # The strategy to be used for auth.
 # Supported values are 'keystone'(default), 'noauth'.
@@ -175,6 +175,7 @@ allow_overlapping_ips = True
 # Seconds to regard the agent as down; should be at least twice
 # report_interval, to be sure the agent is down for good
 # agent_down_time = 75
+agent_down_time = {{ agent_down_time }}
 # ===========  end of items for agent management extension =====
 
 # =========== items for agent scheduler extension =============
@@ -482,19 +483,23 @@ rabbit_virtual_host={{ rabbit_virtual_host }}
 # How frequently to retry connecting with RabbitMQ. (integer
 # value)
 # rabbit_retry_interval=1
+rabbit_retry_interval={{ rabbit_retry_interval }}
 
 # How long to backoff for between retries when connecting to
 # RabbitMQ. (integer value)
 # rabbit_retry_backoff=2
+rabbit_retry_backoff={{ rabbit_retry_backoff }}
 
 # Maximum number of RabbitMQ connection retries. Default is 0
 # (infinite retry count). (integer value)
 # rabbit_max_retries=0
+rabbit_max_retries={{ rabbit_max_retries }}
 
 # Use HA queues in RabbitMQ (x-ha-policy: all). If you change
 # this option, you must wipe the RabbitMQ database. (boolean
 # value)
 # rabbit_ha_queues=false
+rabbit_ha_queues={{ rabbit_ha_queues }}
 
 # If passed, use a fake RabbitMQ provider. (boolean value)
 # fake_rabbit=false
@@ -696,7 +701,7 @@ root_helper =
 # =========== items for agent management extension =============
 # seconds between nodes reporting state to server; should be less than
 # agent_down_time, best if it is half or less than agent_down_time
-report_interval = 120
+report_interval = {{ agent.report_interval }}
 
 # ===========  end of items for agent management extension =====
 
