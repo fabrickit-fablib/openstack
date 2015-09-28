@@ -91,14 +91,24 @@ class Neutron(SimpleBase):
                 data=data,
             ) or is_updated
 
+            if self.data['version'] == 'kilo':
+                linuxbridge_conf = '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini'
+            elif self.data['version'] == 'liberty':
+                linuxbridge_conf = '/etc/neutron/plugins/ml2/linuxbridge_conf.ini'
+
             is_updated = filer.template(
-                '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini',
+                linuxbridge_conf,
                 src='{0}/linuxbridge_conf.ini.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 
+            if self.data['version'] == 'kilo':
+                ovs_conf = '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini'
+            elif self.data['version'] == 'liberty':
+                ovs_conf = '/etc/neutron/plugins/ml2/ovs_neutron_plugin.ini'
+
             is_updated = filer.template(
-                '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini',
+                ovs_conf,
                 src='{0}/ovs_neutron_plugin.ini.j2'.format(data['version']),
                 data=data,
             ) or is_updated
@@ -122,10 +132,7 @@ class Neutron(SimpleBase):
             ) or is_updated
 
         if self.is_tag('data'):
-            option = '--config-file /etc/neutron/neutron.conf' \
-                + ' --config-file /etc/neutron/plugins/ml2/ml2_conf.ini' \
-                + ' --config-file /etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini'
-
+            option = '--config-file /etc/neutron/neutron.conf'
             run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
 
         if self.is_tag('service'):

@@ -48,13 +48,13 @@ class Glance(SimpleBase):
             # setup conf files
             is_updated = filer.template(
                 '/etc/glance/glance-api.conf',
-                src='{0}/glance-api.conf.j2'.format(data['version']),
+                src='kilo/glance-api.conf.j2'.format(data['version']),
                 data=data,
             )
 
             is_updated = filer.template(
                 '/etc/glance/glance-registry.conf',
-                src='{0}/glance-registry.conf.j2'.format(data['version']),
+                src='kilo/glance-registry.conf.j2'.format(data['version']),
                 data=data,
             ) or is_updated
 

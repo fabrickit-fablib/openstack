@@ -37,8 +37,8 @@ physical_interface_mappings = {{ linuxbridge.physical_interface_mappings|join(',
 [vxlan]
 # (BoolOpt) enable VXLAN on the agent
 # VXLAN support can be enabled when agent is managed by ml2 plugin using
-# linuxbridge mechanism driver. Useless if set while using linuxbridge plugin.
-# enable_vxlan = False
+# linuxbridge mechanism driver.
+enable_vxlan = {{ linuxbridge.enable_vxlan }}
 #
 # (IntOpt) use specific TTL for vxlan interface protocol packets
 # ttl =
@@ -75,7 +75,9 @@ physical_interface_mappings = {{ linuxbridge.physical_interface_mappings|join(',
 # Firewall driver for realizing neutron security group function
 # firewall_driver = neutron.agent.firewall.NoopFirewallDriver
 # Example: firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
+firewall_driver = neutron.agent.firewall.NoopFirewallDriver
 
 # Controls if neutron security group is enabled or not.
 # It should be false when you use nova security group.
 # enable_security_group = True
+enable_security_group = False
