@@ -94,7 +94,7 @@ class Neutron(SimpleBase):
             if self.data['version'] == 'kilo':
                 linuxbridge_conf = '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini'
             elif self.data['version'] == 'liberty':
-                linuxbridge_conf = '/etc/neutron/plugins/ml2/linuxbridge_conf.ini'
+                linuxbridge_conf = '/etc/neutron/plugins/ml2/linuxbridge_agent.ini'
 
             is_updated = filer.template(
                 linuxbridge_conf,
@@ -105,19 +105,20 @@ class Neutron(SimpleBase):
             if self.data['version'] == 'kilo':
                 ovs_conf = '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini'
             elif self.data['version'] == 'liberty':
-                ovs_conf = '/etc/neutron/plugins/ml2/ovs_neutron_plugin.ini'
+                ovs_conf = '/etc/neutron/plugins/ml2/openvswitch_agent.ini'
 
-            is_updated = filer.template(
-                ovs_conf,
-                src='{0}/ovs_neutron_plugin.ini.j2'.format(data['version']),
-                data=data,
-            ) or is_updated
+            if self.data['ml2']['mechanism_drivers'] == 'openvswitch':
+                is_updated = filer.template(
+                    ovs_conf,
+                    src='{0}/ovs_neutron_plugin.ini.j2'.format(data['version']),
+                    data=data,
+                ) or is_updated
 
-            is_updated = filer.template(
-                '/etc/neutron/l3_agent.ini',
-                src='{0}/l3_agent.ini.j2'.format(data['version']),
-                data=data,
-            ) or is_updated
+                is_updated = filer.template(
+                    '/etc/neutron/l3_agent.ini',
+                    src='{0}/l3_agent.ini.j2'.format(data['version']),
+                    data=data,
+                ) or is_updated
 
             is_updated = filer.template(
                 '/etc/neutron/dhcp_agent.ini',
@@ -132,8 +133,9 @@ class Neutron(SimpleBase):
             ) or is_updated
 
         if self.is_tag('data'):
-            option = '--config-file /etc/neutron/neutron.conf'
-            run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
+            if self.mode == MODE_CONTROLLER:
+                option = '--config-file /etc/neutron/neutron.conf'
+                run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
