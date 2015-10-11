@@ -36,9 +36,9 @@ class Tools(SimpleBase):
         python.setup()
         Package('mysql-devel').install()
         Package('mysql').install()
-        python.install('mysql-python')
+        python.install('PyMySQL')
         # SQLAlchemy==0.9.10 is bad sql
-        python.install('SQLAlchemy==0.9.8')
+        # python.install('SQLAlchemy==0.9.8')
 
     def cmd(self, cmd):
         keystone = env.cluster['keystone']

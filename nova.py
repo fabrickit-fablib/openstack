@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from fabkit import sudo, env, Package, filer
+from fabkit import sudo, env, Package, filer, api
 from fablib.python import Python
 from tools import Tools
 from fablib.base import SimpleBase
@@ -156,3 +156,14 @@ class Nova(SimpleBase):
                 flavor = map(lambda f: str(f), flavor)
                 options = ' '.join(flavor)
                 self.cmd("flavor-create --is-public true {0} auto {1}".format(flavor_name, options))
+
+    def create_flavor(self, name, ram, disk, vcpu):
+        with api.warn_only():
+            result = self.cmd("flavor-list 2>/dev/null | grep ' {0} '".format(name))
+
+        if result.return_code == 0:
+            return
+
+        else:
+            self.cmd("flavor-create --is-public true {0} auto {1} {2} {3}".format(
+                name, ram, disk, vcpu))

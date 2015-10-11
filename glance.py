@@ -46,48 +46,54 @@ class Glance(SimpleBase):
 
         if self.is_tag('conf'):
             # setup conf files
-            is_updated = filer.template(
-                '/etc/glance/glance-api.conf',
-                src='kilo/glance-api.conf.j2'.format(data['version']),
-                data=data,
-            )
+            if filer.template(
+                    '/etc/glance/glance-api.conf',
+                    src='kilo/glance-api.conf.j2'.format(data['version']),
+                    data=data):
+                self.handlers['restart_glance-api'] = True
 
-            is_updated = filer.template(
-                '/etc/glance/glance-registry.conf',
-                src='kilo/glance-registry.conf.j2'.format(data['version']),
-                data=data,
-            ) or is_updated
+            if filer.template(
+                    '/etc/glance/glance-registry.conf',
+                    src='kilo/glance-registry.conf.j2'.format(data['version']),
+                    data=data):
+                self.handlers['restart_glance-registry'] = True
 
         if self.is_tag('data'):
             sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))
 
         if self.is_tag('conf', 'service'):
             self.enable_services().start_services(pty=False)
-            if is_updated:
-                self.restart_services(pty=False)
-
-        if self.is_tag('data'):
-            self.register_images()
+            self.exec_handlers()
 
     def cmd(self, cmd):
+        self.init()
         return self.tools.cmd('glance {0}'.format(cmd))
 
-    def register_images(self):
-        data = self.init()
+    def create_image(self, image_name, image_url, disk_format='qcow2', container_format='bare',
+                     property='is_public=True'):
+        self.init()
 
-        result = self.cmd("image-list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
-        image_list = result.split('\r\n')
+        result = self.cmd(
+            "image-list 2>/dev/null | grep ' {0} ' | awk '{{print $2}}'".format(image_name))
 
-        for image_name, image in data['images'].items():
-            if image_name in image_list:
-                continue
+        if len(result) > 0:
+            return result
 
-            image_file = '/tmp/{0}'.format(image_name)
-            if not filer.exists(image_file):
-                run('wget {0} -O {1}'.format(image['url'], image_file))
+        image_file = '/tmp/{0}'.format(image_name)
+        if not filer.exists(image_file):
+            run('wget {0} -O {1}'.format(image_url, image_file))
 
-            create_cmd = 'image-create --name "{0}" --disk-format {1[disk-format]}' \
-                + ' --container-format {1[container-format]}' \
-                + ' --property "is-public=True"' \
-                + ' --file {2}'
-            self.cmd(create_cmd.format(image_name, image, image_file))
+        create_cmd = 'image-create --name "{0}" --disk-format {1}' \
+            + ' --container-format {2}' \
+            + ' --property "{3}"' \
+            + ' --file {4}'
+        result = self.cmd(create_cmd.format(
+            image_name, disk_format, container_format, property, image_file))
+
+        result = self.cmd(
+            "image-list 2>/dev/null | grep ' {0} ' | awk '{{print $2}}'".format(image_name))
+
+        if len(result) > 0:
+            return result
+
+        raise Exception('Failed Create Image: {0}'.format(image_name))
