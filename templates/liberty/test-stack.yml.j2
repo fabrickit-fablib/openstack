@@ -1,16 +1,41 @@
 heat_template_version: 2014-10-16
-description: A simple server.
-
+description: A simple auto scaling group
 resources:
-  server:
-    type: OS::Nova::Server
+  group:
+    type: OS::Heat::AutoScalingGroup
     properties:
-      image: {{ image_id }}
-      flavor: {{ flavor }}
-      networks:
-      - network: {{ net_id }}
+      cooldown: 60
+      desired_capacity: 1
+      max_size: 3
+      min_size: 1
+      resource:
+        type: OS::Nova::Server
+        properties:
+          image: ad29f472-e2b5-44b8-adcd-4a221aa7fa79
+          flavor: test-flavor
+          networks:
+            - network: 183f9b60-f663-40ed-8fd4-27cb3add3c90
+          # user_data_format: RAW
+          # user_data: |
+          #   #!/bin/sh
+          #   while [ 1 ] ; do echo $((13**99)) 1>/dev/null 2>&1; done
 
-outputs:
-  private_ip:
-    description: IP address of the server in the private network
-    value: { get_attr: [ server, first_address ] }
+  scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: { get_resource: group }
+      cooldown: 60
+      scaling_adjustment: 1
+
+  cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [scaleup_policy, alarm_url]}
+      comparison_operator: gt

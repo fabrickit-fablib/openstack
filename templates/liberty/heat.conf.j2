@@ -158,6 +158,7 @@ heat_waitcondition_server_url = {{ heat_waitcondition_server_url }}
 
 # Keystone role for heat template-defined users. (string value)
 #heat_stack_user_role = heat_stack_user
+heat_stack_user_role = admin
 
 # Keystone domain ID which contains heat template-defined users. If this option
 # is set, stack_user_domain_name option will be ignored. (string value)
@@ -241,12 +242,14 @@ stack_domain_admin_password = {{ stack_domain_admin_password }}
 # Print debugging output (set logging level to DEBUG instead of default INFO
 # level). (boolean value)
 #debug = false
+debug = {{ debug }}
 
 # If set to false, will disable INFO logging level, making WARNING the default.
 # (boolean value)
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #verbose = true
+verbose = {{ verbose }}
 
 # The name of a logging configuration file. This file is appended to any
 # existing logging configuration files. For details about logging configuration
