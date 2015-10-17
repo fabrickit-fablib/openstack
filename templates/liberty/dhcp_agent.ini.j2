@@ -14,7 +14,11 @@
 # Example of interface_driver option for OVS based plugins(OVS, Ryu, NEC, NVP,
 # BigSwitch/Floodlight)
 # interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
+{% if ml2.mechanism_drivers == 'linuxbridge' %}
+interface_driver = neutron.agent.linux.interface.BridgeInterfaceDriver
+{% else %}
 interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
+{% endif %}
 
 # Name of Open vSwitch bridge to use
 # ovs_integration_bridge = br-int

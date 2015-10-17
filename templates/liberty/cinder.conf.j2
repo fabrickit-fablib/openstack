@@ -621,6 +621,7 @@ auth_strategy=keystone
 # be backed by a unique [CONFIG] group with its options (list
 # value)
 #enabled_backends=<None>
+enabled_backends = {{ enabled_backends|join(',') }}
 
 # Whether snapshots count against gigabyte quota (boolean
 # value)
@@ -3004,3 +3005,14 @@ rabbit_virtual_host={{ rabbit_virtual_host }}
 
 [oslo_concurrency]
 lock_path = /var/lock/cinder
+
+{% for name, backend in backends.items() %}
+{% if backend.type == 'lvm' %}
+[{{ name }}]
+volume_backend_name={{ name }}
+volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
+volume_group = {{ backend.volume_group }}
+iscsi_protocol = iscsi
+iscsi_helper = lioadm
+{% endif %}
+{% endfor %}

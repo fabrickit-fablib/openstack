@@ -1,6 +1,7 @@
 # coding: utf-8
 
-from fabkit import env, sudo, filer
+import re
+from fabkit import env, sudo, filer, Service
 from fablib.python import Python
 from tools import Tools
 from fablib.base import SimpleBase
@@ -19,6 +20,13 @@ class Cinder(SimpleBase):
             'cinder-scheduler',
         ]
 
+        self.packages = [
+            'targetcli',
+            'scsi-target-utils',
+            'qemu-kvm',
+            'lvm2'
+        ]
+
     def init_before(self):
         self.package = env['cluster']['os_package_map']['cinder']
         self.prefix = self.package.get('prefix', '/opt/cinder')
@@ -30,15 +38,18 @@ class Cinder(SimpleBase):
             'keystone': env.cluster['keystone'],
         })
 
+        self.lvm2_lvmetad = Service('lvm2-lvmetad')
+        self.tgtd = Service('tgtd')
+
     def setup(self):
         data = self.init()
 
         self.tools.setup()
 
+        self.install_packages()
         self.python.install_from_git(**self.package)
 
-        # if not filer.exists('/usr/bin/cinder-manage'):
-        #     sudo('ln -s {0}/bin/cinder-manage /usr/bin/'.format(self.prefix))
+        self.setup_lvm()
 
         # setup conf files
         is_updated = filer.template(
@@ -55,3 +66,31 @@ class Cinder(SimpleBase):
 
     def cmd(self, cmd):
         return self.tools.cmd('cinder {0}'.format(cmd))
+
+    def setup_lvm(self):
+        data = self.init()
+        lvm_backend = None
+        for backend in data['backends'].values():
+            if backend['type'] == 'lvm':
+                lvm_backend = backend
+
+        if len(lvm_backend) == 0:
+            return
+
+        volume_group = lvm_backend['volume_group']
+        filer.template('/etc/cinder/lvm.conf', data={
+            'volume_group': volume_group,
+        })
+
+        self.lvm2_lvmetad.start().enable()
+        self.tgtd.start().enable()
+
+        volume_path = '/tmp/{0}'.format(volume_group)
+        if not filer.exists(volume_path):
+            sudo('dd if=/dev/zero of={0} bs=1 count=0 seek=20G'.format(volume_path))
+
+        result = sudo('pvscan')
+        if re.search(' {0} '.format(volume_group), result) == -1:
+            sudo('losetup /dev/loop2 {0}'.format(volume_path))
+            sudo('pvcreate /dev/loop2')
+            sudo('vgcreate {0} /dev/loop2'.format(volume_group))

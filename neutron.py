@@ -190,6 +190,8 @@ class Neutron(SimpleBase):
 
     def setup_ovs_network(self):
         data = self.init()
+        if data['ml2']['mechanism_drivers'] != 'ovs':
+            return
 
         Service('openvswitch').start().enable()
 
