@@ -2,8 +2,8 @@
 
 from fabkit import env, sudo, filer
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
+import utils
 
 
 class Heat(SimpleBase):
@@ -21,7 +21,6 @@ class Heat(SimpleBase):
         self.package = env['cluster']['os_package_map']['heat']
         self.prefix = self.package.get('prefix', '/opt/heat')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -32,10 +31,8 @@ class Heat(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.tools.setup()
-
-            # developインストールだと依存解決できなくてコケる?
-            self.python.install_from_git(**self.package)
+            self.python.setup()
+            self.python.setup_package(**self.package)
 
         if self.is_tag('conf'):
             # setup conf files
@@ -45,8 +42,8 @@ class Heat(SimpleBase):
                 data=data,
             )
 
-        if self.is_tag('data'):
-            self.tools.cmd('/opt/heat/bin/heat-keystone-setup-domain \
+        if self.is_tag('data') and env.host == env.hosts[0]:
+            utils.oscmd('/opt/heat/bin/heat-keystone-setup-domain \
                             --stack-user-domain-name {0} \
                             --stack-domain-admin {1} \
                             --stack-domain-admin-password {2}'.format(
@@ -62,4 +59,4 @@ class Heat(SimpleBase):
                 self.restart_services(pty=False)
 
     def cmd(self, cmd):
-        return self.tools.cmd('heat {0}'.format(cmd))
+        return utils.oscmd('heat {0}'.format(cmd))

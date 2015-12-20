@@ -2,8 +2,8 @@
 
 from fabkit import env, sudo, filer, run
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
+import utils
 
 
 class Glance(SimpleBase):
@@ -25,7 +25,6 @@ class Glance(SimpleBase):
         self.package = env['cluster']['os_package_map']['glance']
         self.prefix = self.package.get('prefix', '/opt/glance')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -36,13 +35,8 @@ class Glance(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.tools.setup()
-
-            # developインストールだと依存解決できなくてコケる?
-            self.python.install_from_git(**self.package)
-
-            if not filer.exists('/usr/bin/glance-manage'):
-                sudo('ln -s {0}/bin/glance-manage /usr/bin/'.format(self.prefix))
+            self.python.setup()
+            self.python.setup_package(**self.package)
 
         if self.is_tag('conf'):
             # setup conf files
@@ -58,7 +52,7 @@ class Glance(SimpleBase):
                     data=data):
                 self.handlers['restart_glance-registry'] = True
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))
 
         if self.is_tag('conf', 'service'):
@@ -67,7 +61,7 @@ class Glance(SimpleBase):
 
     def cmd(self, cmd):
         self.init()
-        return self.tools.cmd('glance {0}'.format(cmd))
+        return utils.oscmd('glance {0}'.format(cmd))
 
     def create_image(self, image_name, image_url, disk_format='qcow2', container_format='bare',
                      property='is_public=True'):

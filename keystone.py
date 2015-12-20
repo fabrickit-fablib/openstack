@@ -4,7 +4,6 @@ import time
 from fabkit import sudo, api, filer, run, env
 from fablib.python import Python
 from fablib.base import SimpleBase
-from tools import Tools
 
 
 class Keystone(SimpleBase):
@@ -25,7 +24,6 @@ class Keystone(SimpleBase):
         self.package = env['cluster']['os_package_map']['keystone']
         self.prefix = self.package.get('prefix', '/opt/keystone')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -42,10 +40,9 @@ class Keystone(SimpleBase):
         version = data['version']
 
         if self.is_tag('package'):
-            self.tools.setup()
-            self.python.install_from_git(**self.package)
-            if not filer.exists('/usr/bin/keystone-manage'):
-                sudo('ln -s {0}/bin/keystone-manage /usr/bin/'.format(self.prefix))
+            self.python.setup()
+            self.python.setup_package(**self.package)
+
         is_updated = False
         if self.is_tag('conf'):
             is_updated = filer.template(
@@ -62,7 +59,7 @@ class Keystone(SimpleBase):
             if is_updated:
                 self.restart_services(pty=False)
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             time.sleep(3)
             self.create_tenant('admin', 'Admin Project')
             self.create_role('admin')
@@ -134,7 +131,3 @@ class Keystone(SimpleBase):
             --adminurl={0[adminurl]} \\
             --region {0[region]} \\
             {0[type]}'''.format(service))
-
-    def dump_openstackrc(self):
-        data = self.init()
-        self.tools.dump_openstackrc(data)

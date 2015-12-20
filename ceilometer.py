@@ -2,8 +2,8 @@
 
 from fabkit import env, filer, sudo
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
+import utils
 
 
 class Ceilometer(SimpleBase):
@@ -25,7 +25,6 @@ class Ceilometer(SimpleBase):
         self.package = env['cluster']['os_package_map']['ceilometer']
         self.prefix = self.package.get('prefix', '/opt/ceilometer')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -36,8 +35,8 @@ class Ceilometer(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.tools.setup()
-            self.python.install_from_git(**self.package)
+            self.python.setup()
+            self.python.setup_package(**self.package)
 
         if self.is_tag('conf'):
             is_updated = filer.template(
@@ -46,7 +45,7 @@ class Ceilometer(SimpleBase):
                 data=data,
             )
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             sudo('{0}/bin/ceilometer-dbsync'.format(self.prefix))
 
         if self.is_tag('conf', 'service'):
@@ -55,4 +54,4 @@ class Ceilometer(SimpleBase):
                 self.restart_services(pty=False)
 
     def cmd(self, cmd):
-        return self.tools.cmd('ceilometer {0}'.format(cmd))
+        return utils.oscmd('ceilometer {0}'.format(cmd))

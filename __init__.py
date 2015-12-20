@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from bootstrap import Bootstrap  # noqa
 from keystone import Keystone  # noqa
 from glance import Glance  # noqa
 from cinder import Cinder  # noqa

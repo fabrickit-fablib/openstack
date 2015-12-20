@@ -2,7 +2,6 @@
 
 from fabkit import sudo, env, filer
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
 
 
@@ -26,7 +25,6 @@ class Horizon(SimpleBase):
         self.package = env['cluster']['os_package_map']['horizon']
         self.prefix = self.package.get('prefix', '/usr')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -38,10 +36,9 @@ class Horizon(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.tools.setup()
             self.install_packages()
-
-            self.python.install_from_git(**self.package)
+            self.python.setup()
+            self.python.setup_package(**self.package)
 
             sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py collectstatic --noinput"'.format(
                 self.prefix, self.python.get_cmd()))

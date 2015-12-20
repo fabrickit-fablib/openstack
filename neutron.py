@@ -5,8 +5,8 @@ import struct
 import time
 from fabkit import sudo, env, filer, run, Service, api
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
+import utils
 
 MODE_CONTROLLER = 'controller'
 MODE_COMPUTE = 'compute'
@@ -32,7 +32,6 @@ class Neutron(SimpleBase):
         self.package = env['cluster']['os_package_map']['neutron']
         self.prefix = self.package.get('prefix', '/opt/neutron')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
         neutron = env.cluster['neutron']
 
         self.services = []
@@ -63,11 +62,10 @@ class Neutron(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.tools.setup()
+            self.python.setup()
             self.install_packages()
+            self.python.setup_package(**self.package)
             sudo('modprobe tun')
-
-            self.python.install_from_git(**self.package)
 
         if self.is_tag('network') and self.mode == MODE_NETWORK:
             self.setup_ovs_network()
@@ -132,7 +130,7 @@ class Neutron(SimpleBase):
                 data=data,
             ) or is_updated
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             if self.mode == MODE_CONTROLLER:
                 option = '--config-file /etc/neutron/neutron.conf'
                 run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
@@ -143,7 +141,7 @@ class Neutron(SimpleBase):
             if is_updated:
                 self.restart_services(pty=False)
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             if self.mode == MODE_CONTROLLER:
                 time.sleep(5)
                 self.create_nets()
@@ -152,7 +150,7 @@ class Neutron(SimpleBase):
         return 0
 
     def cmd(self, cmd):
-        return self.tools.cmd('neutron {0}'.format(cmd))
+        return utils.oscmd('neutron {0}'.format(cmd))
 
     def create_nets(self):
         data = self.init()

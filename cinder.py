@@ -3,8 +3,8 @@
 import re
 from fabkit import env, sudo, filer, Service
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
+import utils
 
 
 class Cinder(SimpleBase):
@@ -22,7 +22,6 @@ class Cinder(SimpleBase):
 
         self.packages = [
             'targetcli',
-            'scsi-target-utils',
             'qemu-kvm',
             'lvm2'
         ]
@@ -31,7 +30,6 @@ class Cinder(SimpleBase):
         self.package = env['cluster']['os_package_map']['cinder']
         self.prefix = self.package.get('prefix', '/opt/cinder')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -44,10 +42,10 @@ class Cinder(SimpleBase):
     def setup(self):
         data = self.init()
 
-        self.tools.setup()
-
         self.install_packages()
-        self.python.install_from_git(**self.package)
+
+        self.python.setup()
+        self.python.setup_package(**self.package)
 
         self.setup_lvm()
 
@@ -65,7 +63,7 @@ class Cinder(SimpleBase):
             self.restart_services(pty=False)
 
     def cmd(self, cmd):
-        return self.tools.cmd('cinder {0}'.format(cmd))
+        return utils.oscmd('cinder {0}'.format(cmd))
 
     def setup_lvm(self):
         data = self.init()

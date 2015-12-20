@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from fabkit import filer, env
-from tools import Tools
 from keystone import Keystone
 from glance import Glance
 from nova import Nova

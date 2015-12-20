@@ -2,8 +2,8 @@
 
 from fabkit import sudo, env, Package, filer, api
 from fablib.python import Python
-from tools import Tools
 from fablib.base import SimpleBase
+import utils
 
 MODE_CONTROLLER = 'controller'
 MODE_COMPUTE = 'compute'
@@ -41,7 +41,6 @@ class Nova(SimpleBase):
         self.package = env['cluster']['os_package_map']['nova']
         self.prefix = self.package.get('prefix', '/usr')
         self.python = Python(self.prefix)
-        self.tools = Tools(self.python)
 
     def init_after(self):
         self.data.update({
@@ -60,7 +59,6 @@ class Nova(SimpleBase):
         is_updated = False
 
         if self.is_tag('package'):
-            self.tools.setup()
             if self.mode == MODE_CONTROLLER:
                 Package('novnc').install()
 
@@ -79,7 +77,8 @@ class Nova(SimpleBase):
                 # for src in libvirt_python:
                 #     sudo('ln -s {0} {1}'.format(src, site_packages))
 
-            self.python.install_from_git(**self.package)
+            self.python.setup()
+            self.python.setup_package(**self.package)
 
             if not filer.exists('/usr/bin/nova'):
                 sudo('ln -s {0}/bin/nova /usr/bin/'.format(self.prefix))
@@ -105,7 +104,7 @@ class Nova(SimpleBase):
                 data=data,
             ) or is_updated
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             if self.mode == MODE_CONTROLLER:
                 sudo('nova-manage db sync')
 
@@ -114,7 +113,7 @@ class Nova(SimpleBase):
             if is_updated:
                 self.restart_services(pty=False)
 
-        if self.is_tag('data'):
+        if self.is_tag('data') and env.host == env.hosts[0]:
             if self.mode == MODE_CONTROLLER:
                 self.sync_flavors()
 
@@ -122,7 +121,7 @@ class Nova(SimpleBase):
 
     def cmd(self, cmd):
         self.init()
-        return self.tools.cmd('nova {0}'.format(cmd))
+        return utils.oscmd('nova {0}'.format(cmd))
 
     def check(self):
         self.nova_api.status()
