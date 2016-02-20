@@ -1,0 +1,237 @@
+keystone:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: True
+  admin_user: admin
+  admin_password: adminpass
+  service_tenant_name: service
+  service_region: RegionOne
+  service_user: service
+  service_password: service_password
+  auth_host: ${#node_map.openstack.hosts.0}
+  auth_port: 35357
+  auth_protocol: http
+  identity_uri: ${#keystone.auth_protocol}://${#keystone.auth_host}:${#keystone.auth_port}
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/keystone
+  services:
+    keystone:
+      type: identity
+      region: RegionOne
+      description: Openstack Identity Service
+      publicurl: http://${#keystone.host}:5000/v2.0
+      internalurl: http://${#keystone.host}:5000/v2.0
+      adminurl: http://${#keystone.host}:35357/v2.0
+    glance:
+      type: image
+      region: RegionOne
+      description: Openstack Image Service
+      publicurl: http://${#glance.host}:9292
+      internalurl: http://${#glance.host}:9292
+      adminurl: http://${#glance.host}:9292
+    nova:
+      type: compute
+      region: RegionOne
+      description: Openstack Compute Service
+      publicurl: http://${#nova.host}:8774/v2/%\(tenant_id\)s
+      internalurl: http://${#nova.host}:8774/v2/%\(tenant_id\)s
+      adminurl: http://${#nova.host}:8774/v2/%\(tenant_id\)s
+    neutron:
+      type: network
+      region: RegionOne
+      description: Openstack Networking Service
+      publicurl: http://${#neutron.host}:9696
+      internalurl: http://${#neutron.host}:9696
+      adminurl: http://${#neutron.host}:9696
+    cinder:
+      type: volume
+      region: RegionOne
+      description: Openstack Volume Service
+      publicurl: http://${#cinder.host}:8776/v1/%\(tenant_id\)s
+      internalurl: http://${#cinder.host}:8776/v1/%\(tenant_id\)s
+      adminurl: http://${#cinder.host}:8776/v1/%\(tenant_id\)s
+    cinderv2:
+      type: volumev2
+      region: RegionOne
+      description: Openstack Volume Service
+      publicurl: http://${#cinder.host}:8776/v2/%\(tenant_id\)s
+      internalurl: http://${#cinder.host}:8776/v2/%\(tenant_id\)s
+      adminurl: http://${#cinder.host}:8776/v2/%\(tenant_id\)s
+    heat:
+      type: orchestration
+      region: RegionOne
+      description: Openstack Orchestration Service
+      publicurl: http://${#heat.host}:8004/v1/%\(tenant_id\)s
+      internalurl: http://${#heat.host}:8004/v1/%\(tenant_id\)s
+      adminurl: http://${#heat.host}:8004/v1/%\(tenant_id\)s
+    ceilometer:
+      type: metering
+      region: RegionOne
+      description: Openstack Telemetry Service
+      publicurl: http://${#ceilometer.host}:8777
+      internalurl: http://${#ceilometer.host}:8777
+      adminurl: http://${#ceilometer.host}:8777
+
+glance:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: True
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/glance
+
+nova:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: True
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/nova
+  state_path: /var/lib/nova
+  rpc_backend: rabbit
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  reserved_host_disk_mb: 64
+  reserved_host_memory_mb: 32
+  novncproxy_base_url: http://${#nova.host}:6080/vnc_auto.html
+  auth_strategy: keystone
+  network_api_class: nova.network.neutronv2.api.API
+  neutron_url: http://${#nova.host}:9696
+  linuxnet_interface_driver: nova.network.linux_net.LinuxBridgeInterfaceDriver
+  firewall_driver: nova.virt.firewall.NoopFirewallDriver
+  security_group_api: nova
+  glance_host: ${#glance.host}
+  compute_driver: libvirt.LibvirtDriver
+  service_neutron_metadata_proxy: true
+  metadata_proxy_shared_secret: METADATA_SECRET
+  libvirt:
+    virt_type: kvm
+  flavors:
+    RAM_64M-DISC_2G-VCPUS_1: [64, 2, 1]
+    RAM_512M-DISC_10G-VCPUS_1: [512, 10, 1]
+    RAM_512M-DISC_20G-VCPUS_2: [512, 20, 2]
+    RAM_1024M-DISC_20G-VCPUS_2: [1024, 20, 2]
+    RAM_1024M-DISC_40G-VCPUS_4: [1024, 40, 4]
+    RAM_2048M-DISC_60G-VCPUS_6: [2048, 60, 6]
+
+
+neutron:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: True
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/neutron
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_retry_interval: 1
+  rabbit_retry_backoff: 2
+  rabbit_max_retries: 10
+  rabbit_ha_queues: true
+  auth_strategy: keystone
+  lock_path: /var/lock/subsys/neutron
+  nova_url: http://${#nova.host}:8774/v2/
+  service_plugins: router
+  agent_down_time: 120
+  agent:
+    # report_interval should be half or less than agent_down_time
+    report_interval: 60
+  ml2:
+    type_drivers: flat
+    tenant_network_types: flat
+    mechanism_drivers: "${require linuxbridge or openvswitch}"
+    flat_networks:
+      - physnet1
+  linuxbridge:
+    enable_vxlan: True
+    tenant_network_type: flat
+    network_vlan_ranges:
+      - physnet1
+    physical_interface_mappings:
+      - physnet1:eth0
+  dhcp:
+    enable: true
+  test_net: test_net
+  networks:
+    test_net:
+      options:
+        - provider:physical_network=physnet1
+        - provider:network_type=flat
+        - shared
+      subnets:
+        test_subnet:
+          cidr: 192.168.122.0/24
+          options:
+            - allocation-pool start=192.168.122.100,end=192.168.122.120
+
+horizon:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  time_zone: Asia/Tokyo
+  debug: True
+  template_debug: True
+
+cinder:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: True
+  verbose: True
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/cinder
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  enabled_backends: [lvm01]
+  backends:
+    lvm01:
+      type: lvm
+      size: 5G
+      volume_group: cinder-volumes
+
+heat:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: true
+  verbose: true
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/heat
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  heat_metadata_server_url: http://${#heat.host}:8000
+  heat_waitcondition_server_url: http://${#heat.host}:8000/v1/waitcondition
+  stack_domain_admin: heat
+  stack_domain_admin_password: heatpass
+  stack_user_domain_name: heatdomain
+  notification_driver: messagingv2
+
+ceilometer:
+  host: ${#node_map.openstack.hosts.0}
+  version: liberty
+  debug: true
+  verbose: true
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/ceilometer
+    metering_connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/metering
+    alarm_connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/alarm
+    event_connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/event
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  keystone: ${#keystone}
+  publisher:
+    telemetry_secret: telemetry_secret

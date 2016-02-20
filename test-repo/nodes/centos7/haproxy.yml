@@ -1,0 +1,14 @@
+haproxy:
+  clusters:
+    common:
+      hosts: ${#node_map.haproxy.hosts}
+      rings:
+        - bindnetaddr: 192.168.122.0
+          mcastport: 5405
+          nodes:
+            - 192.168.122.50
+            - 192.168.122.51
+      vip: 192.168.122.55
+      cidr_netmask: 24
+      monitor_interval: 30
+

@@ -1,0 +1,80 @@
+bootstrap:
+  status_flow: [1]
+
+mysql:
+  require:
+    openstack/bootstrap: 1
+  status_flow: [1]
+
+haproxy:
+  require:
+    openstack/bootstrap: 1
+  status_flow: [1]
+
+rabbitmq:
+  require:
+    openstack/bootstrap: 1
+  status_flow: [1]
+
+keystone:
+  status_flow: [1]
+  require:
+    openstack/bootstrap: 1
+    openstack/mysql: 1
+    openstack/haproxy: 1
+
+glance:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+
+cinder:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+
+nova:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+    openstack/rabbitmq: 1
+
+neutron:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+    openstack/rabbitmq: 1
+
+neutron_network:
+  status_flow: [1]
+  require:
+    openstack/neutron: 1
+
+heat:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+
+ceilometer:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+
+horizon:
+  status_flow: [1]
+  require:
+    openstack/keystone: 1
+    openstack/mysql: 1
+
+compute:
+  status_flow: [1]
+  require:
+    openstack/rabbitmq: 1
+    openstack/nova: 1
+    openstack/neutron: 1
