@@ -1,5 +1,5 @@
 haproxy:
-  clusters:
+  cluster_map:
     common:
       hosts: ${#node_map.haproxy.hosts}
       rings:

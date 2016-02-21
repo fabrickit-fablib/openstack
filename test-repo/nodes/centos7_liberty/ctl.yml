@@ -80,7 +80,7 @@ glance:
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   database:
     connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/glance
 
@@ -96,7 +96,7 @@ nova:
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   reserved_host_disk_mb: 64
   reserved_host_memory_mb: 32
   novncproxy_base_url: http://${#nova.host}:6080/vnc_auto.html
@@ -131,7 +131,7 @@ neutron:
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   rabbit_retry_interval: 1
   rabbit_retry_backoff: 2
   rabbit_max_retries: 10
@@ -190,7 +190,7 @@ cinder:
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   enabled_backends: [lvm01]
   backends:
     lvm01:
@@ -209,7 +209,7 @@ heat:
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   heat_metadata_server_url: http://${#heat.host}:8000
   heat_waitcondition_server_url: http://${#heat.host}:8000/v1/waitcondition
   stack_domain_admin: heat
@@ -231,7 +231,7 @@ ceilometer:
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhosts.openstack}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   keystone: ${#keystone}
   publisher:
     telemetry_secret: telemetry_secret

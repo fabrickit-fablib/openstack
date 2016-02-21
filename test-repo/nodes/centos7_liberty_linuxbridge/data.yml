@@ -1,0 +1,6 @@
+include:
+  - centos7_liberty
+
+neutron:
+  ml2:
+    mechanism_drivers: linuxbridge

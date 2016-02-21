@@ -1,6 +1,9 @@
 mysql:
   cluster_map:
     common:
+      host: ${#haproxy.cluster_map.common.vip}
+      port: 3306
+      hosts: ${#node_map.mysql.hosts}
       user_map:
         slave:
           user: slave
@@ -15,6 +18,5 @@ mysql:
             - '192.168.122.0/255.255.255.0'
           previleges: 'ALL PREVILEGES'
 
-      hosts: ${#node_map.mysql.hosts}
       replication:
         types: [master, master]
