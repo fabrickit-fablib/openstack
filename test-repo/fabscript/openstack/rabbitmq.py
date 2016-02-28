@@ -8,5 +8,6 @@ from fablib.rabbitmq import RabbitMQ
 def setup():
     rabbitmq = RabbitMQ()
     rabbitmq.setup()
+    rabbitmq.setup_cluster()
 
     return {'status': 1}

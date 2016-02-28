@@ -1,3 +1,5 @@
+db_connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:3306/keystone
+
 keystone:
   host: ${#node_map.openstack.hosts.0}
   version: liberty
@@ -13,7 +15,7 @@ keystone:
   auth_protocol: http
   identity_uri: ${#keystone.auth_protocol}://${#keystone.auth_host}:${#keystone.auth_port}
   database:
-    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.host}:${#mysql.cluster_map.common.port}/keystone
+    connection: ${#db_connection}
   services:
     keystone:
       type: identity

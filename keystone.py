@@ -52,7 +52,8 @@ class Keystone(SimpleBase):
             )
 
         if self.is_tag('data'):
-            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
+            if env.host == env.hosts[0]:
+                sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)

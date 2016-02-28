@@ -11,4 +11,48 @@ haproxy:
       vip: 192.168.122.55
       cidr_netmask: 24
       monitor_interval: 30
-
+      defaults:
+        - mode                    http
+        - log                     global
+        - option                  httplog
+        - option                  dontlognull
+        - option http-server-close
+        - option forwardfor       except 127.0.0.0/8
+        - option                  redispatch
+        - retries                 3
+        - timeout http-request    10s
+        - timeout queue           1m
+        - timeout connect         10s
+        - timeout client          1m
+        - timeout server          1m
+        - timeout http-keep-alive 10s
+        - timeout check           10s
+        - maxconn                 3000
+        - balance source
+      hastats:
+        enable: true
+        port: 49999
+        auth:
+          user: admin
+          pass: adminpass
+      listens:
+        - name: horizon
+          port: 80
+          options:
+            - option tcpka
+            - option httpchk
+            - option tcplog
+          servers:
+           - ctl1 192.168.122.50:10080 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:10080 check inter 2000 rise 2 fall 5
+        - name: mysql
+          port: 3306
+          options:
+            - mode tcp
+            - maxconn 1024
+            - timeout connect 500000
+            - timeout client 1000000
+            - timeout server 1000000
+          servers:
+           - ctl1 192.168.122.50:13306 check inter 2000 rise 2 fall 5 backup
+           - ctl2 192.168.122.51:13306 check inter 2000 rise 2 fall 5 backup
