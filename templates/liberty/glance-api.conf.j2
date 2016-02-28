@@ -157,7 +157,7 @@ bind_host = 0.0.0.0
 # Minimum value: 1
 # Maximum value: 65535
 #bind_port = <None>
-bind_port = 9292
+bind_port = {{ api_port }}
 
 # The number of child process workers that will be created to service
 # requests. The default will be equal to the number of CPUs available.
@@ -251,7 +251,7 @@ registry_host = 0.0.0.0
 # Minimum value: 1
 # Maximum value: 65535
 #registry_port = 9191
-registry_port = 9191
+registry_port = {{ registry_port }}
 
 # Whether to pass through the user token when making requests to the
 # registry. To prevent failures with token expiration during big files

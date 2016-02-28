@@ -1,6 +1,12 @@
 haproxy:
+  ctl_options:
+    - option tcpka
+    - option httpchk
+    - option tcplog
   cluster_map:
     common:
+      host: 192.168.122.55
+      vip: 192.168.122.55
       hosts: ${#node_map.haproxy.hosts}
       rings:
         - bindnetaddr: 192.168.122.0
@@ -8,7 +14,6 @@ haproxy:
           nodes:
             - 192.168.122.50
             - 192.168.122.51
-      vip: 192.168.122.55
       cidr_netmask: 24
       monitor_interval: 30
       defaults:
@@ -37,14 +42,11 @@ haproxy:
           pass: adminpass
       listens:
         - name: horizon
-          port: 80
-          options:
-            - option tcpka
-            - option httpchk
-            - option tcplog
+          port: 443
+          options: ${#haproxy.ctl_options}
           servers:
-           - ctl1 192.168.122.50:10080 check inter 2000 rise 2 fall 5
-           - ctl2 192.168.122.51:10080 check inter 2000 rise 2 fall 5
+           - ctl1 192.168.122.50:10443 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:10443 check inter 2000 rise 2 fall 5
         - name: mysql
           port: 3306
           options:
@@ -56,3 +58,77 @@ haproxy:
           servers:
            - ctl1 192.168.122.50:13306 check inter 2000 rise 2 fall 5 backup
            - ctl2 192.168.122.51:13306 check inter 2000 rise 2 fall 5 backup
+
+        - name: glance_api
+          port: 9292
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:19292 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:19292 check inter 2000 rise 2 fall 5
+        - name: glance_registry
+          port: 9191
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:19191 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:19191 check inter 2000 rise 2 fall 5
+
+        - name: keystone
+          port: 5000
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:15000 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:15000 check inter 2000 rise 2 fall 5
+        - name: keystone_admin
+          port: 35357
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:45357 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:45357 check inter 2000 rise 2 fall 5
+
+        - name: nova_api
+          port: 8774
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:18774 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:18774 check inter 2000 rise 2 fall 5
+        - name: nova_vncproxy
+          port: 6080
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:16080 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:16080 check inter 2000 rise 2 fall 5
+
+        - name: neutron_api
+          port: 9696
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:19696 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:19696 check inter 2000 rise 2 fall 5
+
+        - name: cinder_api
+          port: 8776
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:18776 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:18776 check inter 2000 rise 2 fall 5
+
+        - name: ceilometer_api
+          port: 8777
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:18777 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:18777 check inter 2000 rise 2 fall 5
+
+        - name: heat_api
+          port: 8004
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:18004 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:18004 check inter 2000 rise 2 fall 5
+
+        - name: swift_proxy
+          port: 8080
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:18080 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:18080 check inter 2000 rise 2 fall 5

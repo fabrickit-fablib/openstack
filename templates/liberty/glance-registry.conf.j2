@@ -130,7 +130,7 @@ bind_host = 0.0.0.0
 # Minimum value: 1
 # Maximum value: 65535
 #bind_port = <None>
-bind_port = 9191
+bind_port = {{ registry_port }}
 
 # The backlog value that will be used when creating the TCP listener
 # socket. (integer value)
@@ -158,6 +158,7 @@ backlog = 4096
 # requests. The default will be equal to the number of CPUs available.
 # (integer value)
 #workers = 4
+workers = 1
 
 # Maximum line size of message headers to be accepted. max_header_line
 # may need to be increased when using large tokens (typically those

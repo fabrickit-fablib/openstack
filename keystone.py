@@ -92,11 +92,12 @@ class Keystone(SimpleBase):
 
     def cmd(self, cmd):
         # create users, roles, services
+        endpoint = '{0}/v2.0'.format(self.data['admin_endpoint'])
         with api.shell_env(
                 OS_SERVICE_TOKEN=self.data['admin_token'],
-                OS_SERVICE_ENDPOINT='http://localhost:35357/v2.0',
+                OS_SERVICE_ENDPOINT=endpoint,
                 OS_TOKEN=self.data['admin_token'],
-                OS_URL='http://localhost:35357/v2.0',
+                OS_URL=endpoint,
                 ):
             return run('openstack {0}'.format(cmd))
 

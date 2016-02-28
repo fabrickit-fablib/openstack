@@ -42,13 +42,13 @@ class Glance(SimpleBase):
             # setup conf files
             if filer.template(
                     '/etc/glance/glance-api.conf',
-                    src='kilo/glance-api.conf.j2'.format(data['version']),
+                    src='{0}/glance-api.conf.j2'.format(data['version']),
                     data=data):
                 self.handlers['restart_glance-api'] = True
 
             if filer.template(
                     '/etc/glance/glance-registry.conf',
-                    src='kilo/glance-registry.conf.j2'.format(data['version']),
+                    src='{0}/glance-registry.conf.j2'.format(data['version']),
                     data=data):
                 self.handlers['restart_glance-registry'] = True
 

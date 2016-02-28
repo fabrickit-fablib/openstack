@@ -6,6 +6,8 @@ node_map:
     fabruns:
       - openstack/bootstrap
       - openstack/keystone
+      - openstack/glance
+      # - openstack/neutron
 
   mysql:
     hosts:

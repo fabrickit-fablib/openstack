@@ -1,10 +1,10 @@
 mysql:
   cluster_map:
     common:
-      host: ${#haproxy.cluster_map.common.vip}
-      port: 13306
+      endpoint: ${#haproxy.cluster_map.common.host}:3306
       hosts: ${#node_map.mysql.hosts}
-      dbs: [keystone, nova, neutron, glance, cinder, heat, ceilometer]
+      port: 13306
+      dbs: [keystone, nova, neutron, glance, cinder, heat, ceilometer, metering, alarm, event]
       user_map:
         slave:
           user: slave

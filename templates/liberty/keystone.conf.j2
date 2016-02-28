@@ -630,6 +630,7 @@ connection = {{ database.connection }}
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #public_workers = <None>
+public_workers = 1
 
 # The number of worker processes to serve the admin eventlet application.
 # Defaults to number of CPUs (minimum of 2). (integer value)
@@ -637,6 +638,7 @@ connection = {{ database.connection }}
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #admin_workers = <None>
+admin_workers = 1
 
 # The IP address of the network interface for the public service to listen on.
 # (string value)
@@ -653,6 +655,7 @@ connection = {{ database.connection }}
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #public_port = 5000
+public_port = {{ public_port }}
 
 # The IP address of the network interface for the admin service to listen on.
 # (string value)
@@ -668,7 +671,7 @@ connection = {{ database.connection }}
 # Deprecated group/name - [DEFAULT]/admin_port
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
-#admin_port = 35357
+admin_port = {{ admin_port }}
 
 # If set to false, disables keepalives on the server; all connections will be
 # closed after serving one request. (boolean value)
