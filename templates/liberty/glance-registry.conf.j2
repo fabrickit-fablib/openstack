@@ -469,6 +469,7 @@ connection = {{ database.connection }}
 
 # List of stores enabled (list value)
 #stores = file,http
+stores = {{ glance_store.stores }}
 
 # Default scheme to use to store image data. The scheme must be
 # registered by one of the stores defined by the 'stores' config
@@ -628,6 +629,7 @@ connection = {{ database.connection }}
 # Directory to which the Filesystem backend store writes images.
 # (string value)
 #filesystem_store_datadir = <None>
+filesystem_store_datadir = {{ glance_store.filesystem_store_datadir }}
 
 # List of directories and its priorities to which the Filesystem
 # backend store writes images. (multi valued)
@@ -1095,7 +1097,11 @@ flavor={{ paste_deploy.flavor }}
 
 
 [keystone_authtoken]
-identity_uri = {{ keystone.identity_uri }}
-admin_tenant_name = {{ keystone.service_tenant_name }}
-admin_user = {{ keystone.service_user }}
-admin_password = {{ keystone.service_password }}
+auth_uri = {{ cluster.keystone.endpoint }}
+auth_url = {{ cluster.keystone.admin_endpoint }}
+auth_plugin = password
+project_domain_id = default
+user_domain_id = default
+project_name = {{ cluster.keystone.service_tenant_name }}
+username = {{ cluster.keystone.service_user }}
+password = {{ cluster.keystone.service_password }}

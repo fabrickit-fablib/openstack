@@ -227,10 +227,12 @@ state_path={{ state_path }}
 
 # The port on which the EC2 API will listen. (integer value)
 #ec2_listen_port=8773
+ec2_listen_port={{ ec2_port }}
 
 # Number of workers for EC2 API service. The default will be
 # equal to the number of CPUs available. (integer value)
 #ec2_workers=<None>
+ec2_workers=1
 
 # The IP address on which the OpenStack API will listen.
 # (string value)
@@ -239,10 +241,12 @@ state_path={{ state_path }}
 # The port on which the OpenStack API will listen. (integer
 # value)
 #osapi_compute_listen_port=8774
+osapi_compute_listen_port={{ api_port }}
 
 # Number of workers for OpenStack API service. The default
 # will be the number of CPUs available. (integer value)
 #osapi_compute_workers=<None>
+osapi_compute_workers=1
 
 # OpenStack metadata service manager (string value)
 #metadata_manager=nova.api.manager.MetadataManager
@@ -254,10 +258,12 @@ state_path={{ state_path }}
 # The port on which the metadata API will listen. (integer
 # value)
 #metadata_listen_port=8775
+metadata_listen_port={{ metadata_port }}
 
 # Number of workers for metadata service. The default will be
 # the number of CPUs available. (integer value)
 #metadata_workers=<None>
+metadata_workers=1
 
 # Full class name for the Manager for compute (string value)
 #compute_manager=nova.compute.manager.ComputeManager
@@ -424,6 +430,7 @@ instance_usage_audit_period=hour
 
 # The port of the EC2 API server (integer value)
 #ec2_port=8773
+ec2_port={{ ec2_port }}
 
 # The protocol to use when connecting to the EC2 API server
 # (http, https) (string value)
@@ -632,6 +639,7 @@ instance_usage_audit_period=hour
 # Port on which to listen for incoming requests (integer
 # value)
 #novncproxy_port=6080
+novncproxy_port={{ novncproxy_port }}
 
 
 #
@@ -2065,6 +2073,7 @@ vncserver_proxyclient_address={{ vncserver_proxyclient_address }}
 # default will be the number of CPUs available. (integer
 # value)
 #workers=<None>
+workers=1
 
 
 [database]
@@ -2322,19 +2331,20 @@ host={{ glance_host }}
 
 
 [keystone_authtoken]
+auth_uri = {{ cluster.keystone.endpoint }}
+auth_url = {{ cluster.keystone.admin_endpoint }}
+auth_plugin = password
+project_domain_id = default
+user_domain_id = default
+project_name = {{ cluster.keystone.service_tenant_name }}
+username = {{ cluster.keystone.service_user }}
+password = {{ cluster.keystone.service_password }}
 
 #
 # Options defined in keystonemiddleware.auth_token
 #
 
 # Complete public Identity API endpoint. (string value)
-auth_uri={{ keystone.services.keystone.publicurl }}
-auth_host={{ keystone.auth_host }}
-auth_port={{ keystone.auth_port }}
-auth_protocol={{ keystone.auth_protocol }}
-admin_user={{ keystone.service_user }}
-admin_password={{ keystone.service_password }}
-admin_tenant_name={{ keystone.service_tenant_name }}
 
 # API version of the admin Identity API endpoint. (string
 # value)

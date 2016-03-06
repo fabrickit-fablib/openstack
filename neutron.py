@@ -23,7 +23,6 @@ class Neutron(SimpleBase):
             'verbose': True,
             'user': 'neutron',
             'auth_strategy': 'keystone',
-            'rpc_backend': 'neutron.openstack.common.rpc.impl_kombu',
             'core_plugin': 'ml2',
         }
         self.packages = ['openvswitch']

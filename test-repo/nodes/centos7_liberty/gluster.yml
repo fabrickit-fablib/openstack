@@ -1,0 +1,10 @@
+gluster:
+  clusters:
+    common:
+      hosts: ${#node_map.gluster.hosts}
+      host: ${#node_map.gluster.hosts.0}
+      volume_map:
+        glance:
+          name: glance
+          brick: /export/glance
+          replica: 2

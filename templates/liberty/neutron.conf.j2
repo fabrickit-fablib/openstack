@@ -43,6 +43,7 @@ debug = {{ debug }}
 
 # Port the bind the API server to
 # bind_port = 9696
+bind_port = {{ port }}
 
 # Path to the extensions.  Note that this can be a colon-separated list of
 # paths.  For example:
@@ -284,6 +285,7 @@ agent_down_time = {{ agent_down_time }}
 # worker thread in the current process.  Greater than 0 launches that number of
 # child processes as workers.  The parent process manages them.
 # api_workers = 0
+api_workers = 1
 
 # Number of separate RPC worker processes to spawn.  The default, 0, runs the
 # worker thread in the current process.  Greater than 0 launches that number of
@@ -291,6 +293,7 @@ agent_down_time = {{ agent_down_time }}
 # This feature is experimental until issues are addressed and testing has been
 # enabled for various plugins for compatibility.
 # rpc_workers = 0
+rpc_workers = 1
 
 # Timeout for client connections socket operations. If an
 # incoming connection is idle for this number of seconds it
@@ -706,21 +709,14 @@ report_interval = {{ agent.report_interval }}
 # ===========  end of items for agent management extension =====
 
 [keystone_authtoken]
-auth_uri = {{ keystone.auth_protocol }}://{{ keystone.auth_host }}:5000
-auth_url = {{ keystone.auth_protocol }}://{{ keystone.auth_host }}:35357
-# auth_plugin = password
-# project_domain_id = default
-# user_domain_id = default
-project_name = {{ keystone.service_tenant_name }}
-username = {{ keystone.service_user }}
-password = {{ keystone.service_password }}
-
-auth_host = {{ keystone.auth_host }}
-auth_port = {{ keystone.auth_port }}
-auth_protocol = {{ keystone.auth_protocol }}
-admin_tenant_name = {{ keystone.service_tenant_name }}
-admin_user = {{ keystone.service_user }}
-admin_password = {{ keystone.service_password }}
+auth_uri = {{ cluster.keystone.endpoint }}
+auth_url = {{ cluster.keystone.admin_endpoint }}
+auth_plugin = password
+project_domain_id = default
+user_domain_id = default
+project_name = {{ cluster.keystone.service_tenant_name }}
+username = {{ cluster.keystone.service_user }}
+password = {{ cluster.keystone.service_password }}
 
 [database]
 # This line MUST be changed to actually run the plugin.

@@ -163,6 +163,7 @@ bind_port = {{ api_port }}
 # requests. The default will be equal to the number of CPUs available.
 # (integer value)
 #workers = 4
+workers = 1
 
 # Maximum line size of message headers to be accepted. max_header_line
 # may need to be increased when using large tokens (typically those
@@ -1398,3 +1399,13 @@ flavor={{ paste_deploy.flavor }}
 # 'parallel'. (integer value)
 # Deprecated group/name - [task]/eventlet_executor_pool_size
 #max_workers = 10
+
+[keystone_authtoken]
+auth_uri = {{ cluster.keystone.endpoint }}
+auth_url = {{ cluster.keystone.admin_endpoint }}
+auth_plugin = password
+project_domain_id = default
+user_domain_id = default
+project_name = {{ cluster.keystone.service_tenant_name }}
+username = {{ cluster.keystone.service_user }}
+password = {{ cluster.keystone.service_password }}

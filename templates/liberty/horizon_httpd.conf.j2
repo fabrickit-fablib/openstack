@@ -1,4 +1,5 @@
-<VirtualHost *:80>
+Listen {{ port }}
+<VirtualHost *:{{ port }}>
     WSGIDaemonProcess apache processes=5 threads=1 user=apache group=apache display-name=%{GROUP} python-path={{ prefix }}/lib/python2.7/site-packages
     WSGIProcessGroup apache
     WSGIScriptAlias / {{ prefix }}/lib/horizon/openstack_dashboard/wsgi/django.wsgi

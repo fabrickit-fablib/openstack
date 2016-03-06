@@ -38,6 +38,8 @@ class Glance(SimpleBase):
             self.python.setup()
             self.python.setup_package(**self.package)
 
+            filer.mkdir(data['glance_store']['filesystem_store_datadir'])
+
         if self.is_tag('conf'):
             # setup conf files
             if filer.template(

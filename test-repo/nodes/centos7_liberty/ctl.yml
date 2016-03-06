@@ -91,13 +91,19 @@ glance:
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
   rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  glance_store:
+    stores: file
+    filesystem_store_datadir: /mnt/glance/images/
   database:
     connection: ${#db_connection}/glance
 
 nova:
   endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8774
   vncproxy_endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:6080
+  ec2_port: 18773
   api_port: 18774
+  metadata_port: 18775
+  novncproxy_port: 16080
   version: liberty
   debug: True
   database:
@@ -118,7 +124,7 @@ nova:
   linuxnet_interface_driver: nova.network.linux_net.LinuxBridgeInterfaceDriver
   firewall_driver: nova.virt.firewall.NoopFirewallDriver
   security_group_api: nova
-  # glance_host: ${#glance.host}
+  glance_host: ${#haproxy.cluster_map.common.host}
   compute_driver: libvirt.LibvirtDriver
   service_neutron_metadata_proxy: true
   metadata_proxy_shared_secret: METADATA_SECRET
@@ -140,6 +146,7 @@ neutron:
   debug: True
   database:
     connection: ${#db_connection}/neutron
+  rpc_backend: rabbit
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -164,7 +171,7 @@ neutron:
     flat_networks:
       - physnet1
   linuxbridge:
-    enable_vxlan: True
+    enable_vxlan: False
     tenant_network_type: flat
     network_vlan_ranges:
       - physnet1
@@ -174,13 +181,13 @@ neutron:
     enable: true
   test_net: test_net
   networks:
-    test_net:
+    - name: test_net
       options:
         - provider:physical_network=physnet1
         - provider:network_type=flat
         - shared
       subnets:
-        test_subnet:
+        - name: test_subnet
           cidr: 192.168.122.0/24
           options:
             - allocation-pool start=192.168.122.100,end=192.168.122.120
@@ -213,7 +220,8 @@ cinder:
 
 heat:
   endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8004
-  port: 18004
+  api_port: 18004
+  cfn_port: 18000
   version: liberty
   debug: true
   verbose: true
@@ -224,8 +232,8 @@ heat:
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
   rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
   rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
-  # heat_metadata_server_url: https://${#heat.host}:8000
-  # heat_waitcondition_server_url: https://${#heat.host}:8000/v1/waitcondition
+  heat_metadata_server_url: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8000
+  heat_waitcondition_server_url: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8000/v1/waitcondition
   stack_domain_admin: heat
   stack_domain_admin_password: heatpass
   stack_user_domain_name: heatdomain

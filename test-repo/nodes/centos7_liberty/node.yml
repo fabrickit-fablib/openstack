@@ -7,7 +7,18 @@ node_map:
       - openstack/bootstrap
       - openstack/keystone
       - openstack/glance
-      # - openstack/neutron
+      - openstack/neutron
+      - openstack/nova
+      - openstack/heat
+      - openstack/compute
+      - openstack/horizon
+
+  gluster:
+    hosts:
+      - 192.168.122.50
+      - 192.168.122.51
+    fabruns:
+      - openstack/gluster
 
   mysql:
     hosts:
