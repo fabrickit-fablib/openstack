@@ -9,9 +9,11 @@ node_map:
       - openstack/glance
       - openstack/neutron
       - openstack/nova
-      - openstack/heat
       - openstack/compute
-      - openstack/horizon
+      - openstack/heat
+      - openstack/test
+      # - openstack/horizon
+      # - openstack/ceilometer
 
   gluster:
     hosts:

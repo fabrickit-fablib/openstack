@@ -14,6 +14,7 @@ class Heat(SimpleBase):
 
         self.services = [
             'heat-api',
+            'heat-api-cfn',
             'heat-engine',
         ]
 

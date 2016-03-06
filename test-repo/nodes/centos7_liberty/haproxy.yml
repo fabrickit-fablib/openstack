@@ -1,7 +1,6 @@
 haproxy:
   ctl_options:
     - option tcpka
-    - option httpchk
     - option tcplog
   cluster_map:
     common:
@@ -125,6 +124,13 @@ haproxy:
           servers:
            - ctl1 192.168.122.50:18004 check inter 2000 rise 2 fall 5
            - ctl2 192.168.122.51:18004 check inter 2000 rise 2 fall 5
+
+        - name: heat_api_cfn
+          port: 8000
+          options: ${#haproxy.ctl_options}
+          servers:
+           - ctl1 192.168.122.50:18000 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:18000 check inter 2000 rise 2 fall 5
 
         - name: swift_proxy
           port: 8080

@@ -91,6 +91,7 @@ class Keystone(SimpleBase):
         self.restart_services(pty=False)
 
     def cmd(self, cmd):
+        self.init()
         # create users, roles, services
         endpoint = '{0}/v2.0'.format(self.data['admin_endpoint'])
         with api.shell_env(
@@ -102,17 +103,20 @@ class Keystone(SimpleBase):
             return run('openstack {0}'.format(cmd))
 
     def create_tenant(self, name, description):
+        self.init()
         tenant_list = self.cmd('project list')
         if ' {0} '.format(name) not in tenant_list:
             self.cmd('project create --description="{1}" {0}'.format(
                 name, description))
 
     def create_role(self, name):
+        self.init()
         role_list = self.cmd('role list')
         if ' {0} '.format(name) not in role_list:
             self.cmd('role create {0}'.format(name))
 
     def create_user(self, name, password, tenant_roles):
+        self.init()
         user_list = self.cmd('user list')
         if ' {0} '.format(name) not in user_list:
             self.cmd('user create --password={1} {0}'.format(name, password))
@@ -121,6 +125,7 @@ class Keystone(SimpleBase):
                     name, tenant_role[0], tenant_role[1]))
 
     def create_service(self, name, service):
+        self.init()
         service_list = self.cmd('service list')
         endpoint_list = self.cmd('endpoint list')
         if ' {0} '.format(name) not in service_list:

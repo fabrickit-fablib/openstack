@@ -282,6 +282,11 @@ os_package_map:
         exec: ${#os_package_map.heat.prefix}/bin/heat-api
               --config-file=/etc/heat/heat.conf
               --log-file=/var/log/heat/api.log
+      - name: heat-api-cfn
+        description: OpenStack Orchestration Service
+        exec: ${#os_package_map.heat.prefix}/bin/heat-api-cfn
+              --config-file=/etc/heat/heat.conf
+              --log-file=/var/log/heat/api-cfn.log
       - name: heat-engine
         description: OpenStack Orchestration Service
         exec: ${#os_package_map.heat.prefix}/bin/heat-engine
