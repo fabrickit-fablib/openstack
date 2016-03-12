@@ -46,6 +46,7 @@
 # Libvirt domain type. (string value)
 # Allowed values: kvm, lxc, qemu, uml, xen
 #libvirt_type = kvm
+libvirt_type = {{ cluster.nova.libvirt.virt_type }}
 
 # Override the default libvirt URI (which is dependent on
 # libvirt_type). (string value)
@@ -379,6 +380,7 @@ rpc_backend = rabbit
 # Maximum value: 65535
 # Deprecated group/name - [DEFAULT]/metering_api_port
 #port = 8777
+port = {{ port }}
 
 # The listen IP for the ceilometer API server. (string value)
 #host = 0.0.0.0
@@ -740,6 +742,14 @@ connection = {{ database.connection }}
 
 
 [keystone_authtoken]
+auth_uri = {{ cluster.keystone.endpoint }}
+auth_url = {{ cluster.keystone.admin_endpoint }}
+auth_plugin = password
+project_domain_id = default
+user_domain_id = default
+project_name = {{ cluster.keystone.service_tenant_name }}
+username = {{ cluster.keystone.service_user }}
+password = {{ cluster.keystone.service_password }}
 
 #
 # From keystonemiddleware.auth_token
@@ -747,7 +757,6 @@ connection = {{ database.connection }}
 
 # Complete public Identity API endpoint. (string value)
 #auth_uri = <None>
-auth_uri={{ keystone.services.keystone.publicurl }}
 
 # API version of the admin Identity API endpoint. (string value)
 #auth_version = <None>
@@ -881,17 +890,14 @@ auth_uri={{ keystone.services.keystone.publicurl }}
 # Host providing the admin Identity API endpoint. Deprecated, use
 # identity_uri. (string value)
 #auth_host = 127.0.0.1
-auth_host={{ keystone.auth_host }}
 
 # Port of the admin Identity API endpoint. Deprecated, use
 # identity_uri. (integer value)
 #auth_port = 35357
-auth_port={{ keystone.auth_port }}
 
 # Protocol of the admin Identity API endpoint (http or https).
 # Deprecated, use identity_uri. (string value)
 #auth_protocol = https
-auth_protocol={{ keystone.auth_protocol }}
 
 # Complete admin Identity API endpoint. This should specify the
 # unversioned root endpoint e.g. https://localhost:35357/ (string
@@ -907,15 +913,12 @@ auth_protocol={{ keystone.auth_protocol }}
 
 # Service username. (string value)
 #admin_user = <None>
-admin_user={{ keystone.service_user }}
 
 # Service user password. (string value)
 #admin_password = <None>
-admin_password={{ keystone.service_password }}
 
 # Service tenant name. (string value)
 #admin_tenant_name = admin
-admin_tenant_name={{ keystone.service_tenant_name }}
 
 
 [matchmaker_redis]

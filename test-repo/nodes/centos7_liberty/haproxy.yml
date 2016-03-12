@@ -41,11 +41,11 @@ haproxy:
           pass: adminpass
       listens:
         - name: horizon
-          port: 443
+          port: 40080
           options: ${#haproxy.ctl_options}
           servers:
-           - ctl1 192.168.122.50:10443 check inter 2000 rise 2 fall 5
-           - ctl2 192.168.122.51:10443 check inter 2000 rise 2 fall 5
+           - ctl1 192.168.122.50:10080 check inter 2000 rise 2 fall 5
+           - ctl2 192.168.122.51:10080 check inter 2000 rise 2 fall 5
         - name: mysql
           port: 3306
           options:

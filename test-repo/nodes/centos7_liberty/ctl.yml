@@ -194,7 +194,8 @@ neutron:
 
 horizon:
   endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:443
-  port: 10443
+  port: 10080
+  memcached_servers: ${#node_map.openstack.hosts}
   version: liberty
   time_zone: Asia/Tokyo
   debug: True
@@ -217,6 +218,19 @@ cinder:
       type: lvm
       size: 5G
       volume_group: cinder-volumes
+  database:
+    connection: ${#db_connection}/cinder
+
+swift:
+  endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8080
+  proxy_port: 18080
+  object_port: 6000
+  container_port: 6001
+  account_port: 6002
+  version: liberty
+  debug: True
+  verbose: True
+  memcached_servers: ${#node_map.openstack.hosts}
 
 heat:
   endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8004

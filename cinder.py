@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import re
-from fabkit import env, sudo, filer, Service
+from fabkit import env, sudo, filer
 from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
@@ -18,6 +18,7 @@ class Cinder(SimpleBase):
             'cinder-api',
             'cinder-volume',
             'cinder-scheduler',
+            'target',
         ]
 
         self.packages = [
@@ -35,9 +36,6 @@ class Cinder(SimpleBase):
         self.data.update({
             'keystone': env.cluster['keystone'],
         })
-
-        self.lvm2_lvmetad = Service('lvm2-lvmetad')
-        self.tgtd = Service('tgtd')
 
     def setup(self):
         data = self.init()

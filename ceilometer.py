@@ -45,6 +45,12 @@ class Ceilometer(SimpleBase):
                 data=data,
             )
 
+            is_updated = filer.template(
+                '/etc/ceilometer/pipeline.yaml',
+                src='{0}/pipeline.yaml'.format(data['version']),
+                data=data,
+            ) or is_updated
+
         if self.is_tag('data') and env.host == env.hosts[0]:
             sudo('{0}/bin/ceilometer-dbsync'.format(self.prefix))
 

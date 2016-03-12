@@ -8,3 +8,7 @@ gluster:
           name: glance
           brick: /export/glance
           replica: 2
+        swift:
+          name: swift
+          brick: /export/swift
+          replica: 2

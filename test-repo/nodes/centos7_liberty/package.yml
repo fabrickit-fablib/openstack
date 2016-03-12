@@ -10,6 +10,7 @@ os_package_map:
       - python-novaclient
       - python-neutronclient
       - python-cinderclient
+      - python-swiftclient
       - python-heatclient
       - python-ceilometerclient
     mk_links:
@@ -19,6 +20,7 @@ os_package_map:
       - { src: /opt/os-tools/bin/nova, dest: /usr/bin/nova }
       - { src: /opt/os-tools/bin/neutron, dest: /usr/bin/neutron }
       - { src: /opt/os-tools/bin/cinder, dest: /usr/bin/cinder }
+      - { src: /opt/os-tools/bin/swift, dest: /usr/bin/swift }
       - { src: /opt/os-tools/bin/heat, dest: /usr/bin/heat }
       - { src: /opt/os-tools/bin/ceilometer, dest: /usr/bin/ceilometer }
 
@@ -234,7 +236,7 @@ os_package_map:
         branch: stable/liberty
     requirements:
       - pymysql
-    lns:
+    mk_links:
       - { src: /opt/cinder/bin/cinder-rtstool, dest: /usr/bin/cinder-rtstool }
     mk_dirs:
       - { path: /var/log/cinder }
@@ -257,6 +259,97 @@ os_package_map:
         exec: ${#os_package_map.cinder.prefix}/bin/cinder-volume
               --config-file=/etc/cinder/cinder.conf
               --log-file=/var/log/cinder/volume.log
+
+  swift:
+    name: swift
+    user: root
+    group: root
+    prefix: /opt/swift
+    version: liberty
+    is_develop: false
+    git_repos:
+      - name: swift
+        url: https://github.com/openstack/swift.git
+        branch: stable/liberty
+      - name: swift3
+        url: https://github.com/openstack/swift3.git
+        branch: master
+    requirements:
+      - pymysql
+      - keystonemiddleware
+    mk_dirs:
+      - { path: /var/log/swift }
+      - { path: /var/cache/swift }
+    mk_links:
+      - { src: /opt/swift/bin/swift-ring-builder, dest: /usr/bin/swift-ring-builder }
+    cp_files:
+      - { src: ../swift/etc, dest: /etc/swift }
+    services:
+      - name: swift-proxy-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-proxy-server
+              --config-file=/etc/swift/proxy-server.conf
+              --log-file=/var/log/swift/proxy-server.log
+      - name: swift-account-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-server
+              --config-file=/etc/swift/account-server.conf
+              --log-file=/var/log/swift/account-server.log
+      - name: swift-account-auditor
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-auditor
+              --config-file=/etc/swift/account-server.conf
+              --log-file=/var/log/swift/account-auditor.log
+      - name: swift-account-reaper
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-reaper
+              --config-file=/etc/swift/account-server.conf
+              --log-file=/var/log/swift/account-reaper.log
+      - name: swift-account-replicator
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-replicator
+              --config-file=/etc/swift/account-server.conf
+              --log-file=/var/log/swift/account-replicator.log
+      - name: swift-container-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-container-server
+              --config-file=/etc/swift/container-server.conf
+              --log-file=/var/log/swift/container-server.log
+      - name: swift-container-auditor
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-container-auditor
+              --config-file=/etc/swift/container-server.conf
+              --log-file=/var/log/swift/contailer-auditor.log
+      - name: swift-container-replicator
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-container-replicator
+              --config-file=/etc/swift/container-server.conf
+              --log-file=/var/log/swift/contailer-replicator.log
+      - name: swift-container-updater
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-contailer-updater
+              --config-file=/etc/swift/contailer-server.conf
+              --log-file=/var/log/swift/contailer-updater.log
+      - name: swift-object-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-server
+              --config-file=/etc/swift/object-server.conf
+              --log-file=/var/log/swift/object-server.log
+      - name: swift-object-auditor
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-auditor
+              --config-file=/etc/swift/object-server.conf
+              --log-file=/var/log/swift/object-auditor.log
+      - name: swift-object-replicator
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-replicator
+              --config-file=/etc/swift/object-server.conf
+              --log-file=/var/log/swift/object-replicator.log
+      - name: swift-object-updater
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-updater
+              --config-file=/etc/swift/object-server.conf
+              --log-file=/var/log/swift/object-updater.log
 
   heat:
     name: heat
@@ -321,7 +414,7 @@ os_package_map:
         description: OpenStack Telemetry Service
         exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-agent-notification
               --config-file=/etc/ceilometer/ceilometer.conf
-              --log-file=/var/log/ceilometer/notification.log
+              --log-file=/var/log/ceilometer/agent-notification.log
       - name: ceilometer-alarm-evaluator
         description: OpenStack Telemetry Service
         exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-alarm-evaluator
@@ -331,7 +424,7 @@ os_package_map:
         description: OpenStack Telemetry Service
         exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-alarm-notifier
               --config-file=/etc/ceilometer/ceilometer.conf
-              --log-file=/var/log/ceilometer/notifier.log
+              --log-file=/var/log/ceilometer/alarm-notifier.log
       - name: ceilometer-collector
         description: OpenStack Telemetry Service
         exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-collector

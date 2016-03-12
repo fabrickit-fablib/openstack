@@ -16,11 +16,6 @@ class Horizon(SimpleBase):
         self.services = ['httpd', 'memcached']
         self.packages = ['httpd', 'mod_wsgi', 'memcached']
 
-        # self.prefix = '/opt/horizon' にすると、インスタンスリスト表示時に以下のエラーが発生
-        # self.prefix = '/usr' にすると発生しないので、OS依存のモジュール読み込みで失敗してそう
-        # /opt/horizon/lib/python2.7/site-packages/_cffi_backend.so: undefined symbol: PyUnicodeUCS2_FromUnicode  # noqa
-        # Exception Location: /opt/horizon/lib/python2.7/site-packages/cffi/api.py in __init__, line 56  # noqa
-
     def init_before(self):
         self.package = env['cluster']['os_package_map']['horizon']
         self.prefix = self.package.get('prefix', '/usr')

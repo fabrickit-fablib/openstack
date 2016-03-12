@@ -129,11 +129,18 @@ SECRET_KEY = secret_key.generate_or_read_from_file(
 #    }
 #}
 
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+#     }
+# }
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': [{% for server in memcached_servers %}'{{ server }}:11211',{% endfor %}],
     }
 }
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 # Send email to the console by default
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

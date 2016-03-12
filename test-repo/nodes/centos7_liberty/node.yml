@@ -12,8 +12,10 @@ node_map:
       - openstack/compute
       - openstack/heat
       - openstack/test
-      # - openstack/horizon
+      - openstack/horizon
+      - openstack/swift
       # - openstack/ceilometer
+      # - openstack/cinder
 
   gluster:
     hosts:
