@@ -65,6 +65,13 @@ keystone:
       publicurl: ${#cinder.endpoint}/v2/%\(tenant_id\)s
       internalurl: ${#cinder.endpoint}/v2/%\(tenant_id\)s
       adminurl: ${#cinder.endpoint}/v2/%\(tenant_id\)s
+    swift:
+      type: object-store
+      region: RegionOne
+      description: Openstack Object Storage Service
+      publicurl: ${#swift.endpoint}/v1/AUTH_%\(tenant_id\)s
+      internalurl: ${#swift.endpoint}/v1/AUTH_%\(tenant_id\)s
+      adminurl: ${#swift.endpoint}/v1
     heat:
       type: orchestration
       region: RegionOne
@@ -230,7 +237,7 @@ swift:
   version: liberty
   debug: True
   verbose: True
-  memcached_servers: ${#node_map.openstack.hosts}
+  memcache_servers: ${#node_map.openstack.hosts}
 
 heat:
   endpoint: ${#openstack.protocol}://${#haproxy.cluster_map.common.host}:8004

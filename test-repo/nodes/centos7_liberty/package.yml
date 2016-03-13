@@ -288,68 +288,55 @@ os_package_map:
       - name: swift-proxy-server
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-proxy-server
-              --config-file=/etc/swift/proxy-server.conf
-              --log-file=/var/log/swift/proxy-server.log
+              /etc/swift/proxy-server.conf
       - name: swift-account-server
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-account-server
-              --config-file=/etc/swift/account-server.conf
-              --log-file=/var/log/swift/account-server.log
+              /etc/swift/account-server.conf
       - name: swift-account-auditor
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-account-auditor
-              --config-file=/etc/swift/account-server.conf
-              --log-file=/var/log/swift/account-auditor.log
+              /etc/swift/account-server.conf
       - name: swift-account-reaper
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-account-reaper
-              --config-file=/etc/swift/account-server.conf
-              --log-file=/var/log/swift/account-reaper.log
+              /etc/swift/account-server.conf
       - name: swift-account-replicator
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-account-replicator
-              --config-file=/etc/swift/account-server.conf
-              --log-file=/var/log/swift/account-replicator.log
+              /etc/swift/account-server.conf
       - name: swift-container-server
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-container-server
-              --config-file=/etc/swift/container-server.conf
-              --log-file=/var/log/swift/container-server.log
+              /etc/swift/container-server.conf
       - name: swift-container-auditor
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-container-auditor
-              --config-file=/etc/swift/container-server.conf
-              --log-file=/var/log/swift/contailer-auditor.log
+              /etc/swift/container-server.conf
       - name: swift-container-replicator
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-container-replicator
-              --config-file=/etc/swift/container-server.conf
-              --log-file=/var/log/swift/contailer-replicator.log
+              /etc/swift/container-server.conf
       - name: swift-container-updater
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-contailer-updater
-              --config-file=/etc/swift/contailer-server.conf
-              --log-file=/var/log/swift/contailer-updater.log
+              /etc/swift/contailer-server.conf
       - name: swift-object-server
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-object-server
-              --config-file=/etc/swift/object-server.conf
-              --log-file=/var/log/swift/object-server.log
+              /etc/swift/object-server.conf
       - name: swift-object-auditor
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-object-auditor
-              --config-file=/etc/swift/object-server.conf
-              --log-file=/var/log/swift/object-auditor.log
+              /etc/swift/object-server.conf
       - name: swift-object-replicator
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-object-replicator
-              --config-file=/etc/swift/object-server.conf
-              --log-file=/var/log/swift/object-replicator.log
+              /etc/swift/object-server.conf
       - name: swift-object-updater
         description: OpenStack Object Storage Service
         exec: ${#os_package_map.swift.prefix}/bin/swift-object-updater
-              --config-file=/etc/swift/object-server.conf
-              --log-file=/var/log/swift/object-updater.log
+              /etc/swift/object-server.conf
 
   heat:
     name: heat

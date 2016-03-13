@@ -80,7 +80,7 @@ user = root
 
 [pipeline:main]
 # pipeline = catch_errors gatekeeper healthcheck proxy-logging cache container_sync bulk tempurl ratelimit tempauth container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
-pipeline = catch_errors gatekeeper healthcheck proxy-logging container_sync bulk tempurl ratelimit tempauth container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
+pipeline = catch_errors gatekeeper healthcheck proxy-logging cache container_sync bulk ratelimit authtoken keystoneauth container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
 
 [app:proxy-server]
 use = egg:swift#proxy
@@ -404,6 +404,7 @@ use = egg:swift#memcache
 # default to the value below. You can specify multiple servers separated with
 # commas, as in: 10.1.2.3:11211,10.1.2.4:11211
 # memcache_servers = 127.0.0.1:11211
+memcache_servers = {{ memcache_servers }}
 #
 # Sets how memcache values are serialized and deserialized:
 # 0 = older, insecure pickle serialization

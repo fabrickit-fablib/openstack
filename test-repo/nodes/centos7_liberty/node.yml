@@ -5,6 +5,7 @@ node_map:
       - 192.168.122.51
     fabruns:
       - openstack/bootstrap
+      - openstack/memcache
       - openstack/keystone
       - openstack/glance
       - openstack/neutron
@@ -16,6 +17,7 @@ node_map:
       - openstack/swift
       # - openstack/ceilometer
       # - openstack/cinder
+      #
 
   gluster:
     hosts:

@@ -13,8 +13,8 @@ class Horizon(SimpleBase):
             'allowed_hosts': "['*']",
         }
 
-        self.services = ['httpd', 'memcached']
-        self.packages = ['httpd', 'mod_wsgi', 'memcached']
+        self.services = ['httpd']
+        self.packages = ['httpd', 'mod_wsgi']
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['horizon']
