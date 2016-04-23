@@ -10,8 +10,8 @@ class Bootstrap(SimpleBase):
         self.packages = {
             'CentOS Linux 7.*': [
                 {
-                    'name': 'rdo-release-juno',
-                    'path': 'http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm'
+                    'name': 'rdo-release-liberty-3.noarch',
+                    'path': 'https://repos.fedorapeople.org/repos/openstack/openstack-liberty/rdo-release-liberty-3.noarch.rpm'
                 },
                 'epel-release',
                 'mysql-devel',
