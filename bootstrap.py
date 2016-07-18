@@ -7,11 +7,14 @@ from fablib.base import SimpleBase
 
 class Bootstrap(SimpleBase):
     def __init__(self):
+
+        # 'https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-5.noarch.rpm'
+        # 'https://repos.fedorapeople.org/repos/openstack/openstack-liberty/rdo-release-liberty-3.noarch.rpm'
         self.packages = {
             'CentOS Linux 7.*': [
                 {
-                    'name': 'rdo-release-liberty-3.noarch',
-                    'path': 'https://repos.fedorapeople.org/repos/openstack/openstack-liberty/rdo-release-liberty-3.noarch.rpm'
+                    'name': 'rdo-release-mitaka-5.noarch',
+                    'path': 'https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-5.noarch.rpm',  # noqa
                 },
                 'epel-release',
                 'mysql-devel',
@@ -42,7 +45,7 @@ class Bootstrap(SimpleBase):
 
     def dump_openstackrc(self):
         keystone_data = env.cluster['keystone']
-        run('''cat << _EOT_ > ~/openstackrc
+        sudo('''cat << _EOT_ > /root/openstackrc
     export OS_USERNAME=admin
     export OS_PASSWORD={0}
     export OS_TENANT_NAME=admin

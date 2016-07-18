@@ -1,0 +1,21 @@
+Listen {{ port }}
+<VirtualHost *:{{ port }}>
+    WSGIDaemonProcess apache processes=5 threads=1 user=apache group=apache display-name=%{GROUP} python-path={{ prefix }}/lib/python2.7/site-packages
+    WSGIProcessGroup apache
+    WSGIScriptAlias / {{ prefix }}/lib/horizon/openstack_dashboard/wsgi/django.wsgi
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    Alias /media {{ prefix }}/lib/horizon/openstack_dashboard/static
+
+    <Directory />
+        Require all granted
+    </Directory>
+    <Directory {{ prefix }}/lib/horizon/>
+        Require all granted
+    </Directory>
+
+    LogLevel info
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/httpd/horizon-error.log
+    CustomLog /var/log/httpd/horizon-access.log combined
+</VirtualHost>

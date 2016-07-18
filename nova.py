@@ -1,41 +1,61 @@
 # coding: utf-8
 
-from fabkit import sudo, env, Package, filer, api
+from fabkit import sudo, env, filer, api
 from fablib.python import Python
 from fablib.base import SimpleBase
+import re
 import utils
-
-MODE_CONTROLLER = 'controller'
-MODE_COMPUTE = 'compute'
 
 
 class Nova(SimpleBase):
-    def __init__(self, mode=MODE_CONTROLLER):
+    def __init__(self, enable_services=['.*']):
         self.data_key = 'nova'
-        self.mode = mode
         self.data = {
             'debug': 'true',
             'verbose': 'true',
             'timeout_nbd': 1,
+            'is_nova-api': False,
+            'is_master': False,
         }
 
-        if mode == MODE_CONTROLLER:
-            self.services = [
-                'nova-api',
-                'nova-cert',
-                'nova-console',
-                'nova-consoleauth',
-                'nova-scheduler',
-                'nova-conductor',
-                'nova-novncproxy',
-            ]
+        default_services = [
+            'nova-api',
+            'nova-scheduler',
+            'nova-conductor',
+            'nova-consoleauth',
+            'nova-novncproxy',
+            'nova-compute',
+        ]
 
-        elif mode == MODE_COMPUTE:
-            self.services = [
+        self.packages = []
+        self.services = []
+        for service in default_services:
+            for enable_service in enable_services:
+                if re.search(enable_service, service):
+                    self.services.append(service)
+                    break
+
+        if 'nova-api' in self.services:
+            self.data['is_nova-api'] = True
+
+        if 'nova-novncproxy' in self.services:
+            self.packages.append('novnc')
+
+        if 'nova-compute' in self.services:
+            self.services.extend([
                 'libvirtd',
                 'messagebus',
                 'nova-compute',
-            ]
+            ])
+
+            self.packages.extend([
+                'libvirt',
+                'sysfsutils',
+                'qemu-kvm',
+                'libvirt-python',
+                'libvirt-devel',
+                'dbus',
+            ])
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['nova']
@@ -54,29 +74,16 @@ class Nova(SimpleBase):
             'keystone': env.cluster['keystone'],
         })
 
+        if env.host == env.hosts[0] and self.data['is_nova-api']:
+            self.data['is_master'] = True
+        else:
+            self.data['is_master'] = False
+
     def setup(self):
         data = self.init()
-        is_updated = False
 
         if self.is_tag('package'):
-            if self.mode == MODE_CONTROLLER:
-                Package('novnc').install()
-
-            if self.mode == MODE_COMPUTE:
-                Package('libvirt').install()
-                Package('sysfsutils').install()
-                Package('qemu-kvm').install()
-                Package('libvirt-python').install()
-                Package('libvirt-devel').install()
-                Package('dbus').install()
-
-                # libvirt-pythonを利用するには、ディストリビューションのものをコピーする必要がある
-                # http://d.hatena.ne.jp/pyde/20130831/p1
-                # site_packages = self.python.get_site_packages()
-                # libvirt_python = run('rpm -ql libvirt-python | grep site-packages').split('\r\n')
-                # for src in libvirt_python:
-                #     sudo('ln -s {0} {1}'.format(src, site_packages))
-
+            self.install_packages()
             self.python.setup()
             self.python.setup_package(**self.package)
 
@@ -92,29 +99,33 @@ class Nova(SimpleBase):
             # sudo: >>> /etc/sudoers.d/nova: syntax error near line 2 <<<
             # この場合は以下のコマンドでvisudoを実行し、編集する
             # $ pkexec visudo -f /etc/sudoers.d/nova
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/sudoers.d/nova',
                 data=data,
                 src='sudoers.j2',
-            )
+                    ):
+                self.handlers['restart_nova'] = True
 
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/nova/nova.conf',
                 src='{0}/nova.conf.j2'.format(data['version']),
                 data=data,
-            ) or is_updated
+                    ):
+                self.handlers['restart_nova'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            if self.mode == MODE_CONTROLLER:
+            if data['is_master']:
                 sudo('nova-manage db sync')
+
+                if data['version'] in ['mitaka']:
+                    sudo('nova-manage api_db sync')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
-            if is_updated:
-                self.restart_services(pty=False)
+            self.exec_handlers()
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            if self.mode == MODE_CONTROLLER:
+            if data['is_master']:
                 self.sync_flavors()
 
         return 0

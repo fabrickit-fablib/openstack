@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import re
 import socket
 import struct
 import time
@@ -8,14 +9,9 @@ from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
 
-MODE_CONTROLLER = 'controller'
-MODE_COMPUTE = 'compute'
-MODE_NETWORK = 'network'
-
 
 class Neutron(SimpleBase):
-    def __init__(self, mode=MODE_CONTROLLER):
-        self.mode = mode
+    def __init__(self, enable_services=['.*']):
         self.data_key = 'neutron'
         self.data = {
             'sudoers_cmd': 'ALL',
@@ -24,38 +20,43 @@ class Neutron(SimpleBase):
             'user': 'neutron',
             'auth_strategy': 'keystone',
             'core_plugin': 'ml2',
+            'is_neutron-server': False,
+            'is_master': False,
         }
         self.packages = ['openvswitch']
+
+        default_services = [
+            'neutron-server',
+            'neutron-linuxbridge-agent',
+            'neutron-openvswitch-agent',
+            'neutron-dhcp-agent',
+        ]
+
+        self.services = []
+        for service in default_services:
+            for enable_service in enable_services:
+                if re.search(enable_service, service):
+                    self.services.append(service)
+                    break
+
+        if 'neutron-server' in self.services:
+            self.data['is_neutron-server'] = True
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['neutron']
         self.prefix = self.package.get('prefix', '/opt/neutron')
         self.python = Python(self.prefix)
-        neutron = env.cluster['neutron']
-
-        self.services = []
-        if self.mode == MODE_CONTROLLER:
-            self.services = ['neutron-server']
-        elif self.mode == MODE_COMPUTE:
-            if neutron.get('linuxbridge', {}).get('enable'):
-                self.services.append('neutron-linuxbridge-agent')
-            if neutron.get('ovs', {}).get('enable'):
-                self.services.append('neutron-openvswitch-agent')
-        elif self.mode == MODE_NETWORK:
-            if neutron.get('ovs', {}).get('enable'):
-                self.services.append('neutron-openvswitch-agent')
-            if neutron.get('l3', {}).get('enable'):
-                self.services.append('neutron-l3-agent')
-            if neutron.get('dhcp', {}).get('enable'):
-                self.services.append('neutron-dhcp-agent')
-            if neutron.get('metadata', {}).get('enable'):
-                self.services.append('neutron-metadata-agent')
 
     def init_after(self):
         self.data.update({
             'keystone': env.cluster['keystone'],
             'my_ip': env.node['ip']['default_dev']['ip'],
         })
+
+        if env.host == env.hosts[0] and self.data['is_neutron-server']:
+            self.data['is_master'] = True
+        else:
+            self.data['is_master'] = False
 
     def setup(self):
         data = self.init()
@@ -65,9 +66,6 @@ class Neutron(SimpleBase):
             self.install_packages()
             self.python.setup_package(**self.package)
             sudo('modprobe tun')
-
-        if self.is_tag('network') and self.mode == MODE_NETWORK:
-            self.setup_ovs_network()
 
         if self.is_tag('conf'):
             is_updated = filer.template(
@@ -90,7 +88,7 @@ class Neutron(SimpleBase):
 
             if self.data['version'] == 'kilo':
                 linuxbridge_conf = '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini'
-            elif self.data['version'] == 'liberty':
+            elif self.data['version'] in ['liberty', 'mitaka', 'master']:
                 linuxbridge_conf = '/etc/neutron/plugins/ml2/linuxbridge_agent.ini'
 
             is_updated = filer.template(
@@ -101,7 +99,7 @@ class Neutron(SimpleBase):
 
             if self.data['version'] == 'kilo':
                 ovs_conf = '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini'
-            elif self.data['version'] == 'liberty':
+            elif self.data['version'] in ['liberty', 'mitaka', 'master']:
                 ovs_conf = '/etc/neutron/plugins/ml2/openvswitch_agent.ini'
 
             if self.data['ml2']['mechanism_drivers'] == 'openvswitch':
@@ -116,6 +114,8 @@ class Neutron(SimpleBase):
                     src='{0}/l3_agent.ini.j2'.format(data['version']),
                     data=data,
                 ) or is_updated
+            else:
+                sudo('echo '' > {0}'.format(ovs_conf))
 
             is_updated = filer.template(
                 '/etc/neutron/dhcp_agent.ini',
@@ -130,7 +130,7 @@ class Neutron(SimpleBase):
             ) or is_updated
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            if self.mode == MODE_CONTROLLER:
+            if data['is_master']:
                 option = '--config-file /etc/neutron/neutron.conf'
                 run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
 
@@ -141,7 +141,7 @@ class Neutron(SimpleBase):
                 self.restart_services(pty=False)
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            if self.mode == MODE_CONTROLLER:
+            if data['is_master']:
                 time.sleep(5)
                 self.create_nets()
                 self.create_routers()

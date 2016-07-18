@@ -4,6 +4,7 @@ import time
 from fabkit import sudo, api, filer, run, env
 from fablib.python import Python
 from fablib.base import SimpleBase
+import utils
 
 
 class Keystone(SimpleBase):
@@ -18,7 +19,13 @@ class Keystone(SimpleBase):
             },
         }
 
-        self.services = ['keystone']
+        self.packages = {
+            'CentOS Linux 7.*': [
+                'httpd',
+                'mod_wsgi',
+            ]
+        }
+        self.services = ['httpd']
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['keystone']
@@ -42,14 +49,42 @@ class Keystone(SimpleBase):
         if self.is_tag('package'):
             self.python.setup()
             self.python.setup_package(**self.package)
+            self.install_packages()
 
-        is_updated = False
         if self.is_tag('conf'):
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/keystone/keystone.conf',
                 src='{0}/keystone.conf.j2'.format(version),
                 data=data,
-            )
+                    ):
+                self.handlers['restart_httpd'] = True
+
+            data.update({
+                'httpd_port': data['public_port'],
+                'prefix': self.prefix,
+                'wsgi_name': 'keystone-public',
+                'wsgi_script_alias': '{0}/bin/keystone-wsgi-public'.format(self.prefix),
+                'wsgi_script_dir': '{0}/bin/'.format(self.prefix),
+                'log_name': 'keystone'
+            })
+            if filer.template(
+                '/etc/httpd/conf.d/wsgi-keystone-public.conf',
+                src='wsgi-httpd.conf',
+                data=data,
+            ):
+                self.handlers['restart_httpd'] = True
+
+            data.update({
+                'httpd_port': data['admin_port'],
+                'wsgi_name': 'keystone-admin',
+                'wsgi_script_alias': '{0}/bin/keystone-wsgi-admin'.format(self.prefix),
+            })
+            if filer.template(
+                '/etc/httpd/conf.d/wsgi-keystone-admin.conf',
+                src='wsgi-httpd.conf',
+                data=data,
+            ):
+                self.handlers['restart_httpd'] = True
 
         if self.is_tag('data'):
             if env.host == env.hosts[0]:
@@ -57,8 +92,7 @@ class Keystone(SimpleBase):
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
-            if is_updated:
-                self.restart_services(pty=False)
+            self.exec_handlers()
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             time.sleep(3)
@@ -90,39 +124,42 @@ class Keystone(SimpleBase):
         )
         self.restart_services(pty=False)
 
-    def cmd(self, cmd):
+    def cmd(self, cmd, use_admin_token=True):
         self.init()
         # create users, roles, services
-        endpoint = '{0}/v2.0'.format(self.data['admin_endpoint'])
-        with api.shell_env(
-                OS_SERVICE_TOKEN=self.data['admin_token'],
-                OS_SERVICE_ENDPOINT=endpoint,
-                OS_TOKEN=self.data['admin_token'],
-                OS_URL=endpoint,
-                ):
-            return run('openstack {0}'.format(cmd))
+        if use_admin_token:
+            endpoint = '{0}/v2.0'.format(self.data['admin_endpoint'])
+            with api.shell_env(
+                    OS_SERVICE_TOKEN=self.data['admin_token'],
+                    OS_SERVICE_ENDPOINT=endpoint,
+                    OS_TOKEN=self.data['admin_token'],
+                    OS_URL=endpoint,
+                    ):
+                return run('openstack {0}'.format(cmd))
+        else:
+            return utils.oscmd('openstack {0}'.format(cmd))
 
     def create_tenant(self, name, description):
         self.init()
-        tenant_list = self.cmd('project list')
+        tenant_list = self.cmd('project list', True)
         if ' {0} '.format(name) not in tenant_list:
             self.cmd('project create --description="{1}" {0}'.format(
                 name, description))
 
     def create_role(self, name):
         self.init()
-        role_list = self.cmd('role list')
+        role_list = self.cmd('role list', True)
         if ' {0} '.format(name) not in role_list:
             self.cmd('role create {0}'.format(name))
 
-    def create_user(self, name, password, tenant_roles):
+    def create_user(self, name, password, tenant_roles, use_admin_token=True):
         self.init()
-        user_list = self.cmd('user list')
+        user_list = self.cmd('user list', use_admin_token)
         if ' {0} '.format(name) not in user_list:
-            self.cmd('user create --password={1} {0}'.format(name, password))
+            self.cmd('user create --password={1} {0}'.format(name, password), use_admin_token)
             for tenant_role in tenant_roles:
                 self.cmd('role add --user={0} --project={1} {2}'.format(
-                    name, tenant_role[0], tenant_role[1]))
+                    name, tenant_role[0], tenant_role[1]), use_admin_token)
 
     def create_service(self, name, service):
         self.init()

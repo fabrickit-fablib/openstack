@@ -6,8 +6,8 @@ from fablib.openstack import Nova
 
 @task
 @parallel
-def setup():
-    nova = Nova()
+def setup(enable_services=['.*']):
+    nova = Nova(enable_services)
     nova.setup()
 
     return {'status': 1}

@@ -13,20 +13,28 @@ test_bootstrap:
     - name: centos7
       template: user-data_centos7
       src_image: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1511.qcow2c.xz
-      vcpus: 1
+      vcpus: 2
       ip: 192.168.122.50
-      ram: 4096
+      ram: 8096
       disk_size: 20
-    - name: centos7_2
-      template: user-data_centos7
-      src_image: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1511.qcow2c.xz
-      vcpus: 1
-      ip: 192.168.122.51
-      ram: 4096
-      disk_size: 20
+    # - name: centos7
+    #   template: user-data_centos7
+    #   src_image: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1511.qcow2c.xz
+    #   vcpus: 1
+    #   ip: 192.168.122.50
+    #   ram: 4096
+    #   disk_size: 20
+    # - name: centos7_2
+    #   template: user-data_centos7
+    #   src_image: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1511.qcow2c.xz
+    #   vcpus: 1
+    #   ip: 192.168.122.51
+    #   ram: 4096
+    #   disk_size: 20
   iptables:
     - ip: 192.168.122.55
       ports:
+        - [46080, 46080]
         - [40080, 40080]
         - [43306, 43306]
         - [49999, 49999]

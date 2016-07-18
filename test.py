@@ -1,6 +1,7 @@
 # coding: utf-8
 
-from fabkit import filer, env
+import time
+from fabkit import *  # noqa
 from keystone import Keystone
 from glance import Glance
 from nova import Nova
@@ -9,17 +10,23 @@ import utils
 
 
 class Test(SimpleBase):
+    def __init__(self):
+        self.data_key = 'test_openstack'
+        self.data = {}
+
     def basic(self):
+        data = self.init()
+
         if env.host != env.hosts[0]:
             return
 
         keystone = Keystone()
-        keystone.create_user('testuser', 'testuser', [['admin', 'admin']])
+        keystone.create_user(data['user'], data['password'], [['admin', 'admin']], False)
 
         glance = Glance()
         image_id = glance.create_image(
-            'cirros-0.3.3-x86_64',
-            'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+            data['image']['name'],
+            data['image']['src_url'],
         )
 
         net_id = utils.oscmd("neutron net-list | grep ' {0} ' | awk '{{print $2}}'".format(
@@ -34,8 +41,11 @@ class Test(SimpleBase):
             'flavor': 'test-flavor',
         }
 
-        print test_stack
-
         filer.template('/tmp/stack-nova.yml', src='stack/stack-nova.yml', data=test_stack)
 
-        utils.oscmd('heat stack-create -f /tmp/stack-nova.yml stack-nova')
+        with api.warn_only():
+            result = utils.oscmd('heat stack-list | grep stack-nova')
+            if result.return_code == 0:
+                utils.oscmd('heat stack-delete -y stack-nova')
+                time.sleep(3)
+            utils.oscmd('heat stack-create -f /tmp/stack-nova.yml stack-nova')

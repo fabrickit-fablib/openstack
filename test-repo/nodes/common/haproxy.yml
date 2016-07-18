@@ -1,0 +1,135 @@
+haproxy:
+  ha_password: hapass
+  ctl_options:
+    - option tcpka
+    - option tcplog
+  cluster_map:
+    common:
+      hosts: ${#node_map.haproxy.hosts}
+      host: 192.168.122.55
+      vip: 192.168.122.55
+      cidr_netmask: 24
+      monitor_interval: 30
+      defaults:
+        - mode                    http
+        - log                     global
+        - option                  httplog
+        - option                  dontlognull
+        - option http-server-close
+        - option forwardfor       except 127.0.0.0/8
+        - option                  redispatch
+        - retries                 3
+        - timeout http-request    10s
+        - timeout queue           1m
+        - timeout connect         10s
+        - timeout client          1m
+        - timeout server          1m
+        - timeout http-keep-alive 10s
+        - timeout check           10s
+        - maxconn                 3000
+        - balance source
+      hastats:
+        enable: true
+        port: 49999
+        auth:
+          user: admin
+          pass: adminpass
+      listens:
+        - name: horizon
+          port: 40080
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 10080
+          server_option: check inter 2000 rise 2 fall 5
+        - name: mysql
+          port: 3306
+          options:
+            - mode tcp
+            - maxconn 1024
+            - timeout connect 500000
+            - timeout client 1000000
+            - timeout server 1000000
+          server_hosts: ${#node_map.mysql.hosts}
+          server_port: 13306
+          server_option: check inter 2000 rise 2 fall 5 backup
+
+        - name: glance_api
+          port: 9292
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 19292
+          server_option: check inter 2000 rise 2 fall 5
+        - name: glance_registry
+          port: 9191
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 19191
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: keystone
+          port: 5000
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 15000
+          server_option: check inter 2000 rise 2 fall 5
+        - name: keystone_admin
+          port: 35357
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 45357
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: nova_api
+          port: 8774
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18774
+          server_option: check inter 2000 rise 2 fall 5
+        - name: nova_vncproxy
+          port: 6080
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 16080
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: neutron_api
+          port: 9696
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 19696
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: cinder_api
+          port: 8776
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18776
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: ceilometer_api
+          port: 8777
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18777
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: heat_api
+          port: 8004
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18004
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: heat_api_cfn
+          port: 8000
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18000
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: swift_proxy
+          port: 8080
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18080
+          server_option: check inter 2000 rise 2 fall 5

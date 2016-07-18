@@ -1,9 +1,9 @@
 mysql:
   cluster_map:
     common:
-      endpoint: ${#node_map.mysql.hosts.0}:3306
+      endpoint: ${#haproxy.cluster_map.common.host}:3306
       hosts: ${#node_map.mysql.hosts}
-      port: 3306
+      port: 13306
       user_map:
         slave:
           user: slave
@@ -17,7 +17,7 @@ mysql:
           src_hosts:
             - '192.168.122.0/255.255.255.0'
           previleges: 'ALL PREVILEGES'
-          dbs: [keystone, nova, neutron, glance, cinder, heat, ceilometer, metering, alarm, event]
+          dbs: [keystone, nova, novaapi, neutron, glance, cinder, heat, ceilometer, metering, alarm, event]
 
       replication:
         types: [master, master]

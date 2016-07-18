@@ -90,9 +90,11 @@ horizon:
     openstack/mysql: 1
     openstack/memcache: 1
 
-compute:
-  status_flow: [1]
+test:
   require:
-    openstack/rabbitmq: 1
     openstack/nova: 1
     openstack/neutron: 1
+    openstack/heat: 1
+    openstack/glance: 1
+    openstack/keystone: 1
+    openstack/horizon: 1
