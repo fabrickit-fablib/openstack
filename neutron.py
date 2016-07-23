@@ -30,6 +30,8 @@ class Neutron(SimpleBase):
             'neutron-linuxbridge-agent',
             'neutron-openvswitch-agent',
             'neutron-dhcp-agent',
+            'neutron-l3-agent',
+            'neutron-metadata-agent',
         ]
 
         self.services = []
@@ -65,7 +67,9 @@ class Neutron(SimpleBase):
             self.python.setup()
             self.install_packages()
             self.python.setup_package(**self.package)
-            sudo('modprobe tun')
+            sudo('modprobe tun')  # for vhost_net
+
+            self.setup_network_bridge()
 
         if self.is_tag('conf'):
             is_updated = filer.template(
@@ -185,32 +189,37 @@ class Neutron(SimpleBase):
                 for interface in router['interfaces']:
                     self.cmd('router-interface-add {0} {1}'.format(router['name'], interface))
 
-    def setup_ovs_network(self):
+    def setup_network_bridge(self):
         data = self.init()
-        if data['ml2']['mechanism_drivers'] != 'ovs':
-            return
 
-        Service('openvswitch').start().enable()
+        if 'linuxbridge' in data['ml2']['mechanism_drivers']:
+            sudo('modprobe bridge')
 
-        sudo('ovs-vsctl br-exists {0} || ovs-vsctl add-br {0}'.format(
-            data['ovs']['integration_bridge']))
+        elif 'openvswitch' in data['ml2']['mechanism_drivers']:
+            sudo('modprobe -r bridge')
+            Service('openvswitch').start().enable()
 
-        filer.template(
-            '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(data['ovs']['integration_bridge']),
-            src='network/ovs-ifcfg-br.j2',
-            data=data)
+            sudo('ovs-vsctl br-exists {0} || ovs-vsctl add-br {0}'.format(
+                data['ovs']['integration_bridge']))
 
-        for mapping in data['ovs']['physical_interface_mappings']:
-            pair = mapping.split(':')
-            ovs_interface = pair[0]
-            physical_interface = pair[1]
-            sudo('ovs-vsctl br-exists {0} || ovs-vsctl add-br {0}'.format(ovs_interface))
+            filer.template(
+                '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(data['ovs']['integration_bridge']),
+                src='network/ovs-ifcfg-br.j2',
+                data=data)
 
-            if physical_interface == 'default':
-                data['ovs_interface'] = ovs_interface
-                backup = '/etc/sysconfig/network-scripts/default-ifcfg'
-                if filer.exists(backup):
-                    default = run('cat {0}'.format(backup))
+            for mapping in data['ovs']['bridge_mappings']:
+                pair = mapping.split(':')
+                ovs_interface = pair[1]
+                sudo('ovs-vsctl br-exists {0} || ovs-vsctl add-br {0}'.format(ovs_interface))
+
+            for mapping in data['ovs']['physical_interface_mappings']:
+                pair = mapping.split(':')
+                ovs_interface = pair[0]
+                physical_interface = pair[1]
+
+                backup_default_dev_file = '/etc/sysconfig/network-scripts/bk-ifcfg-defualt'
+                if filer.exists(backup_default_dev_file):
+                    default = run('cat {0}'.format(backup_default_dev_file))
                     dev, ip, subnet, gateway = default.split(':')
                     data['default_dev'] = {
                         'dev': dev,
@@ -222,26 +231,32 @@ class Neutron(SimpleBase):
                     sudo("echo '{0[dev]}:{0[ip]}:{0[subnet]}:{1}' > {2}".format(
                         env.node['ip']['default_dev'],
                         env.node['ip']['default']['ip'],
-                        backup))
+                        backup_default_dev_file))
                     data['default_dev'] = env.node['ip']['default_dev']
                     data['default_dev']['gateway'] = env.node['ip']['default']['ip']
+
                 data['default_dev']['netmask'] = self.cidr(
                     data['default_dev']['subnet'].split('/')[1])
 
-                filer.template(
-                    '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(data['default_dev']['dev']),
-                    src='network/ovs-ifcfg-flat.j2',
-                    data=data)
+                if physical_interface == data['default_dev']['dev']:
+                    # create backup for default interface
 
-                filer.template(
-                    '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(ovs_interface),
-                    src='network/ovs-ifcfg-br-flat.j2',
-                    data=data)
+                    data['ovs_interface'] = ovs_interface
 
-                result = sudo('ovs-vsctl list-ports {0}'.format(ovs_interface))
-                if result.find(data['default_dev']['dev']) == -1:
-                    with api.warn_only():
-                        api.reboot()
+                    filer.template(
+                        '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(physical_interface),
+                        src='network/ovs-ifcfg-flat.j2',
+                        data=data)
+
+                    filer.template(
+                        '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(ovs_interface),
+                        src='network/ovs-ifcfg-br-flat.j2',
+                        data=data)
+
+                    result = sudo('ovs-vsctl list-ports {0}'.format(ovs_interface))
+                    if result.find(data['default_dev']['dev']) == -1:
+                        with api.warn_only():
+                            api.reboot(180)
 
     def cidr(self, prefix):
         prefix = int(prefix)

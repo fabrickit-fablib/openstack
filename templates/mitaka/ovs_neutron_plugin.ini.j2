@@ -73,7 +73,7 @@ bridge_mappings = {{ ovs.bridge_mappings|join(',') }}
 # Example: tunnel_types = gre
 # Example: tunnel_types = vxlan
 # Example: tunnel_types = vxlan, gre
-tunnel_types = gre
+tunnel_types = {{ ovs.agent.tunnel_types|join(',') }}
 
 # (IntOpt) The port number to utilize if tunnel_types includes 'vxlan'. By
 # default, this will make use of the Open vSwitch default value of '4789' if
@@ -130,12 +130,12 @@ tunnel_types = gre
 # Firewall driver for realizing neutron security group function.
 # firewall_driver = neutron.agent.firewall.NoopFirewallDriver
 # Example: firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
-firewall_driver = neutron.agent.firewall.NoopFirewallDriver
+firewall_driver = {{ ovs.securitygroup.firewall_driver }}
 
 # Controls if neutron security group is enabled or not.
 # It should be false when you use nova security group.
 # enable_security_group = True
-enable_security_group = False
+enable_security_group = {{ ovs.securitygroup.enable_security_group }}
 
 #-----------------------------------------------------------------------------
 # Sample Configurations.

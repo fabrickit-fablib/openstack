@@ -9,7 +9,7 @@
 # Example of interface_driver option for OVS based plugins (OVS, Ryu, NEC)
 # that supports L3 agent
 # interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
-interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
+interface_driver = {{ l3.interface_driver }}
 
 # Use veth for an OVS interface or not.
 # Support kernels with limited namespace support
@@ -93,7 +93,7 @@ external_network_bridge = {{ l3.external_network_bridge }}
 # you are sure that your version of iproute does not suffer from the problem.
 # If True, namespaces will be deleted when a router is destroyed.
 # router_delete_namespaces = False
-router_delete_namespaces = True
+router_delete_namespaces = {{ l3.router_delete_namespaces }}
 
 # Timeout for ovs-vsctl commands.
 # If the timeout expires, ovs commands will fail with ALARMCLOCK error.

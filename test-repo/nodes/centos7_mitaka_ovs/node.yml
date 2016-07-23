@@ -1,0 +1,62 @@
+include:
+  - centos7_mitaka
+
+node_map:
+  openstack:
+    hosts:
+      - 192.168.122.50
+    fabruns:
+      - openstack/bootstrap
+      - openstack/memcache
+      - openstack/keystone
+      - openstack/glance
+      - openstack/nova:
+          enable_services: ['.*']
+      - openstack/neutron:
+          enable_services: ['server', 'dhcp-agent', 'l3-agent', 'metadata-agent', 'openvswitch-agent']
+      - openstack/heat
+      - openstack/ceilometer
+      - openstack/horizon
+      - openstack/test
+      # - openstack/swift
+      # - openstack/cinder
+      #
+
+neutron:
+  service_plugins: router
+  ml2:
+    type_drivers: flat,gre
+    tenant_network_types: flat,gre
+    mechanism_drivers:
+      - openvswitch
+    flat_networks:
+      - physnet1
+  ovs:
+    integration_bridge: br-int
+    physical_interface_mappings:
+      - br-eth0:eth0
+    bridge_mappings:
+      - physnet1:br-eth0
+    agent:
+      tunnel_types: [gre]
+    securitygroup:
+      firewall_driver: neutron.agent.firewall.NoopFirewallDriver
+      enable_security_group: False
+  l3:
+    interface_driver: neutron.agent.linux.interface.OVSInterfaceDriver
+    external_network_bridge: br-ex
+    router_delete_namespaces: true
+  dhcp:
+    enable: true
+  test_net: test_net
+  networks:
+    - name: test_net
+      options:
+        - provider:physical_network=physnet1
+        - provider:network_type=flat
+        - shared
+      subnets:
+        - name: test_subnet
+          cidr: 192.168.122.0/24
+          options:
+            - allocation-pool start=192.168.122.100,end=192.168.122.120

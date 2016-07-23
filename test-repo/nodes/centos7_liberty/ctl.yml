@@ -186,6 +186,7 @@ neutron:
       - physnet1:eth0
   dhcp:
     enable: true
+    dhcp_delete_namespaces: true
   test_net: test_net
   networks:
     - name: test_net

@@ -90,7 +90,7 @@ dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq
 # you are sure that your version of iproute does not suffer from the problem.
 # If True, namespaces will be deleted when a dhcp server is disabled.
 # dhcp_delete_namespaces = False
-dhcp_delete_namespaces = True
+dhcp_delete_namespaces = {{ dhcp.dhcp_delete_namespaces }}
 
 # Timeout for ovs-vsctl commands.
 # If the timeout expires, ovs commands will fail with ALARMCLOCK error.
