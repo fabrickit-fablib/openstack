@@ -46,9 +46,23 @@ class Bootstrap(SimpleBase):
     def dump_openstackrc(self):
         keystone_data = env.cluster['keystone']
         sudo('''cat << _EOT_ > /root/openstackrc
-    export OS_USERNAME=admin
-    export OS_PASSWORD={0}
-    export OS_TENANT_NAME=admin
-    export OS_AUTH_URL={1}'''.format(
+export OS_USERNAME=admin
+export OS_PASSWORD={0}
+export OS_TENANT_NAME=admin
+export OS_AUTH_URL={1}'''.format(
             keystone_data['admin_password'],
             keystone_data['services']['keystone']['adminurl']))
+
+        sudo('''cat << _EOT_ > /root/openstackrcv3
+export OS_USERNAME=admin
+export OS_PASSWORD={0}
+export OS_TENANT_NAME=admin
+export OS_AUTH_URL={1}/v3
+export OS_REGION_NAME={2}
+export OS_VOLUME_API_VERSION=2
+export OS_IDENTITY_API_VERSION=3
+export OS_USER_DOMAIN_NAME=${{OS_USER_DOMAIN_NAME:-"Default"}}
+export OS_PROJECT_DOMAIN_NAME=${{OS_PROJECT_DOMAIN_NAME:-"Default"}}'''.format(
+            keystone_data['admin_password'],
+            keystone_data['endpoint'],
+            keystone_data['service_region']))

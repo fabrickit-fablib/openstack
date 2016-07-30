@@ -12,6 +12,8 @@ os_package_map:
       - python-swiftclient
       - python-heatclient
       - python-ceilometerclient
+      - tox
+      - flake8
     mk_links:
       - { src: /opt/os-tools/bin/openstack, dest: /usr/bin/openstack }
       - { src: /opt/os-tools/bin/glance, dest: /usr/bin/glance }
@@ -21,6 +23,8 @@ os_package_map:
       - { src: /opt/os-tools/bin/swift, dest: /usr/bin/swift }
       - { src: /opt/os-tools/bin/heat, dest: /usr/bin/heat }
       - { src: /opt/os-tools/bin/ceilometer, dest: /usr/bin/ceilometer }
+      - { src: /opt/os-tools/bin/tox, dest: /usr/bin/tox }
+      - { src: /opt/os-tools/bin/flake8, dest: /usr/bin/flake8 }
 
   keystone:
     name: keystone
@@ -98,6 +102,7 @@ os_package_map:
       - { src: etc/nova, dest: /etc/nova }
     mk_links:
       - { src: /opt/nova/bin/nova-manage, dest: /usr/bin/nova-manage }
+      - { src: /opt/nova/bin/privsep-helper, dest: /usr/bin/privsep-helper }  # for cinder
     services:
       - name: nova-api
         description: OpenStack Nova Service
@@ -152,6 +157,9 @@ os_package_map:
       - name: neutron
         url: https://github.com/openstack/neutron.git
         branch: stable/mitaka
+      - name: neutron-lbaas
+        url: https://github.com/openstack/neutron-lbaas.git
+        branch: stable/mitaka
     requirements:
       - pymysql
     mk_dirs:
@@ -200,6 +208,12 @@ os_package_map:
               --config-file=/etc/neutron/neutron.conf
               --config-file=/etc/neutron/metadata_agent.ini
               --log-file=/var/log/neutron/metadata-agent.log
+      - name: neutron-lbaasv2-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-lbaasv2-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/lbaas_agent.ini
+              --log-file=/var/log/neutron/lbaasv2-agent.log
 
   horizon:
     name: horizon

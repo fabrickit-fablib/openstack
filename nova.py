@@ -87,12 +87,9 @@ class Nova(SimpleBase):
             self.python.setup()
             self.python.setup_package(**self.package)
 
-            if not filer.exists('/usr/bin/nova'):
-                sudo('ln -s {0}/bin/nova /usr/bin/'.format(self.prefix))
-            if not filer.exists('/usr/bin/nova-manage'):
-                sudo('ln -s {0}/bin/nova-manage /usr/bin/'.format(self.prefix))
-            if not filer.exists('/usr/bin/nova-rootwrap'):
-                sudo('ln -s {0}/bin/nova-rootwrap /usr/bin/'.format(self.prefix))
+            # for cinder
+            if not filer.exists('/usr/bin/scsi_id'):
+                sudo('ln -s /lib/udev/scsi_id /usr/bin/')
 
         if self.is_tag('conf'):
             # sudoersファイルは最後に改行入れないと、シンタックスエラーとなりsudo実行できなくなる

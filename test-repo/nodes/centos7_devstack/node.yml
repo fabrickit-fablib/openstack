@@ -1,0 +1,6 @@
+node_map:
+  openstack:
+    hosts:
+      - 192.168.122.50
+    fabruns:
+      - openstack/devstack

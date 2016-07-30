@@ -25,20 +25,22 @@ node_map:
 neutron:
   service_plugins: router
   ml2:
-    type_drivers: flat,gre
-    tenant_network_types: flat,gre
+    type_drivers: [flat, gre, vxlan]
+    tenant_network_types: [flat, gre, vxlan]
     mechanism_drivers:
       - openvswitch
+      - l2population
     flat_networks:
-      - physnet1
+      - external1
   ovs:
     integration_bridge: br-int
     physical_interface_mappings:
       - br-eth0:eth0
     bridge_mappings:
-      - physnet1:br-eth0
+      - external1:br-eth0
     agent:
-      tunnel_types: [gre]
+    tunnel_types: [gre, vxlan]
+    l2_population: true
     securitygroup:
       firewall_driver: neutron.agent.firewall.NoopFirewallDriver
       enable_security_group: False
@@ -48,15 +50,29 @@ neutron:
     router_delete_namespaces: true
   dhcp:
     enable: true
-  test_net: test_net
+  test_net: ext_net
   networks:
-    - name: test_net
+    - name: ext_net
       options:
-        - provider:physical_network=physnet1
-        - provider:network_type=flat
-        - shared
+        - provider:network_type flat
+        - provider:physical_network external1
       subnets:
-        - name: test_subnet
+        - name: ext_subnet
           cidr: 192.168.122.0/24
           options:
+            - disable-dhcp
+            - gateway 192.168.122.1
             - allocation-pool start=192.168.122.100,end=192.168.122.120
+    - name: int_net
+      options:
+        - provider:network_type vxlan
+      subnets:
+        - name: int_subnet
+          cidr: 192.168.1.0/24
+          options:
+            - gateway 192.168.1.1
+  routers:
+    - name: router1
+      gateway: ext_net
+      interfaces:
+        - int_subnet

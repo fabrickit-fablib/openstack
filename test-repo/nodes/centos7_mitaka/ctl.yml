@@ -186,17 +186,22 @@ neutron:
   auth_strategy: keystone
   lock_path: /var/lock/subsys/neutron
   nova_url: ${#nova.endpoint}/v2/
-  service_plugins: router
+  service_plugins: [router, neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2]
   agent_down_time: 120
   agent:
     # report_interval should be half or less than agent_down_time
     report_interval: 60
   ml2:
-    type_drivers: flat
-    tenant_network_types: flat
-    mechanism_drivers: linuxbridge
+    type_drivers: [flat]
+    tenant_network_types: [flat]
+    mechanism_drivers: [linuxbridge]
+    extension_drivers: []
     flat_networks:
       - physnet1
+    tunnel_id_ranges:
+      - '1:10'
+    vni_ranges:
+      - '1:10'
   linuxbridge:
     enable: true
     enable_vxlan: False

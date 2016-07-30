@@ -11,3 +11,4 @@ from horizon import Horizon  # noqa
 from heat import Heat  # noqa
 from ceilometer import Ceilometer  # noqa
 from test import Test  # noqa
+from devstack import Devstack  # noqa

@@ -23,7 +23,7 @@ class Neutron(SimpleBase):
             'is_neutron-server': False,
             'is_master': False,
         }
-        self.packages = ['openvswitch']
+        self.packages = ['openvswitch', 'haproxy']
 
         default_services = [
             'neutron-server',
@@ -32,6 +32,7 @@ class Neutron(SimpleBase):
             'neutron-dhcp-agent',
             'neutron-l3-agent',
             'neutron-metadata-agent',
+            'neutron-lbaasv2-agent',
         ]
 
         self.services = []
@@ -72,77 +73,106 @@ class Neutron(SimpleBase):
             self.setup_network_bridge()
 
         if self.is_tag('conf'):
-            is_updated = filer.template(
+            filer.template(
                 '/etc/sudoers.d/neutron',
                 data=data,
                 src='sudoers.j2',
             )
 
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/neutron/neutron.conf',
                 src='{0}/neutron.conf.j2'.format(data['version']),
                 data=data,
-            )
+            ):
+                self.handlers['restart_neutron-*'] = True
 
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/neutron/plugins/ml2/ml2_conf.ini',
                 src='{0}/ml2_conf.ini.j2'.format(data['version']),
                 data=data,
-            ) or is_updated
+            ):
+                self.handlers['restart_neutron-*'] = True
 
             if self.data['version'] == 'kilo':
                 linuxbridge_conf = '/etc/neutron/plugins/linuxbridge/linuxbridge_conf.ini'
             elif self.data['version'] in ['liberty', 'mitaka', 'master']:
                 linuxbridge_conf = '/etc/neutron/plugins/ml2/linuxbridge_agent.ini'
 
-            is_updated = filer.template(
+            if filer.template(
                 linuxbridge_conf,
                 src='{0}/linuxbridge_conf.ini.j2'.format(data['version']),
                 data=data,
-            ) or is_updated
+            ):
+                self.handlers['restart_neutron-*'] = True
 
             if self.data['version'] == 'kilo':
                 ovs_conf = '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini'
             elif self.data['version'] in ['liberty', 'mitaka', 'master']:
                 ovs_conf = '/etc/neutron/plugins/ml2/openvswitch_agent.ini'
 
-            if self.data['ml2']['mechanism_drivers'] == 'openvswitch':
-                is_updated = filer.template(
+            if 'openvswitch' in self.data['ml2']['mechanism_drivers']:
+                if filer.template(
                     ovs_conf,
                     src='{0}/ovs_neutron_plugin.ini.j2'.format(data['version']),
                     data=data,
-                ) or is_updated
+                ):
+                    self.handlers['restart_neutron-*'] = True
 
-                is_updated = filer.template(
+                if filer.template(
                     '/etc/neutron/l3_agent.ini',
                     src='{0}/l3_agent.ini.j2'.format(data['version']),
                     data=data,
-                ) or is_updated
+                ):
+                    self.handlers['restart_neutron-*'] = True
             else:
                 sudo('echo '' > {0}'.format(ovs_conf))
 
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/neutron/dhcp_agent.ini',
                 src='{0}/dhcp_agent.ini.j2'.format(data['version']),
                 data=data,
-            ) or is_updated
+            ):
+                self.handlers['restart_neutron-*'] = True
 
-            is_updated = filer.template(
+            if filer.template(
                 '/etc/neutron/metadata_agent.ini',
                 src='{0}/metadata_agent.ini.j2'.format(data['version']),
                 data=data,
-            ) or is_updated
+            ):
+                self.handlers['restart_neutron-*'] = True
+
+            # lbaas
+            if filer.template(
+                '/etc/neutron/services_lbaas.conf',
+                src='{0}/services_lbaas.conf.j2'.format(data['version']),
+                data=data,
+            ):
+                self.handlers['restart_neutron-*'] = True
+
+            if filer.template(
+                '/etc/neutron/neutron_lbaas.conf',
+                src='{0}/neutron_lbaas.conf.j2'.format(data['version']),
+                data=data,
+            ):
+                self.handlers['restart_neutron-*'] = True
+
+            if filer.template(
+                '/etc/neutron/lbaas_agent.ini',
+                src='{0}/lbaas_agent.ini.j2'.format(data['version']),
+                data=data,
+            ):
+                self.handlers['restart_neutron-*'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
                 option = '--config-file /etc/neutron/neutron.conf'
                 run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
+                run('{0}/bin/neutron-db-manage {1} --service lbaas upgrade head'.format(
+                    self.prefix, option))
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
-
-            if is_updated:
-                self.restart_services(pty=False)
+            self.exec_handlers()
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
@@ -203,7 +233,8 @@ class Neutron(SimpleBase):
                 data['ovs']['integration_bridge']))
 
             filer.template(
-                '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(data['ovs']['integration_bridge']),
+                '/etc/sysconfig/network-scripts/ifcfg-{0}'.format(
+                    data['ovs']['integration_bridge']),
                 src='network/ovs-ifcfg-br.j2',
                 data=data)
 

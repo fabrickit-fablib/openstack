@@ -12,6 +12,10 @@ class Swift(SimpleBase):
         self.data = {
         }
 
+        self.packages = [
+            'liberasurecode-devel',
+        ]
+
         self.services = [
             'swift-proxy-server',
             'swift-account-server',
@@ -45,6 +49,7 @@ class Swift(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
+            self.install_packages()
             self.python.setup()
             self.python.setup_package(**self.package)
 

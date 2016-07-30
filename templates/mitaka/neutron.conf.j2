@@ -70,7 +70,7 @@ core_plugin = {{ core_plugin }}
 #
 # service_plugins =
 # Example: service_plugins = router,firewall,lbaas,vpnaas,metering
-service_plugins = {{ service_plugins }}
+service_plugins = {{ service_plugins|join(',') }}
 
 # Paste configuration file
 # api_paste_config = api-paste.ini

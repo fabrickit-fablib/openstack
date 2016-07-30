@@ -1,7 +1,6 @@
 # coding: utf-8
 
-import re
-from fabkit import env, sudo, filer
+from fabkit import *  # noqa
 from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
@@ -78,15 +77,15 @@ class Cinder(SimpleBase):
             'volume_group': volume_group,
         })
 
-        self.lvm2_lvmetad.start().enable()
-        self.tgtd.start().enable()
+        Service('lvm2-lvmetad').start().enable()
 
         volume_path = '/tmp/{0}'.format(volume_group)
         if not filer.exists(volume_path):
-            sudo('dd if=/dev/zero of={0} bs=1 count=0 seek=20G'.format(volume_path))
+            sudo('dd if=/dev/zero of={0} bs=1 count=0 seek=8G'.format(volume_path))
 
-        result = sudo('pvscan')
-        if re.search(' {0} '.format(volume_group), result) == -1:
-            sudo('losetup /dev/loop2 {0}'.format(volume_path))
-            sudo('pvcreate /dev/loop2')
-            sudo('vgcreate {0} /dev/loop2'.format(volume_group))
+        free_loopdev = sudo('losetup -f')
+        # if re.search(' {0} '.format(volume_group), result) == -1:
+        sudo('losetup -a | grep {0} || losetup {1} {0}'.format(volume_path, free_loopdev))
+        loopdev = "`losetup -a | grep {0} | awk -F : '{{print $1}}'`".format(volume_path)
+        sudo("pvscan | grep {0} || pvcreate {0}".format(loopdev))
+        sudo('pvscan | grep {0} || vgcreate {0} {1}'.format(volume_group, loopdev))

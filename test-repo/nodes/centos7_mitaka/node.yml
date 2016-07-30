@@ -10,13 +10,13 @@ node_map:
       - openstack/nova:
           enable_services: ['.*']
       - openstack/neutron:
-          enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent']
+          enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
       - openstack/heat
       - openstack/ceilometer
       - openstack/horizon
+      - openstack/cinder
+      - openstack/swift
       - openstack/test
-      # - openstack/swift
-      # - openstack/cinder
       #
 
   gluster:
