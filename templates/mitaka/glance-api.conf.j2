@@ -1168,6 +1168,11 @@ swift_store_auth_address = 127.0.0.1:5000/v2.0/
 
 
 [oslo_messaging_rabbit]
+rabbit_host = {{ rabbit_host }}
+rabbit_port = {{ rabbit_port }}
+rabbit_userid = {{ rabbit_userid }}
+rabbit_password = {{ rabbit_password }}
+rabbit_virtual_host = {{ rabbit_virtual_host }}
 
 #
 # From oslo.messaging
@@ -1226,13 +1231,11 @@ swift_store_auth_address = 127.0.0.1:5000/v2.0/
 # value)
 # Deprecated group/name - [DEFAULT]/rabbit_host
 #rabbit_host = localhost
-rabbit_host = {{ rabbit_host }}
 
 # The RabbitMQ broker port where a single node is used. (integer
 # value)
 # Deprecated group/name - [DEFAULT]/rabbit_port
 #rabbit_port = 5672
-rabbit_port = {{ rabbit_port }}
 
 # RabbitMQ HA cluster host:port pairs. (list value)
 # Deprecated group/name - [DEFAULT]/rabbit_hosts
@@ -1245,12 +1248,10 @@ rabbit_port = {{ rabbit_port }}
 # The RabbitMQ userid. (string value)
 # Deprecated group/name - [DEFAULT]/rabbit_userid
 #rabbit_userid = guest
-rabbit_userid = {{ rabbit_userid }}
 
 # The RabbitMQ password. (string value)
 # Deprecated group/name - [DEFAULT]/rabbit_password
 #rabbit_password = guest
-rabbit_password = {{ rabbit_password }}
 
 # The RabbitMQ login method. (string value)
 # Deprecated group/name - [DEFAULT]/rabbit_login_method
@@ -1259,7 +1260,6 @@ rabbit_password = {{ rabbit_password }}
 # The RabbitMQ virtual host. (string value)
 # Deprecated group/name - [DEFAULT]/rabbit_virtual_host
 #rabbit_virtual_host = /
-rabbit_virtual_host = {{ rabbit_virtual_host }}
 
 # How frequently to retry connecting with RabbitMQ. (integer value)
 #rabbit_retry_interval = 1

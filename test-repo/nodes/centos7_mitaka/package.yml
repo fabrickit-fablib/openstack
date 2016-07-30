@@ -429,8 +429,53 @@ os_package_map:
         exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-collector
               --config-file=/etc/ceilometer/ceilometer.conf
               --log-file=/var/log/ceilometer/collector.log
-      - name: ceilometer-polling
+      - name: ceilometer-agent-compute
         description: OpenStack Telemetry Service
-        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-polling --polling-namespaces central compute
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-polling --polling-namespaces compute
               --config-file=/etc/ceilometer/ceilometer.conf
-              --log-file=/var/log/ceilometer/polling.log
+              --log-file=/var/log/ceilometer/agent-compute.log
+      - name: ceilometer-agent-central
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-polling --polling-namespaces central
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/agent-central.log
+
+  aodh:
+    name: aodh
+    user: root
+    group: root
+    prefix: /opt/aodh
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: aodh
+        url: https://github.com/openstack/aodh.git
+        branch: stable/mitaka
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/aodh }
+      - { path: /var/lib/aodh }
+    cp_files:
+      - { src: etc/aodh, dest: /etc/aodh }
+    services:
+      - name: aodh-api
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-api
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/api.log
+      - name: aodh-evaluator
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-evaluator
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/evaluator.log
+      - name: aodh-notifier
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-notifier
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/notifier.log
+      - name: aodh-listener
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-listener
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/listener.log

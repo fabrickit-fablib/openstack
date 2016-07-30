@@ -83,6 +83,13 @@ ceilometer:
     openstack/keystone: 1
     openstack/mysql: 1
 
+aodh:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+    openstack/ceilometer: 1
+
 horizon:
   status_flow: [1]
   require:

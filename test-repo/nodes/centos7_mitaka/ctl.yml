@@ -104,6 +104,13 @@ keystone:
       publicurl: ${#ceilometer.endpoint}
       internalurl: ${#ceilometer.endpoint}
       adminurl: ${#ceilometer.endpoint}
+    aodh:
+      type: alarming
+      region: RegionOne
+      description: Openstack Telemetry Alarming Service
+      publicurl: ${#aodh.endpoint}
+      internalurl: ${#aodh.endpoint}
+      adminurl: ${#aodh.endpoint}
 
 glance:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9292
@@ -307,3 +314,15 @@ ceilometer:
   keystone: ${#keystone}
   publisher:
     telemetry_secret: telemetry_secret
+
+aodh:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8042
+  port: 18042
+  version: mitaka
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  database:
+    connection: ${#openstack.database.connection}/aodh

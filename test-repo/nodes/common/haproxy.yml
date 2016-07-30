@@ -113,6 +113,13 @@ haproxy:
           server_port: 18777
           server_option: check inter 2000 rise 2 fall 5
 
+        - name: aodh_api
+          port: 8042
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18042
+          server_option: check inter 2000 rise 2 fall 5
+
         - name: heat_api
           port: 8004
           options: ${#haproxy.ctl_options}

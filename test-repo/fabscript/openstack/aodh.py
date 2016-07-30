@@ -1,13 +1,13 @@
 # coding: utf-8
 
 from fabkit import task, parallel
-from fablib.openstack import Ceilometer
+from fablib.openstack import Aodh
 
 
 @task
 @parallel
 def setup(enable_services=['.*']):
-    ceilometer = Ceilometer(enable_services)
-    ceilometer.setup()
+    aodh = Aodh(enable_services)
+    aodh.setup()
 
     return {'status': 1}
