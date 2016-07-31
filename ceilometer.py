@@ -19,8 +19,8 @@ class Ceilometer(SimpleBase):
             'ceilometer-agent-notification',
             'ceilometer-agent-compute',
             'ceilometer-agent-central',
-            # 'ceilometer-alarm-evaluator',
-            # 'ceilometer-alarm-notifier',
+            # 'ceilometer-alarm-evaluator', # liberty
+            # 'ceilometer-alarm-notifier', # liberty
         ]
 
         self.services = []

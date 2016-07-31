@@ -104,4 +104,3 @@ test:
     openstack/heat: 1
     openstack/glance: 1
     openstack/keystone: 1
-    openstack/horizon: 1

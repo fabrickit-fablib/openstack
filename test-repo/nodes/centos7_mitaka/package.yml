@@ -165,8 +165,8 @@ os_package_map:
     mk_dirs:
       - { path: /var/log/neutron }
     cp_files:
-      - { src: etc, dest: /etc/neutron }
-      - { src: etc/neutron/plugins, dest: /etc/neutron/plugins }
+      - { src: ../neutron/etc, dest: /etc/neutron }
+      - { src: ../neutron/etc/neutron/plugins, dest: /etc/neutron/plugins }
     services:
       - name: neutron-server
         description: OpenStack Network Service
