@@ -97,6 +97,12 @@ horizon:
     openstack/mysql: 1
     openstack/memcache: 1
 
+ironic:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+
 test:
   require:
     openstack/nova: 1

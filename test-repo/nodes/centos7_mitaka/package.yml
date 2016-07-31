@@ -12,6 +12,7 @@ os_package_map:
       - python-swiftclient
       - python-heatclient
       - python-ceilometerclient
+      - python-ironicclient
       - tox
       - flake8
     mk_links:
@@ -23,6 +24,7 @@ os_package_map:
       - { src: /opt/os-tools/bin/swift, dest: /usr/bin/swift }
       - { src: /opt/os-tools/bin/heat, dest: /usr/bin/heat }
       - { src: /opt/os-tools/bin/ceilometer, dest: /usr/bin/ceilometer }
+      - { src: /opt/os-tools/bin/ironic, dest: /usr/bin/ironic }
       - { src: /opt/os-tools/bin/tox, dest: /usr/bin/tox }
       - { src: /opt/os-tools/bin/flake8, dest: /usr/bin/flake8 }
 
@@ -479,3 +481,33 @@ os_package_map:
         exec: ${#os_package_map.aodh.prefix}/bin/aodh-listener
               --config-file=/etc/aodh/aodh.conf
               --log-file=/var/log/aodh/listener.log
+
+  ironic:
+    name: ironic
+    user: root
+    group: root
+    prefix: /opt/ironic
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: ironic
+        url: https://github.com/openstack/ironic.git
+        branch: stable/mitaka
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/ironic }
+      - { path: /var/lib/ironic }
+    cp_files:
+      - { src: etc/ironic, dest: /etc/ironic }
+    services:
+      - name: ironic-api
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.ironic.prefix}/bin/ironic-api
+              --config-file=/etc/ironic/ironic.conf
+              --log-file=/var/log/ironic/api.log
+      - name: ironic-conductor
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.ironic.prefix}/bin/ironic-conductor
+              --config-file=/etc/ironic/ironic.conf
+              --log-file=/var/log/ironic/conductor.log

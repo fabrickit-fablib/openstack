@@ -11,5 +11,6 @@ from horizon import Horizon  # noqa
 from heat import Heat  # noqa
 from aodh import Aodh  # noqa
 from ceilometer import Ceilometer  # noqa
+from ironic import Ironic  # noqa
 from test import Test  # noqa
 from devstack import Devstack  # noqa

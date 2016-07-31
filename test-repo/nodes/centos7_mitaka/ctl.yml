@@ -111,6 +111,13 @@ keystone:
       publicurl: ${#aodh.endpoint}
       internalurl: ${#aodh.endpoint}
       adminurl: ${#aodh.endpoint}
+    ironic:
+      type: baremetal
+      region: RegionOne
+      description: Openstack Baremetal Service
+      publicurl: ${#ironic.endpoint}
+      internalurl: ${#ironic.endpoint}
+      adminurl: ${#ironic.endpoint}
 
 glance:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9292
@@ -326,3 +333,17 @@ aodh:
   rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   database:
     connection: ${#openstack.database.connection}/aodh
+
+ironic:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6385
+  port: 16385
+  version: mitaka
+  enable_drivers: [fake_pxe]
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  glance_host: ${#openstack.endpoint}
+  database:
+    connection: ${#openstack.database.connection}/ironic
