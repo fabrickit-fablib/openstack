@@ -161,3 +161,17 @@ haproxy:
           server_hosts: ${#node_map.openstack.hosts}
           server_port: 18779
           server_option: check inter 2000 rise 2 fall 5
+
+        - name: designate_api
+          port: 9001
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 19001
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: barbican_api
+          port: 9311
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 19311
+          server_option: check inter 2000 rise 2 fall 5

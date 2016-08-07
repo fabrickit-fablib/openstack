@@ -16,6 +16,7 @@ os_package_map:
       - python-manilaclient
       - python-troveclient
       - python-designateclient
+      - python-barbicanclient
       - tox
       - flake8
     mk_links:
@@ -31,6 +32,7 @@ os_package_map:
       - { src: /opt/os-tools/bin/manila, dest: /usr/bin/manila }
       - { src: /opt/os-tools/bin/trove, dest: /usr/bin/trove }
       - { src: /opt/os-tools/bin/designate, dest: /usr/bin/designate }
+      - { src: /opt/os-tools/bin/barbican, dest: /usr/bin/barbican }
       - { src: /opt/os-tools/bin/tox, dest: /usr/bin/tox }
       - { src: /opt/os-tools/bin/flake8, dest: /usr/bin/flake8 }
 
@@ -578,3 +580,54 @@ os_package_map:
         exec: ${#os_package_map.trove.prefix}/bin/trove-api
               --config-file=/etc/trove/trove.conf
               --log-file=/var/log/trove/api.log
+
+  designate:
+    name: designate
+    user: root
+    group: root
+    prefix: /opt/designate
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: designate
+        url: https://github.com/openstack/designate.git
+        branch: stable/mitaka
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/designate }
+      - { path: /var/lib/designate }
+    cp_files:
+      - { src: etc/designate, dest: /etc/designate }
+    services:
+      - name: designate-api
+        description: OpenStack DNS Service
+        exec: ${#os_package_map.designate.prefix}/bin/designate-api
+              --config-file=/etc/designate/designate.conf
+              --log-file=/var/log/designate/api.log
+
+  barbican:
+    name: barbican
+    user: root
+    group: root
+    prefix: /opt/barbican
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: barbican
+        url: https://github.com/openstack/barbican.git
+        branch: stable/mitaka
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/barbican }
+      - { path: /var/lib/barbican }
+    cp_files:
+      - { src: bin/barbican-api, dest: /opt/barbican/bin/barbican-api }
+      - { src: etc/barbican, dest: /etc/barbican }
+    services:
+      - name: barbican-api
+        description: OpenStack Barbican Service
+        exec: ${#os_package_map.barbican.prefix}/bin/python ${#os_package_map.barbican.prefix}/bin/barbican-api
+              --config-file=/etc/barbican/barbican.conf
+              --log-file=/var/log/barbican/api.log

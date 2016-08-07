@@ -8,24 +8,22 @@ import utils
 
 class Designate(SimpleBase):
     def __init__(self):
-        self.data_key = 'ironic'
+        self.data_key = 'designate'
         self.data = {
         }
 
         self.services = [
-            'ironic-api',
-            'ironic-conductor',
+            'designate-api',
         ]
 
     def init_before(self):
-        self.package = env['cluster']['os_package_map']['ironic']
-        self.prefix = self.package.get('prefix', '/opt/ironic')
+        self.package = env['cluster']['os_package_map']['designate']
+        self.prefix = self.package.get('prefix', '/opt/designate')
         self.python = Python(self.prefix)
 
     def init_after(self):
         self.data.update({
             'keystone': env.cluster['keystone'],
-            'neutron': env.cluster['neutron'],
             'my_ip': env.node['ip']['default_dev']['ip'],
         })
 
@@ -39,14 +37,13 @@ class Designate(SimpleBase):
         if self.is_tag('conf'):
             # setup conf files
             if filer.template(
-                    '/etc/ironic/ironic.conf',
-                    src='{0}/ironic.conf.j2'.format(data['version']),
+                    '/etc/designate/designate.conf',
+                    src='{0}/designate.conf.j2'.format(data['version']),
                     data=data):
                 self.handlers['restart_ironic-*'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            sudo('{0}/bin/ironic-dbsync --config-file /etc/ironic/ironic.conf '
-                 'upgrade --revision head'.format(self.prefix))
+            sudo('{0}/bin/designate-manage database sync'.format(self.prefix))
 
         if self.is_tag('conf', 'service'):
             self.enable_services().start_services(pty=False)
@@ -54,4 +51,4 @@ class Designate(SimpleBase):
 
     def cmd(self, cmd):
         self.init()
-        return utils.oscmd('ironic {0}'.format(cmd))
+        return utils.oscmd('designate {0}'.format(cmd))

@@ -139,6 +139,20 @@ keystone:
       publicurl: ${#trove.endpoint}/v1.0/%\(tenant_id\)s
       internalurl: ${#trove.endpoint}/v1.0/%\(tenant_id\)s
       adminurl: ${#trove.endpoint}/v1.0/%\(tenant_id\)s
+    designate:
+      type: dns
+      region: RegionOne
+      description: Openstack Designate DNS Service
+      publicurl: ${#designate.endpoint}/
+      internalurl: ${#designate.endpoint}/
+      adminurl: ${#designate.endpoint}/
+    barbican:
+      type: key-manager
+      region: RegionOne
+      description: Openstack Barbican Service
+      publicurl: ${#barbican.endpoint}
+      internalurl: ${#barbican.endpoint}
+      adminurl: ${#barbican.endpoint}
 
 glance:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9292
@@ -359,7 +373,6 @@ ironic:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6385
   port: 16385
   version: mitaka
-  enable_drivers: [fake_pxe]
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -373,7 +386,6 @@ manila:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8786
   port: 18786
   version: mitaka
-  enable_drivers: [fake_pxe]
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -393,7 +405,6 @@ trove:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8779
   port: 18779
   version: mitaka
-  enable_drivers: [fake_pxe]
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -407,3 +418,27 @@ trove:
   neutron_url: ${#keystone.endpoint}/
   database:
     connection: ${#openstack.database.connection}/trove
+
+designate:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9001
+  port: 19001
+  version: mitaka
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  database:
+    connection: ${#openstack.database.connection}/designate
+
+barbican:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9311
+  port: 19311
+  version: mitaka
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  database:
+    connection: ${#openstack.database.connection}/designate

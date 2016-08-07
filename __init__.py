@@ -12,7 +12,7 @@ from heat import Heat  # noqa
 from aodh import Aodh  # noqa
 from ceilometer import Ceilometer  # noqa
 from ironic import Ironic  # noqa
-from berbican import Berbican  # noqa
+from barbican import Barbican  # noqa
 from designate import Designate  # noqa
 from trove import Trove  # noqa
 from manila import Manila  # noqa

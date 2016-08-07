@@ -6,19 +6,18 @@ from fablib.base import SimpleBase
 import utils
 
 
-class Berbican(SimpleBase):
+class Barbican(SimpleBase):
     def __init__(self):
-        self.data_key = 'ironic'
+        self.data_key = 'barbican'
         self.data = {
         }
 
         self.services = [
-            'ironic-api',
-            'ironic-conductor',
+            'barbican-api',
         ]
 
     def init_before(self):
-        self.package = env['cluster']['os_package_map']['ironic']
+        self.package = env['cluster']['os_package_map']['barbican']
         self.prefix = self.package.get('prefix', '/opt/ironic')
         self.python = Python(self.prefix)
 
@@ -39,14 +38,14 @@ class Berbican(SimpleBase):
         if self.is_tag('conf'):
             # setup conf files
             if filer.template(
-                    '/etc/ironic/ironic.conf',
-                    src='{0}/ironic.conf.j2'.format(data['version']),
+                    '/etc/barbican/barbican.conf',
+                    src='{0}/barbican.conf.j2'.format(data['version']),
                     data=data):
-                self.handlers['restart_ironic-*'] = True
+                self.handlers['restart_barbican-*'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            sudo('{0}/bin/ironic-dbsync --config-file /etc/ironic/ironic.conf '
-                 'upgrade --revision head'.format(self.prefix))
+            sudo('{0}/bin/barbican-db-manage '
+                 'upgrade'.format(self.prefix))
 
         if self.is_tag('conf', 'service'):
             self.enable_services().start_services(pty=False)
