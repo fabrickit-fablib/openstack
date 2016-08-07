@@ -13,6 +13,9 @@ os_package_map:
       - python-heatclient
       - python-ceilometerclient
       - python-ironicclient
+      - python-manilaclient
+      - python-troveclient
+      - python-designateclient
       - tox
       - flake8
     mk_links:
@@ -25,6 +28,9 @@ os_package_map:
       - { src: /opt/os-tools/bin/heat, dest: /usr/bin/heat }
       - { src: /opt/os-tools/bin/ceilometer, dest: /usr/bin/ceilometer }
       - { src: /opt/os-tools/bin/ironic, dest: /usr/bin/ironic }
+      - { src: /opt/os-tools/bin/manila, dest: /usr/bin/manila }
+      - { src: /opt/os-tools/bin/trove, dest: /usr/bin/trove }
+      - { src: /opt/os-tools/bin/designate, dest: /usr/bin/designate }
       - { src: /opt/os-tools/bin/tox, dest: /usr/bin/tox }
       - { src: /opt/os-tools/bin/flake8, dest: /usr/bin/flake8 }
 
@@ -511,3 +517,64 @@ os_package_map:
         exec: ${#os_package_map.ironic.prefix}/bin/ironic-conductor
               --config-file=/etc/ironic/ironic.conf
               --log-file=/var/log/ironic/conductor.log
+
+  manila:
+    name: manila
+    user: root
+    group: root
+    prefix: /opt/manila
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: manila
+        url: https://github.com/openstack/manila.git
+        branch: stable/mitaka
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/manila }
+      - { path: /var/lib/manila }
+    cp_files:
+      - { src: etc/manila, dest: /etc/manila }
+    services:
+      - name: manila-api
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.manila.prefix}/bin/manila-api
+              --config-file=/etc/manila/manila.conf
+              --log-file=/var/log/manila/api.log
+      - name: manila-scheduler
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.manila.prefix}/bin/manila-scheduler
+              --config-file=/etc/manila/manila.conf
+              --log-file=/var/log/manila/scheduler.log
+      - name: manila-share
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.manila.prefix}/bin/manila-share
+              --config-file=/etc/manila/manila.conf
+              --log-file=/var/log/manila/share.log
+
+  trove:
+    name: trove
+    user: root
+    group: root
+    prefix: /opt/trove
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: trove
+        url: https://github.com/openstack/trove.git
+        branch: stable/mitaka
+    requirements:
+      - pymysql
+      - pycrypto
+    mk_dirs:
+      - { path: /var/log/trove }
+      - { path: /var/lib/trove }
+    cp_files:
+      - { src: etc/trove, dest: /etc/trove }
+    services:
+      - name: trove-api
+        description: OpenStack Database Service
+        exec: ${#os_package_map.trove.prefix}/bin/trove-api
+              --config-file=/etc/trove/trove.conf
+              --log-file=/var/log/trove/api.log

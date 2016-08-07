@@ -103,6 +103,30 @@ ironic:
     openstack/mysql: 1
     openstack/keystone: 1
 
+barbican:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+
+designate:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+
+manila:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+
+trove:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+
 test:
   require:
     openstack/nova: 1

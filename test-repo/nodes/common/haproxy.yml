@@ -140,3 +140,24 @@ haproxy:
           server_hosts: ${#node_map.openstack.hosts}
           server_port: 18080
           server_option: check inter 2000 rise 2 fall 5
+
+        - name: ironic_api
+          port: 6385
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 16385
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: manila_api
+          port: 8786
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18786
+          server_option: check inter 2000 rise 2 fall 5
+
+        - name: trove_api
+          port: 8779
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18779
+          server_option: check inter 2000 rise 2 fall 5
