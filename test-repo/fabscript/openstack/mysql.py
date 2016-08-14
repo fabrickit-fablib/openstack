@@ -11,9 +11,9 @@ def setup():
     return {'status': 1}
 
 
-# @task
-# @serial
-# def setup_replication():
-#     mysql = MySQL()
-#     mysql.setup_replication()
-#     return {'status': 1}
+@task
+@serial
+def setup_replication():
+    mysql = MySQL()
+    mysql.setup_replication()
+    return {'status': 1}

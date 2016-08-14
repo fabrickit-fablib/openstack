@@ -6,6 +6,11 @@ mysql:
     openstack/bootstrap: 1
   status_flow: [1]
 
+mongodb:
+  require:
+    openstack/bootstrap: 1
+  status_flow: [1]
+
 memcache:
   status_flow: [1]
 
@@ -82,6 +87,7 @@ ceilometer:
   require:
     openstack/keystone: 1
     openstack/mysql: 1
+    openstack/mongodb: 1
 
 aodh:
   status_flow: [1]

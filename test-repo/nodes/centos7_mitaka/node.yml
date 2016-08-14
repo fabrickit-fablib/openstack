@@ -12,14 +12,14 @@ node_map:
       - openstack/neutron:
           enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
       - openstack/heat
-      - openstack/manila
-      - openstack/trove
-      - openstack/designate
-      - openstack/barbican
+      - openstack/aodh
+      - openstack/ceilometer:
+          enable_services: ['.*']
+      # - openstack/manila
+      # - openstack/trove
+      # - openstack/designate
+      # - openstack/barbican
       # - openstack/ironic
-      # - openstack/aodh
-      # - openstack/ceilometer:
-      #     enable_services: ['.*']
       # - openstack/horizon
       # - openstack/cinder
       # - openstack/swift
@@ -37,6 +37,12 @@ node_map:
       - 192.168.122.50
     fabruns:
       - openstack/mysql
+
+  mongodb:
+    hosts:
+      - 192.168.122.50
+    fabruns:
+      - openstack/mongodb
 
   rabbitmq:
     hosts:

@@ -1,0 +1,66 @@
+heat_template_version: 2014-10-16
+description: AutoScale
+
+resources:
+  asg:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      cooldown: 60
+      desired_capacity: 1
+      max_size: 3
+      min_size: 1
+      resource:
+        type: OS::Nova::Server
+        properties:
+          image: {{ image_id }}
+          flavor: {{ flavor }}
+          networks:
+            - network: {{ net_id }}
+          # user_data_format: RAW
+          # user_data: |
+          #   #!/bin/sh
+          #   while [ 1 ] ; do echo $((13**99)) 1>/dev/null 2>&1; done
+
+  vm_scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: asg}
+      cooldown: 60
+      scaling_adjustment: 1
+
+  vm_scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: asg}
+      cooldown: 60
+      scaling_adjustment: -1
+
+  cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average  cpu_util &gt; 5 for 1 minute
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 5
+      alarm_actions:
+        - {get_attr: [vm_scaleup_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+
+  cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average cpu_util &lt; 2 for 1 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 2
+      alarm_actions:
+        - {get_attr: [vm_scaledown_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt

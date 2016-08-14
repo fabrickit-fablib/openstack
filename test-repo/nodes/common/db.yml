@@ -21,3 +21,19 @@ mysql:
 
       replication:
         types: [master, master]
+
+mongodb:
+  cluster_map:
+    common:
+      endpoint: ${#node_map.mongodb.hosts.0}:27017
+      hosts: ${#node_map.mongodb.hosts}
+      port: 27017
+      user_map:
+        openstack:
+          dbs: [metering, event]
+          user: openstack
+          password: openstackpass
+          src_hosts:
+          roles:
+            - readWrite
+            - dbAdmin

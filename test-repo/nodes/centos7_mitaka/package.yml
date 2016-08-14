@@ -408,6 +408,7 @@ os_package_map:
         branch: stable/mitaka
     requirements:
       - pymysql
+      - pymongo
     mk_dirs:
       - { path: /var/log/ceilometer }
       - { path: /var/lib/ceilometer }

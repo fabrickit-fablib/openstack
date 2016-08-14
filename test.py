@@ -42,6 +42,7 @@ class Test(SimpleBase):
         }
 
         filer.template('/tmp/stack-nova.yml', src='stack/stack-nova.yml', data=test_stack)
+        filer.template('/tmp/autoscale.yml', src='stack/autoscale.yml', data=test_stack)
 
         with api.warn_only():
             result = utils.oscmd('heat stack-list | grep stack-nova')
