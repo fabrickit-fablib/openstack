@@ -133,6 +133,12 @@ trove:
     openstack/mysql: 1
     openstack/keystone: 1
 
+rally:
+  status_flow: [1]
+  require:
+    openstack/mysql: 1
+    openstack/keystone: 1
+
 test:
   require:
     openstack/nova: 1

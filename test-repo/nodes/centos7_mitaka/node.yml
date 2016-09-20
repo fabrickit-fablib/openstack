@@ -15,6 +15,7 @@ node_map:
       - openstack/aodh
       - openstack/ceilometer:
           enable_services: ['.*']
+      - openstack/rally
       # - openstack/manila
       # - openstack/trove
       # - openstack/designate

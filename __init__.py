@@ -16,5 +16,6 @@ from barbican import Barbican  # noqa
 from designate import Designate  # noqa
 from trove import Trove  # noqa
 from manila import Manila  # noqa
+from rally import Rally  # noqa
 from test import Test  # noqa
 from devstack import Devstack  # noqa

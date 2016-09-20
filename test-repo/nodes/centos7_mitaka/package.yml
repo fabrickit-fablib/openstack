@@ -607,6 +607,27 @@ os_package_map:
               --config-file=/etc/designate/designate.conf
               --log-file=/var/log/designate/api.log
 
+  rally:
+    name: rally
+    user: root
+    group: root
+    prefix: /opt/rally
+    version: mitaka
+    is_develop: false
+    git_repos:
+      - name: rally
+        url: https://github.com/openstack/rally.git
+        branch: master
+    requirements:
+      - pymysql
+    mk_dirs: []
+    cp_files:
+      - { src: etc/rally, dest: /etc/rally }
+    mk_links:
+      - { src: /opt/rally/bin/rally-manage, dest: /usr/bin/rally-manage }
+      - { src: /opt/rally/bin/rally, dest: /usr/bin/rally }
+    services: []
+
   barbican:
     name: barbican
     user: root

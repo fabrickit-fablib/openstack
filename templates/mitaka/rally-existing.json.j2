@@ -1,0 +1,13 @@
+{
+    "type": "ExistingCloud",
+    "auth_url": "{{ cluster.keystone.services.keystone.publicurl }}",
+    "region_name": "{{ cluster.keystone.service_region }}",
+    "endpoint_type": "public",
+    "admin": {
+        "username": "{{ cluster.keystone.service_user }}",
+        "password": "{{ cluster.keystone.service_password }}",
+        "tenant_name": "{{ cluster.keystone.service_tenant_name }}"
+    },
+    "https_insecure": false,
+    "https_cacert": ""
+}

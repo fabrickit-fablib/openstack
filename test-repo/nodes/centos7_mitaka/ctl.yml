@@ -443,3 +443,8 @@ barbican:
   rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   database:
     connection: ${#openstack.database.connection}/designate
+
+rally:
+  version: mitaka
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.endpoint}/rally
