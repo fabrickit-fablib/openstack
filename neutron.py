@@ -23,7 +23,7 @@ class Neutron(SimpleBase):
             'is_neutron-server': False,
             'is_master': False,
         }
-        self.packages = ['openvswitch', 'haproxy']
+        self.packages = ['openvswitch', 'haproxy', 'ebtables']
 
         default_services = [
             'neutron-server',

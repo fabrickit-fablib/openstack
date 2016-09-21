@@ -12,17 +12,17 @@ node_map:
       - openstack/neutron:
           enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
       - openstack/heat
-      - openstack/aodh
-      - openstack/ceilometer:
-          enable_services: ['.*']
-      - openstack/rally
-      # - openstack/manila
+      - openstack/horizon
+      - openstack/cinder
+      - openstack/manila
+      # - openstack/aodh
+      # - openstack/ceilometer:
+      #     enable_services: ['.*']
+      # - openstack/rally
       # - openstack/trove
       # - openstack/designate
       # - openstack/barbican
       # - openstack/ironic
-      # - openstack/horizon
-      # - openstack/cinder
       # - openstack/swift
       - openstack/test
       #

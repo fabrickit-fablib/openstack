@@ -14,12 +14,16 @@ class Manila(SimpleBase):
 
         self.packages = [
             'nfs-utils',
+            'nfs4-acl-tools',
+            'rpcbind',
         ]
 
         self.services = [
             'manila-api',
             'manila-scheduler',
             'manila-share',
+            'rpcbind',
+            'nfs-server',
             # 'manila-data',
         ]
 
@@ -42,6 +46,14 @@ class Manila(SimpleBase):
             self.python.setup()
             self.python.setup_package(**self.package)
             self.install_packages()
+
+            # nfs-kernel-server(ubuntuのnfs-server) がないといくつかの処理が失敗する
+            # これは、ファイルに直書きされてるので、nfs-serverからシンボリックリンクを張って代用する
+            # https://github.com/openstack/manila/blob/fb44a0a49e53ebd449bcf2fd6871b3556a149463/manila/share/drivers/helpers.py#L273
+            nfs_kernel_server = '/usr/lib/systemd/system/nfs-kernel-server.service'
+            if not filer.exists(nfs_kernel_server):
+                sudo('ln -s /usr/lib/systemd/system/nfs-server.service {0}'.format(
+                    nfs_kernel_server))
 
         if self.is_tag('conf'):
             # setup conf files
