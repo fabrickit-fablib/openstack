@@ -239,6 +239,9 @@ os_package_map:
       - name: manila-ui
         url: https://github.com/openstack/manila-ui.git
         branch: stable/mitaka
+      - name: neutron-lbaas-dashboard
+        url: https://github.com/openstack/neutron-lbaas-dashboard.git
+        branch: stable/mitaka
     requirements:
       - python-memcached
     mk_dirs: []
@@ -246,6 +249,7 @@ os_package_map:
       - { src: ../horizon, dest: /opt/horizon/lib/horizon }
       - { src: ../manila-ui/manila_ui/enabled/_90_manila_project_shares.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_90_manila_project_shares.py }
       - { src: ../manila-ui/manila_ui/enabled/_90_manila_admin_shares.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_90_manila_admin_shares.py }
+      - { src: ../neutron-lbaas-dashboard/neutron_lbaas_dashboard/enabled/_1481_project_ng_loadbalancersv2_panel.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_1481_project_ng_loadbalancersv2_panel.py }
       # - { src: manage.py, dest: /opt/horizon/lib/horizon/manage.py }
       # - { src: openstack_dashboard, dest: /opt/horizon/lib/horizon/openstack_dashboard }
     services: []
