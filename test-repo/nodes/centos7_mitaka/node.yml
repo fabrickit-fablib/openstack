@@ -19,7 +19,7 @@ node_map:
       # - openstack/ceilometer:
       #     enable_services: ['.*']
       # - openstack/rally
-      # - openstack/trove
+      - openstack/trove
       # - openstack/designate
       # - openstack/barbican
       # - openstack/ironic

@@ -51,7 +51,7 @@ neutron_url = {{ neutron_url }}
 #neutron_service_type = network
 
 # Config options for enabling volume service
-trove_volume_support = True
+trove_volume_support = False
 block_device_mapping = vdb
 device_path = /dev/vdb
 mount_point = /var/lib/mysql
@@ -61,15 +61,16 @@ server_delete_time_out=480
 # Nova server boot options
 # sets the --config-drive argument when doing a nova boot
 # (controls how file injection is handled by nova)
-use_nova_server_config_drive = False
+use_nova_server_config_drive = True
 
 # Configuration options for talking to nova via the novaclient.
 # These options are for an admin user in your keystone config.
 # It proxy's the token received from the user to send to nova via this admin users creds,
 # basically acting like the client via that proxy token.
-nova_proxy_admin_user = {{ cluster.keystone.service_user }}
-nova_proxy_admin_pass = {{ cluster.keystone.service_password }}
-nova_proxy_admin_tenant_name = {{ cluster.keystone.service_tenant_name }}
+nova_proxy_admin_user = {{ cluster.keystone.admin_user }}
+nova_proxy_admin_pass = {{ cluster.keystone.admin_password }}
+nova_proxy_admin_tenant_name = {{ cluster.keystone.admin_tenant_name }}
+# nova_proxy_admin_tenant_id = f05600e093a842039ee0c2e7b40c5f05
 
 
 # Manager impl for the taskmanager
@@ -161,7 +162,7 @@ pydev_debug = disabled
 
 
 [database]
-connection = mysql://root:e1a2c042c828d3566d0a@localhost/trove
+connection = {{ database.connection }}
 idle_timeout = 3600
 
 
@@ -177,7 +178,7 @@ rabbit_virtual_host = {{ rabbit_virtual_host }}
 # Format (single port or port range): A, B-C
 # where C greater than B
 tcp_ports = 3306
-volume_support = True
+volume_support = False
 device_path = /dev/vdb
 
 [redis]

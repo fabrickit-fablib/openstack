@@ -1,6 +1,6 @@
 # coding:utf-8
 
-from fabkit import sudo, env, run, Service, Editor
+from fabkit import sudo, env, Service, Editor
 from fablib.python import Python
 from fablib.base import SimpleBase
 
@@ -18,6 +18,7 @@ class Bootstrap(SimpleBase):
                 },
                 'epel-release',
                 'mysql-devel',
+                'vim',
             ]
         }
 

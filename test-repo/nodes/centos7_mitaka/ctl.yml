@@ -27,6 +27,7 @@ keystone:
   debug: True
   admin_user: admin
   admin_password: adminpass
+  admin_tenant_name: admin
   service_tenant_name: service
   service_region: RegionOne
   service_user: service
