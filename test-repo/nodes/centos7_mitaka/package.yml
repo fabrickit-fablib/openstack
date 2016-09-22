@@ -236,11 +236,16 @@ os_package_map:
       - name: horizon
         url: https://github.com/openstack/horizon.git
         branch: stable/mitaka
+      - name: manila-ui
+        url: https://github.com/openstack/manila-ui.git
+        branch: stable/mitaka
     requirements:
       - python-memcached
     mk_dirs: []
     cp_files:
-      - { src: ./, dest: /opt/horizon/lib/horizon }
+      - { src: ../horizon, dest: /opt/horizon/lib/horizon }
+      - { src: ../manila-ui/manila_ui/enabled/_90_manila_project_shares.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_90_manila_project_shares.py }
+      - { src: ../manila-ui/manila_ui/enabled/_90_manila_admin_shares.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_90_manila_admin_shares.py }
       # - { src: manage.py, dest: /opt/horizon/lib/horizon/manage.py }
       # - { src: openstack_dashboard, dest: /opt/horizon/lib/horizon/openstack_dashboard }
     services: []
