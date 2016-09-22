@@ -16,6 +16,7 @@ class Manila(SimpleBase):
             'nfs-utils',
             'nfs4-acl-tools',
             'rpcbind',
+            'lvm2',
         ]
 
         self.services = [
