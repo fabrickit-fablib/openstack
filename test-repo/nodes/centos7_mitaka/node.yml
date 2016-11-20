@@ -12,7 +12,7 @@ node_map:
       - openstack/neutron:
           enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
       - openstack/heat
-      - openstack/horizon
+      # - openstack/horizon
       - openstack/cinder
       - openstack/manila
       # - openstack/aodh
