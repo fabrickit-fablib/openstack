@@ -1,0 +1,46 @@
+node_map:
+  openstack:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/bootstrap
+      - openstack/keystone
+      - openstack/glance
+      - openstack/neutron
+      - openstack/nova
+
+  gluster:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/gluster
+
+  mysql:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/mysql
+
+  memcache:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/memcache
+
+  mongodb:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/mongodb
+
+  rabbitmq:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/rabbitmq
+
+  haproxy:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/haproxy

@@ -6,8 +6,8 @@ haproxy:
   cluster_map:
     common:
       hosts: ${#node_map.haproxy.hosts}
-      host: 192.168.122.55
-      vip: 192.168.122.55
+      host: 192.168.122.110
+      vip: 192.168.122.110
       cidr_netmask: 24
       monitor_interval: 30
       defaults:
@@ -30,13 +30,13 @@ haproxy:
         - balance source
       hastats:
         enable: true
-        port: 49999
+        port: 9999
         auth:
           user: admin
           pass: adminpass
       listens:
         - name: horizon
-          port: 40080
+          port: 80
           options: ${#haproxy.ctl_options}
           server_hosts: ${#node_map.openstack.hosts}
           server_port: 10080

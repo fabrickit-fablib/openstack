@@ -91,6 +91,7 @@ class Nova(SimpleBase):
             if not filer.exists('/usr/bin/scsi_id'):
                 sudo('ln -s /lib/udev/scsi_id /usr/bin/')
 
+        return
         if self.is_tag('conf'):
             # sudoersファイルは最後に改行入れないと、シンタックスエラーとなりsudo実行できなくなる
             # sudo: >>> /etc/sudoers.d/nova: syntax error near line 2 <<<

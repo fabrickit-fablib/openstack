@@ -72,6 +72,7 @@ class Neutron(SimpleBase):
 
             self.setup_network_bridge()
 
+        return
         if self.is_tag('conf'):
             filer.template(
                 '/etc/sudoers.d/neutron',
