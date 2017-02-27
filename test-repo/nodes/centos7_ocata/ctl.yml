@@ -162,11 +162,6 @@ glance:
   registry_port: 19191
   version: ocata
   debug: True
-  rabbit_host: ${#rabbitmq.cluster_map.common.host}
-  rabbit_port: ${#rabbitmq.cluster_map.common.port}
-  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
-  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
   glance_store:
     stores: file
     filesystem_store_datadir: /mnt/glance/images/
@@ -188,11 +183,7 @@ nova:
     connection: ${#openstack.database.connection}/nova
   state_path: /var/lib/nova
   rpc_backend: rabbit
-  rabbit_host: ${#rabbitmq.cluster_map.common.host}
-  rabbit_port: ${#rabbitmq.cluster_map.common.port}
-  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
-  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
   reserved_host_disk_mb: 64
   reserved_host_memory_mb: 32
   novncproxy_base_url: ${#nova.vncproxy_endpoint}/vnc_auto.html
@@ -225,11 +216,7 @@ neutron:
   database:
     connection: ${#openstack.database.connection}/neutron
   rpc_backend: rabbit
-  rabbit_host: ${#rabbitmq.cluster_map.common.host}
-  rabbit_port: ${#rabbitmq.cluster_map.common.port}
-  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
-  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
   rabbit_retry_interval: 1
   rabbit_retry_backoff: 2
   rabbit_max_retries: 10
@@ -285,6 +272,13 @@ horizon:
   time_zone: Asia/Tokyo
   debug: True
   template_debug: True
+  database:
+    engine: 'django.db.backends.mysql'
+    name: horizon
+    user: ${#mysql.cluster_map.common.user_map.openstack.user}
+    password: ${#mysql.cluster_map.common.user_map.openstack.password}
+    host: ${#mysql.cluster_map.common.host}
+    port: ${#mysql.cluster_map.common.port}
 
 cinder:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8776

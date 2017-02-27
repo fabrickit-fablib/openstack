@@ -14,3 +14,4 @@ rabbitmq:
           permissions:
             - vhost: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
               permissions: '".*" ".*" ".*"'
+      transport_url: rabbit://${#rabbitmq.cluster_map.common.user_map.openstack.user}:${#rabbitmq.cluster_map.common.user_map.openstack.password}@${#node_map.rabbitmq.hosts.0}:${#rabbitmq.cluster_map.common.port}/${#rabbitmq.cluster_map.common.vhost_map.openstack}

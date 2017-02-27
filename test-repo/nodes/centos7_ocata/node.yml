@@ -1,13 +1,33 @@
 node_map:
+  bootstrap:
+    hosts:
+      - 192.168.122.111
+      - 192.168.122.112
+      - 192.168.122.113
+    fabruns:
+      - openstack/bootstrap
+
   openstack:
     hosts:
       - 192.168.122.111
     fabruns:
-      - openstack/bootstrap
       - openstack/keystone
       - openstack/glance
-      - openstack/neutron
-      - openstack/nova
+      - openstack/nova:
+          enable_services: ['api', 'conductor', 'scheduler']
+      - openstack/neutron:
+          enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
+      - openstack/horizon
+
+  openstack_compute:
+    hosts:
+      - 192.168.122.112
+      - 192.168.122.113
+    fabruns:
+      - openstack/nova:
+          enable_services: ['compute']
+      - openstack/neutron:
+          enable_services: ['linuxbridge-agent']
 
   gluster:
     hosts:

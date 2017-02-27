@@ -91,22 +91,21 @@ class Nova(SimpleBase):
             if not filer.exists('/usr/bin/scsi_id'):
                 sudo('ln -s /lib/udev/scsi_id /usr/bin/')
 
-        return
         if self.is_tag('conf'):
             # sudoersファイルは最後に改行入れないと、シンタックスエラーとなりsudo実行できなくなる
             # sudo: >>> /etc/sudoers.d/nova: syntax error near line 2 <<<
             # この場合は以下のコマンドでvisudoを実行し、編集する
             # $ pkexec visudo -f /etc/sudoers.d/nova
-            if filer.template(
-                '/etc/sudoers.d/nova',
-                data=data,
-                src='sudoers.j2',
-                    ):
-                self.handlers['restart_nova'] = True
+            # if filer.template(
+            #     '/etc/sudoers.d/nova',
+            #     data=data,
+            #     src='sudoers.j2',
+            #         ):
+            #     self.handlers['restart_nova'] = True
 
             if filer.template(
                 '/etc/nova/nova.conf',
-                src='{0}/nova.conf.j2'.format(data['version']),
+                src='{0}/nova/nova.conf'.format(data['version']),
                 data=data,
                     ):
                 self.handlers['restart_nova'] = True
@@ -114,9 +113,7 @@ class Nova(SimpleBase):
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
                 sudo('nova-manage db sync')
-
-                if data['version'] in ['mitaka']:
-                    sudo('nova-manage api_db sync')
+                sudo('nova-manage api_db sync')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
@@ -141,6 +138,7 @@ class Nova(SimpleBase):
         self.nova_novncproxy.status()
 
     def enable_nova_services(self):
+        return
         result = sudo("nova-manage service list 2>/dev/null | grep disabled | awk '{print $1,$2}'")
         services = result.split('\r\n')
         services = map(lambda s: s.split(' '), services)
