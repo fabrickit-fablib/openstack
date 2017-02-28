@@ -1,0 +1,446 @@
+include:
+  - common
+
+openstack:
+  enable_dev: true
+  protocol: http
+  endpoint: ${#haproxy.cluster_map.common.host}
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.endpoint}
+    mongodb_connection: mongodb://${#mongodb.cluster_map.common.user_map.openstack.user}:${#mongodb.cluster_map.common.user_map.openstack.password}@${#mongodb.cluster_map.common.endpoint}
+
+test_openstack:
+  enable: true
+  user: testadmin
+  password: testadmin
+  image:
+    name: 'cirros-0.3.3-x86_64'
+    src_url: 'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img'
+
+keystone:
+  host: ${#node_map.openstack.hosts.0}
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:5000
+  admin_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:35357
+  public_port: 15000
+  admin_port: 45357
+  version: ocata
+  debug: True
+  admin_user: admin
+  admin_password: adminpass
+  admin_tenant_name: admin
+  service_tenant_name: service
+  service_region: RegionOne
+  service_user: service
+  service_password: service_password
+  identity_uri: ${#keystone.admin_endpoint}
+  database:
+    connection: ${#openstack.database.connection}/keystone
+  service_map:
+    keystone:
+      type: identity
+      region: RegionOne
+      description: Openstack Identity Service
+      publicurl: ${#keystone.endpoint}/v3/
+      internalurl: ${#keystone.endpoint}/v3/
+      adminurl: ${#keystone.admin_endpoint}/v3/
+    glance:
+      type: image
+      region: RegionOne
+      description: Openstack Image Service
+      publicurl: ${#glance.endpoint}
+      internalurl: ${#glance.endpoint}
+      adminurl: ${#glance.endpoint}
+    nova:
+      type: compute
+      region: RegionOne
+      description: Openstack Compute Service
+      publicurl: ${#nova.endpoint}/v2/%\(tenant_id\)s
+      internalurl: ${#nova.endpoint}/v2/%\(tenant_id\)s
+      adminurl: ${#nova.endpoint}/v2/%\(tenant_id\)s
+    placement:
+      type: placement
+      region: RegionOne
+      description: Openstack Placement Service
+      publicurl: ${#nova.placement_endpoint}
+      internalurl: ${#nova.placement_endpoint}
+      adminurl: ${#nova.placement_endpoint}
+    neutron:
+      type: network
+      region: RegionOne
+      description: Openstack Networking Service
+      publicurl: ${#neutron.endpoint}
+      internalurl: ${#neutron.endpoint}
+      adminurl: ${#neutron.endpoint}
+    cinder:
+      type: volume
+      region: RegionOne
+      description: Openstack Volume Service
+      publicurl: ${#cinder.endpoint}/v1/%\(tenant_id\)s
+      internalurl: ${#cinder.endpoint}/v1/%\(tenant_id\)s
+      adminurl: ${#cinder.endpoint}/v1/%\(tenant_id\)s
+    cinderv2:
+      type: volumev2
+      region: RegionOne
+      description: Openstack Volume Service
+      publicurl: ${#cinder.endpoint}/v2/%\(tenant_id\)s
+      internalurl: ${#cinder.endpoint}/v2/%\(tenant_id\)s
+      adminurl: ${#cinder.endpoint}/v2/%\(tenant_id\)s
+    swift:
+      type: object-store
+      region: RegionOne
+      description: Openstack Object Storage Service
+      publicurl: ${#swift.endpoint}/v1/AUTH_%\(tenant_id\)s
+      internalurl: ${#swift.endpoint}/v1/AUTH_%\(tenant_id\)s
+      adminurl: ${#swift.endpoint}/v1
+    heat:
+      type: orchestration
+      region: RegionOne
+      description: Openstack Orchestration Service
+      publicurl: ${#heat.endpoint}/v1/%\(tenant_id\)s
+      internalurl: ${#heat.endpoint}/v1/%\(tenant_id\)s
+      adminurl: ${#heat.endpoint}/v1/%\(tenant_id\)s
+    heat_cfn:
+      type: cloudformation
+      region: RegionOne
+      description: Openstack Orchestration Service
+      publicurl: ${#heat.cfn_endpoint}/v1
+      internalurl: ${#heat.cfn_endpoint}/v1
+      adminurl: ${#heat.cfn_endpoint}/v1
+    ceilometer:
+      type: metering
+      region: RegionOne
+      description: Openstack Telemetry Service
+      publicurl: ${#ceilometer.endpoint}
+      internalurl: ${#ceilometer.endpoint}
+      adminurl: ${#ceilometer.endpoint}
+    aodh:
+      type: alarming
+      region: RegionOne
+      description: Openstack Telemetry Alarming Service
+      publicurl: ${#aodh.endpoint}
+      internalurl: ${#aodh.endpoint}
+      adminurl: ${#aodh.endpoint}
+    ironic:
+      type: baremetal
+      region: RegionOne
+      description: Openstack Baremetal Service
+      publicurl: ${#ironic.endpoint}
+      internalurl: ${#ironic.endpoint}
+      adminurl: ${#ironic.endpoint}
+    manila:
+      type: share
+      region: RegionOne
+      description: Openstack Shared File Systems Service
+      publicurl: ${#manila.endpoint}/v1/%\(tenant_id\)s
+      internalurl: ${#manila.endpoint}/v1/%\(tenant_id\)s
+      adminurl: ${#manila.endpoint}/v1/%\(tenant_id\)s
+    manilav2:
+      type: sharev2
+      region: RegionOne
+      description: Openstack Shared File Systems Service
+      publicurl: ${#manila.endpoint}/v2/%\(tenant_id\)s
+      internalurl: ${#manila.endpoint}/v2/%\(tenant_id\)s
+      adminurl: ${#manila.endpoint}/v2/%\(tenant_id\)s
+    trove:
+      type: database
+      region: RegionOne
+      description: Openstack Database Service
+      publicurl: ${#trove.endpoint}/v1.0/%\(tenant_id\)s
+      internalurl: ${#trove.endpoint}/v1.0/%\(tenant_id\)s
+      adminurl: ${#trove.endpoint}/v1.0/%\(tenant_id\)s
+    designate:
+      type: dns
+      region: RegionOne
+      description: Openstack Designate DNS Service
+      publicurl: ${#designate.endpoint}/
+      internalurl: ${#designate.endpoint}/
+      adminurl: ${#designate.endpoint}/
+    barbican:
+      type: key-manager
+      region: RegionOne
+      description: Openstack Barbican Service
+      publicurl: ${#barbican.endpoint}
+      internalurl: ${#barbican.endpoint}
+      adminurl: ${#barbican.endpoint}
+
+glance:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9292
+  api_port: 19292
+  registry_port: 19191
+  version: ocata
+  debug: True
+  glance_store:
+    stores: file
+    filesystem_store_datadir: /mnt/glance/images/
+  database:
+    connection: ${#openstack.database.connection}/glance
+
+nova:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8774
+  placement_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8780
+  vncproxy_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6080
+  ec2_port: 18773
+  api_port: 18774
+  metadata_port: 18775
+  novncproxy_port: 16080
+  placement_port: 18780
+  version: ocata
+  debug: True
+  api_database:
+    connection: ${#openstack.database.connection}/novaapi
+  database:
+    connection: ${#openstack.database.connection}/nova
+  state_path: /var/lib/nova
+  rpc_backend: rabbit
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
+  reserved_host_disk_mb: 64
+  reserved_host_memory_mb: 32
+  novncproxy_base_url: ${#nova.vncproxy_endpoint}/vnc_auto.html
+  auth_strategy: keystone
+  network_api_class: nova.network.neutronv2.api.API
+  neutron_url: ${#neutron.endpoint}
+  linuxnet_interface_driver: nova.network.linux_net.LinuxBridgeInterfaceDriver
+  firewall_driver: nova.virt.firewall.NoopFirewallDriver
+  security_group_api: nova
+  glance_host: ${#openstack.endpoint}
+  compute_driver: libvirt.LibvirtDriver
+  service_neutron_metadata_proxy: true
+  metadata_proxy_shared_secret: METADATA_SECRET
+  libvirt:
+    virt_type: kvm
+  flavors:
+    RAM_64M-DISC_2G-VCPUS_1: [64, 2, 1]
+    RAM_512M-DISC_10G-VCPUS_1: [512, 10, 1]
+    RAM_512M-DISC_20G-VCPUS_2: [512, 20, 2]
+    RAM_1024M-DISC_20G-VCPUS_2: [1024, 20, 2]
+    RAM_1024M-DISC_40G-VCPUS_4: [1024, 40, 4]
+    RAM_2048M-DISC_60G-VCPUS_6: [2048, 60, 6]
+
+
+neutron:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9696
+  port: 19696
+  version: ocata
+  debug: True
+  database:
+    connection: ${#openstack.database.connection}/neutron
+  rpc_backend: rabbit
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
+  rabbit_retry_interval: 1
+  rabbit_retry_backoff: 2
+  rabbit_max_retries: 10
+  rabbit_ha_queues: true
+  auth_strategy: keystone
+  lock_path: /var/lock/subsys/neutron
+  nova_url: ${#nova.endpoint}/v2/
+  service_plugins: [router, neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2]
+  agent_down_time: 120
+  agent:
+    # report_interval should be half or less than agent_down_time
+    report_interval: 60
+  ml2:
+    type_drivers: [flat]
+    tenant_network_types: [flat]
+    mechanism_drivers: [linuxbridge]
+    extension_drivers: []
+    flat_networks:
+      - physnet1
+    tunnel_id_ranges:
+      - '1:10'
+    vni_ranges:
+      - '1:10'
+  linuxbridge:
+    enable: true
+    enable_vxlan: False
+    tenant_network_type: flat
+    network_vlan_ranges:
+      - physnet1
+    physical_interface_mappings:
+      - physnet1:eth0
+  dhcp:
+    enable: true
+    dhcp_delete_namespaces: true
+  test_net: test_net
+  networks:
+    - name: test_net
+      options:
+        - provider:physical_network=physnet1
+        - provider:network_type=flat
+        - shared
+      subnets:
+        - name: test_subnet
+          cidr: 192.168.122.0/24
+          options:
+            - allocation-pool start=192.168.122.200,end=192.168.122.220
+
+horizon:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:443
+  port: 10080
+  memcached_servers: ${#node_map.openstack.hosts}
+  version: ocata
+  time_zone: Asia/Tokyo
+  debug: True
+  template_debug: True
+  database:
+    engine: 'django.db.backends.mysql'
+    name: horizon
+    user: ${#mysql.cluster_map.common.user_map.openstack.user}
+    password: ${#mysql.cluster_map.common.user_map.openstack.password}
+    host: ${#mysql.cluster_map.common.host}
+    port: ${#mysql.cluster_map.common.port}
+
+cinder:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8776
+  port: 18776
+  version: ocata
+  debug: True
+  verbose: True
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
+  enabled_backends: [lvm01]
+  backends:
+    lvm01:
+      type: lvm
+      size: 5G
+      volume_group: cinder-volumes
+  database:
+    connection: ${#openstack.database.connection}/cinder
+
+swift:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8080
+  proxy_port: 18080
+  object_port: 6000
+  container_port: 6001
+  account_port: 6002
+  version: ocata
+  debug: True
+  verbose: True
+  memcache_servers: ${#node_map.openstack.hosts}
+
+heat:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8004
+  cfn_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8000
+  api_port: 18004
+  cfn_port: 18000
+  version: ocata
+  debug: true
+  verbose: true
+  database:
+    connection: ${#openstack.database.connection}/heat
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
+  heat_metadata_server_url: ${#openstack.protocol}://${#openstack.endpoint}:8000
+  heat_waitcondition_server_url: ${#openstack.protocol}://${#openstack.endpoint}:8000/v1/waitcondition
+  stack_domain_admin: heat
+  stack_domain_admin_password: heatpass
+  stack_user_domain_name: heatdomain
+  notification_driver: messagingv2
+
+ceilometer:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8777
+  port: 18777
+  version: ocata
+  debug: true
+  verbose: true
+  database:
+    connection: ${#openstack.database.connection}/ceilometer
+    metering_connection: ${#openstack.database.mongodb_connection}/metering
+    alarm_connection: ${#openstack.database.connection}/alarm
+    event_connection: ${#openstack.database.mongodb_connection}/event
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  keystone: ${#keystone}
+  publisher:
+    telemetry_secret: telemetry_secret
+
+aodh:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8042
+  port: 18042
+  version: ocata
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  database:
+    connection: ${#openstack.database.connection}/aodh
+
+ironic:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6385
+  port: 16385
+  version: ocata
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  glance_host: ${#openstack.endpoint}
+  database:
+    connection: ${#openstack.database.connection}/ironic
+
+manila:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8786
+  port: 18786
+  version: ocata
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  driver_handles_share_servers: true
+  database:
+    connection: ${#openstack.database.connection}/manila
+  enabled_share_backends: [lvm01]
+  backends:
+    lvm01:
+      type: lvm
+      size: 5G
+      volume_group: manila-volumes
+
+trove:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8779
+  port: 18779
+  version: ocata
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  driver_handles_share_servers: true
+  trove_auth_url: ${#keystone.endpoint}/v2.0
+  nova_compute_url: ${#nova.endpoint}/v2
+  cinder_url: ${#cinder.endpoint}/v1
+  swift_url: ${#swift.endpoint}/v1/AUTH
+  neutron_url: ${#keystone.endpoint}/
+  database:
+    connection: ${#openstack.database.connection}/trove
+
+designate:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9001
+  port: 19001
+  version: ocata
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  database:
+    connection: ${#openstack.database.connection}/designate
+
+barbican:
+  endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9311
+  port: 19311
+  version: ocata
+  rabbit_host: ${#rabbitmq.cluster_map.common.host}
+  rabbit_port: ${#rabbitmq.cluster_map.common.port}
+  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
+  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
+  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  database:
+    connection: ${#openstack.database.connection}/designate
+
+rally:
+  version: ocata
+  database:
+    connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.endpoint}/rally

@@ -1,0 +1,687 @@
+os_package_map:
+  os-tools:
+    name: os-tools
+    prefix: /opt/os-tools
+    version: ocata
+    requirements:
+      - python-openstackclient
+      - python-glanceclient
+      - python-novaclient
+      - python-neutronclient
+      - python-cinderclient
+      - python-swiftclient
+      - python-heatclient
+      - python-ceilometerclient
+      - python-ironicclient
+      - python-manilaclient
+      - python-troveclient
+      - python-designateclient
+      - python-barbicanclient
+      - tox
+      - flake8
+      - diskimage-builder
+      - dib-utils
+    mk_links:
+      - { src: /opt/os-tools/bin/openstack, dest: /usr/bin/openstack }
+      - { src: /opt/os-tools/bin/glance, dest: /usr/bin/glance }
+      - { src: /opt/os-tools/bin/nova, dest: /usr/bin/nova }
+      - { src: /opt/os-tools/bin/neutron, dest: /usr/bin/neutron }
+      - { src: /opt/os-tools/bin/cinder, dest: /usr/bin/cinder }
+      - { src: /opt/os-tools/bin/swift, dest: /usr/bin/swift }
+      - { src: /opt/os-tools/bin/heat, dest: /usr/bin/heat }
+      - { src: /opt/os-tools/bin/ceilometer, dest: /usr/bin/ceilometer }
+      - { src: /opt/os-tools/bin/ironic, dest: /usr/bin/ironic }
+      - { src: /opt/os-tools/bin/manila, dest: /usr/bin/manila }
+      - { src: /opt/os-tools/bin/trove, dest: /usr/bin/trove }
+      - { src: /opt/os-tools/bin/designate, dest: /usr/bin/designate }
+      - { src: /opt/os-tools/bin/barbican, dest: /usr/bin/barbican }
+      - { src: /opt/os-tools/bin/tox, dest: /usr/bin/tox }
+      - { src: /opt/os-tools/bin/flake8, dest: /usr/bin/flake8 }
+      - { src: /opt/os-tools/bin/disk-image-create, dest: /usr/bin/disk-image-create }
+      - { src: /opt/os-tools/bin/dib-lint, dest: /usr/bin/dib-lint }
+      - { src: /opt/os-tools/bin/dib-run-parts, dest: /usr/bin/dib-run-parts }
+
+  keystone:
+    name: keystone
+    user: root
+    group: root
+    prefix: /opt/keystone
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: keystone
+        url: https://github.com/openstack/keystone.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/keystone }
+    cp_files:
+      - { src: etc, dest: /etc/keystone }
+    mk_links:
+      - { src: /opt/keystone/bin/keystone-manage, dest: /usr/bin/keystone-manage }
+    services:
+      - name: keystone
+        description: OpenStack Identity Service
+        exec: ${#os_package_map.keystone.prefix}/bin/keystone-all
+              --config-file=/etc/keystone/keystone.conf
+              --log-file=/var/log/keystone/all.log
+
+  glance:
+    name: glance
+    user: root
+    group: root
+    prefix: /opt/glance
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: glance
+        url: https://github.com/openstack/glance.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/glance }
+      - { path: /var/lib/glance }
+    cp_files:
+      - { src: etc, dest: /etc/glance }
+    services:
+      - name: glance-api
+        description: OpenStack Image Service
+        exec: ${#os_package_map.glance.prefix}/bin/glance-api
+              --config-file=/etc/glance/glance-api.conf
+              --log-file=/var/log/glance/api.log
+      - name: glance-registry
+        description: OpenStack Image Service
+        exec: ${#os_package_map.glance.prefix}/bin/glance-registry
+              --config-file=/etc/glance/glance-registry.conf
+              --log-file=/var/log/glance/registry.log
+
+  nova:
+    name: nova
+    user: root
+    group: root
+    prefix: /opt/nova
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: nova
+        url: https://github.com/openstack/nova.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/nova }
+      - { path: /var/lock/subsys/nova }
+      - { path: /var/lib/nova }
+      - { path: /var/lib/nova/instances }
+    cp_files:
+      - { src: etc/nova, dest: /etc/nova }
+    mk_links:
+      - { src: /opt/nova/bin/nova-manage, dest: /usr/bin/nova-manage }
+      - { src: /opt/nova/bin/privsep-helper, dest: /usr/bin/privsep-helper }  # for cinder
+      - { src: /opt/nova/bin/nova-rootwrap, dest: /usr/bin/nova-rootwrap }
+    services:
+      - name: nova-api
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-api
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/api.log
+      - name: nova-scheduler
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-scheduler
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/scheduler.log
+      - name: nova-conductor
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-conductor
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/conductor.log
+      - name: nova-cert
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-cert
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/cert.log
+      - name: nova-console
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-console
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/console.log
+      - name: nova-consoleauth
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-consoleauth
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/consoleauth.log
+      - name: nova-novncproxy
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-novncproxy
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/novncproxy.log
+      - name: nova-compute
+        description: OpenStack Nova Service
+        exec: ${#os_package_map.nova.prefix}/bin/nova-compute
+              --config-file=/etc/nova/nova.conf
+              --log-file=/var/log/nova/compute.log
+
+  neutron:
+    name: neutron
+    user: root
+    group: root
+    prefix: /opt/neutron
+    python: "2.7"
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: neutron
+        url: https://github.com/openstack/neutron.git
+        branch: stable/ocata
+      - name: neutron-lbaas
+        url: https://github.com/openstack/neutron-lbaas.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/neutron }
+    cp_files:
+      - { src: ../neutron/etc, dest: /etc/neutron }
+      - { src: ../neutron/etc/neutron/plugins, dest: /etc/neutron/plugins }
+    services:
+      - name: neutron-server
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-server
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/plugins/ml2/ml2_conf.ini
+              --config-file=/etc/neutron/plugins/ml2/linuxbridge_agent.ini
+              --config-file=/etc/neutron/plugins/ml2/openvswitch_agent.ini
+              --log-file=/var/log/neutron/server.log
+      - name: neutron-linuxbridge-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-linuxbridge-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/plugins/ml2/ml2_conf.ini
+              --config-file=/etc/neutron/plugins/ml2/linuxbridge_agent.ini
+              --log-file=/var/log/neutron/linuxbridge-agent.log
+      - name: neutron-openvswitch-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-openvswitch-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/plugins/ml2/ml2_conf.ini
+              --config-file=/etc/neutron/plugins/ml2/openvswitch_agent.ini
+              --log-file=/var/log/neutron/openvswitch-agent.log
+      - name: neutron-dhcp-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-dhcp-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/dhcp_agent.ini
+              --log-file=/var/log/neutron/dhcp-agent.log
+      - name: neutron-l3-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-l3-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/l3_agent.ini
+              --log-file=/var/log/neutron/l3-agent.log
+      - name: neutron-metadata-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-metadata-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/metadata_agent.ini
+              --log-file=/var/log/neutron/metadata-agent.log
+      - name: neutron-lbaasv2-agent
+        description: OpenStack Network Service
+        exec: ${#os_package_map.neutron.prefix}/bin/neutron-lbaasv2-agent
+              --config-file=/etc/neutron/neutron.conf
+              --config-file=/etc/neutron/lbaas_agent.ini
+              --log-file=/var/log/neutron/lbaasv2-agent.log
+
+  horizon:
+    name: horizon
+    user: apache
+    group: apache
+    prefix: /opt/horizon
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: horizon
+        url: https://github.com/openstack/horizon.git
+        branch: stable/ocata
+      # - name: manila-ui
+      #   url: https://github.com/openstack/manila-ui.git
+      #   branch: stable/ocata
+      # - name: neutron-lbaas-dashboard
+      #   url: https://github.com/openstack/neutron-lbaas-dashboard.git
+      #   branch: stable/ocata
+    requirements:
+      - python-memcached
+      - mysqlclient
+    mk_dirs:
+      - { path: /etc/horizon }
+    cp_files:
+      - { src: ../horizon, dest: /opt/horizon/lib/horizon }
+      # - { src: ../manila-ui/manila_ui/enabled/_90_manila_project_shares.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_90_manila_project_shares.py }
+      # - { src: ../manila-ui/manila_ui/enabled/_90_manila_admin_shares.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_90_manila_admin_shares.py }
+      # - { src: ../neutron-lbaas-dashboard/neutron_lbaas_dashboard/enabled/_1481_project_ng_loadbalancersv2_panel.py, dest: /opt/horizon/lib/horizon/openstack_dashboard/enabled/_1481_project_ng_loadbalancersv2_panel.py }
+      # - { src: manage.py, dest: /opt/horizon/lib/horizon/manage.py }
+      # - { src: openstack_dashboard, dest: /opt/horizon/lib/horizon/openstack_dashboard }
+    mk_links:
+      - { src: /opt/horizon/lib/horizon/openstack_dashboard/local/local_settings.py, dest: /etc/horizon/local_settings.py }
+    services: []
+
+  cinder:
+    name: cinder
+    user: root
+    group: root
+    prefix: /opt/cinder
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: cinder
+        url: https://github.com/openstack/cinder.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_links:
+      - { src: /opt/cinder/bin/cinder-rtstool, dest: /usr/bin/cinder-rtstool }
+    mk_dirs:
+      - { path: /var/log/cinder }
+      - { path: /var/lib/cinder/volumes }
+    cp_files:
+      - { src: etc/cinder, dest: /etc/cinder }
+    services:
+      - name: cinder-api
+        description: OpenStack Volume Service
+        exec: ${#os_package_map.cinder.prefix}/bin/cinder-api
+              --config-file=/etc/cinder/cinder.conf
+              --log-file=/var/log/cinder/api.log
+      - name: cinder-scheduler
+        description: OpenStack Volume Service
+        exec: ${#os_package_map.cinder.prefix}/bin/cinder-scheduler
+              --config-file=/etc/cinder/cinder.conf
+              --log-file=/var/log/cinder/scheduler.log
+      - name: cinder-volume
+        description: OpenStack Volume Service
+        exec: ${#os_package_map.cinder.prefix}/bin/cinder-volume
+              --config-file=/etc/cinder/cinder.conf
+              --log-file=/var/log/cinder/volume.log
+
+  swift:
+    name: swift
+    user: root
+    group: root
+    prefix: /opt/swift
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: swift
+        url: https://github.com/openstack/swift.git
+        branch: stable/ocata
+      - name: swift3
+        url: https://github.com/openstack/swift3.git
+        branch: master
+    requirements:
+      - pymysql
+      - keystonemiddleware
+    mk_dirs:
+      - { path: /var/log/swift }
+      - { path: /var/cache/swift }
+    mk_links:
+      - { src: /opt/swift/bin/swift-ring-builder, dest: /usr/bin/swift-ring-builder }
+    cp_files:
+      - { src: ../swift/etc, dest: /etc/swift }
+    services:
+      - name: swift-proxy-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-proxy-server
+              /etc/swift/proxy-server.conf
+      - name: swift-account-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-server
+              /etc/swift/account-server.conf
+      - name: swift-account-auditor
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-auditor
+              /etc/swift/account-server.conf
+      - name: swift-account-reaper
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-reaper
+              /etc/swift/account-server.conf
+      - name: swift-account-replicator
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-account-replicator
+              /etc/swift/account-server.conf
+      - name: swift-container-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-container-server
+              /etc/swift/container-server.conf
+      - name: swift-container-auditor
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-container-auditor
+              /etc/swift/container-server.conf
+      - name: swift-container-replicator
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-container-replicator
+              /etc/swift/container-server.conf
+      - name: swift-container-updater
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-contailer-updater
+              /etc/swift/contailer-server.conf
+      - name: swift-object-server
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-server
+              /etc/swift/object-server.conf
+      - name: swift-object-auditor
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-auditor
+              /etc/swift/object-server.conf
+      - name: swift-object-replicator
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-replicator
+              /etc/swift/object-server.conf
+      - name: swift-object-updater
+        description: OpenStack Object Storage Service
+        exec: ${#os_package_map.swift.prefix}/bin/swift-object-updater
+              /etc/swift/object-server.conf
+
+  heat:
+    name: heat
+    user: root
+    group: root
+    prefix: /opt/heat
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: heat
+        url: https://github.com/openstack/heat.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/heat }
+      - { path: /var/lib/heat }
+    cp_files:
+      - { src: etc/heat, dest: /etc/heat }
+    services:
+      - name: heat-api
+        description: OpenStack Orchestration Service
+        exec: ${#os_package_map.heat.prefix}/bin/heat-api
+              --config-file=/etc/heat/heat.conf
+              --log-file=/var/log/heat/api.log
+      - name: heat-api-cfn
+        description: OpenStack Orchestration Service
+        exec: ${#os_package_map.heat.prefix}/bin/heat-api-cfn
+              --config-file=/etc/heat/heat.conf
+              --log-file=/var/log/heat/api-cfn.log
+      - name: heat-engine
+        description: OpenStack Orchestration Service
+        exec: ${#os_package_map.heat.prefix}/bin/heat-engine
+              --config-file=/etc/heat/heat.conf
+              --log-file=/var/log/heat/engine.log
+
+  ceilometer:
+    name: ceilometer
+    user: root
+    group: root
+    prefix: /opt/ceilometer
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: ceilometer
+        url: https://github.com/openstack/ceilometer.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+      - pymongo
+    mk_dirs:
+      - { path: /var/log/ceilometer }
+      - { path: /var/lib/ceilometer }
+    cp_files:
+      - { src: etc/ceilometer, dest: /etc/ceilometer }
+    services:
+      - name: ceilometer-api
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-api
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/api.log
+      - name: ceilometer-agent-notification
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-agent-notification
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/agent-notification.log
+      - name: ceilometer-alarm-evaluator
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-alarm-evaluator
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/alarm-evaluator.log
+      - name: ceilometer-alarm-notifier
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-alarm-notifier
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/alarm-notifier.log
+      - name: ceilometer-collector
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-collector
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/collector.log
+      - name: ceilometer-agent-compute
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-polling --polling-namespaces compute
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/agent-compute.log
+      - name: ceilometer-agent-central
+        description: OpenStack Telemetry Service
+        exec: ${#os_package_map.ceilometer.prefix}/bin/ceilometer-polling --polling-namespaces central
+              --config-file=/etc/ceilometer/ceilometer.conf
+              --log-file=/var/log/ceilometer/agent-central.log
+
+  aodh:
+    name: aodh
+    user: root
+    group: root
+    prefix: /opt/aodh
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: aodh
+        url: https://github.com/openstack/aodh.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/aodh }
+      - { path: /var/lib/aodh }
+    cp_files:
+      - { src: etc/aodh, dest: /etc/aodh }
+    services:
+      - name: aodh-api
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-api
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/api.log
+      - name: aodh-evaluator
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-evaluator
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/evaluator.log
+      - name: aodh-notifier
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-notifier
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/notifier.log
+      - name: aodh-listener
+        description: OpenStack Telemetry Alarming Service
+        exec: ${#os_package_map.aodh.prefix}/bin/aodh-listener
+              --config-file=/etc/aodh/aodh.conf
+              --log-file=/var/log/aodh/listener.log
+
+  ironic:
+    name: ironic
+    user: root
+    group: root
+    prefix: /opt/ironic
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: ironic
+        url: https://github.com/openstack/ironic.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/ironic }
+      - { path: /var/lib/ironic }
+    cp_files:
+      - { src: etc/ironic, dest: /etc/ironic }
+    services:
+      - name: ironic-api
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.ironic.prefix}/bin/ironic-api
+              --config-file=/etc/ironic/ironic.conf
+              --log-file=/var/log/ironic/api.log
+      - name: ironic-conductor
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.ironic.prefix}/bin/ironic-conductor
+              --config-file=/etc/ironic/ironic.conf
+              --log-file=/var/log/ironic/conductor.log
+
+  manila:
+    name: manila
+    user: root
+    group: root
+    prefix: /opt/manila
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: manila
+        url: https://github.com/openstack/manila.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/manila }
+      - { path: /var/lib/manila }
+    cp_files:
+      - { src: etc/manila, dest: /etc/manila }
+    services:
+      - name: manila-api
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.manila.prefix}/bin/manila-api
+              --config-file=/etc/manila/manila.conf
+              --log-file=/var/log/manila/api.log
+      - name: manila-scheduler
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.manila.prefix}/bin/manila-scheduler
+              --config-file=/etc/manila/manila.conf
+              --log-file=/var/log/manila/scheduler.log
+      - name: manila-share
+        description: OpenStack Baremetal Service
+        exec: ${#os_package_map.manila.prefix}/bin/manila-share
+              --config-file=/etc/manila/manila.conf
+              --log-file=/var/log/manila/share.log
+
+  trove:
+    name: trove
+    user: root
+    group: root
+    prefix: /opt/trove
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: trove
+        url: https://github.com/openstack/trove.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+      - pycrypto
+    mk_dirs:
+      - { path: /var/log/trove }
+      - { path: /var/lib/trove }
+    cp_files:
+      - { src: etc/trove, dest: /etc/trove }
+    services:
+      - name: trove-api
+        description: OpenStack Database Service
+        exec: ${#os_package_map.trove.prefix}/bin/trove-api
+              --config-file=/etc/trove/trove.conf
+              --log-file=/var/log/trove/api.log
+      - name: trove-conductor
+        description: OpenStack Database Service
+        exec: ${#os_package_map.trove.prefix}/bin/trove-conductor
+              --config-file=/etc/trove/trove.conf
+              --log-file=/var/log/trove/conductor.log
+      - name: trove-taskmanager
+        description: OpenStack Database Service
+        exec: ${#os_package_map.trove.prefix}/bin/trove-taskmanager
+              --config-file=/etc/trove/trove.conf
+              --config-file=/etc/trove/trove-taskmanager.conf
+              --log-file=/var/log/trove/taskmanager.log
+
+  designate:
+    name: designate
+    user: root
+    group: root
+    prefix: /opt/designate
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: designate
+        url: https://github.com/openstack/designate.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/designate }
+      - { path: /var/lib/designate }
+    cp_files:
+      - { src: etc/designate, dest: /etc/designate }
+    services:
+      - name: designate-api
+        description: OpenStack DNS Service
+        exec: ${#os_package_map.designate.prefix}/bin/designate-api
+              --config-file=/etc/designate/designate.conf
+              --log-file=/var/log/designate/api.log
+
+  rally:
+    name: rally
+    user: root
+    group: root
+    prefix: /opt/rally
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: rally
+        url: https://github.com/openstack/rally.git
+        branch: master
+    requirements:
+      - pymysql
+    mk_dirs: []
+    cp_files:
+      - { src: etc/rally, dest: /etc/rally }
+    mk_links:
+      - { src: /opt/rally/bin/rally-manage, dest: /usr/bin/rally-manage }
+      - { src: /opt/rally/bin/rally, dest: /usr/bin/rally }
+    services: []
+
+  barbican:
+    name: barbican
+    user: root
+    group: root
+    prefix: /opt/barbican
+    version: ocata
+    is_develop: false
+    git_repos:
+      - name: barbican
+        url: https://github.com/openstack/barbican.git
+        branch: stable/ocata
+    requirements:
+      - pymysql
+    mk_dirs:
+      - { path: /var/log/barbican }
+      - { path: /var/lib/barbican }
+    cp_files:
+      - { src: bin/barbican-api, dest: /opt/barbican/bin/barbican-api }
+      - { src: etc/barbican, dest: /etc/barbican }
+    services:
+      - name: barbican-api
+        description: OpenStack Barbican Service
+        exec: ${#os_package_map.barbican.prefix}/bin/python ${#os_package_map.barbican.prefix}/bin/barbican-api
+              --config-file=/etc/barbican/barbican.conf
+              --log-file=/var/log/barbican/api.log

@@ -1,7 +1,7 @@
 # coding:utf-8
 
 import time
-from fabkit import sudo, api, filer, run, env
+from fabkit import sudo, filer, env
 from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
@@ -54,7 +54,7 @@ class Keystone(SimpleBase):
         if self.is_tag('conf'):
             if filer.template(
                 '/etc/keystone/keystone.conf',
-                src='{0}/keystone.conf.j2'.format(version),
+                src='{0}/keystone/keystone.conf'.format(version),
                 data=data,
                     ):
                 self.handlers['restart_httpd'] = True
@@ -67,6 +67,13 @@ class Keystone(SimpleBase):
                 'wsgi_script_dir': '{0}/bin/'.format(self.prefix),
                 'log_name': 'keystone'
             })
+
+            if filer.template(
+                '/etc/httpd/conf/httpd.conf',
+                data=data,
+            ):
+                self.handlers['restart_httpd'] = True
+
             if filer.template(
                 '/etc/httpd/conf.d/wsgi-keystone-public.conf',
                 src='wsgi-httpd.conf',
@@ -87,8 +94,22 @@ class Keystone(SimpleBase):
                 self.handlers['restart_httpd'] = True
 
         if self.is_tag('data'):
-            if env.host == env.hosts[0]:
-                sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
+            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
+
+            sudo('keystone-manage fernet_setup '
+                 '--keystone-user apache --keystone-group apache ')
+            sudo('keystone-manage credential_setup '
+                 '--keystone-user apache --keystone-group apache ')
+
+            sudo('keystone-manage bootstrap --bootstrap-password {0} '
+                 '--bootstrap-admin-url {1[adminurl]} '
+                 '--bootstrap-internal-url {1[internalurl]} '
+                 '--bootstrap-public-url {1[publicurl]} '
+                 '--bootstrap-region-id {1[region]}'.format(
+                     data['admin_password'], data['service_map']['keystone']))
+
+            sudo('chown -R apache:apache /etc/keystone/fernet-keys/')
+            sudo('chown -R apache:apache /etc/keystone/credential-keys/')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
@@ -96,70 +117,38 @@ class Keystone(SimpleBase):
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             time.sleep(3)
-            self.create_tenant('admin', 'Admin Project')
-            self.create_role('admin')
-            self.create_role('_member_')
-            self.create_user(data['admin_user'], data['admin_password'],
-                             [['admin', 'admin'], ['admin', '_member_']])
-
             self.create_tenant(data['service_tenant_name'], 'Service Project')
             self.create_user(data['service_user'], data['service_password'],
                              [['service', 'admin']])
 
-            for name, service in data['services'].items():
+            for name, service in data['service_map'].items():
                 self.create_service(name, service)
 
-        if self.is_tag('conf'):
-            self.disable_admin_token()
-
-    def disable_admin_token(self):
-        data = self.init()
-        data.update({
-            'tmp_admin_token': '# admin_token ='
-        })
-        filer.template(
-            '/etc/keystone/keystone.conf',
-            src='{0}/keystone.conf.j2'.format(data['version']),
-            data=data,
-        )
-        self.restart_services(pty=False)
-
-    def cmd(self, cmd, use_admin_token=True):
+    def cmd(self, cmd):
         self.init()
-        # create users, roles, services
-        if use_admin_token:
-            endpoint = '{0}/v2.0'.format(self.data['admin_endpoint'])
-            with api.shell_env(
-                    OS_SERVICE_TOKEN=self.data['admin_token'],
-                    OS_SERVICE_ENDPOINT=endpoint,
-                    OS_TOKEN=self.data['admin_token'],
-                    OS_URL=endpoint,
-                    ):
-                return run('openstack {0}'.format(cmd))
-        else:
-            return utils.oscmd('openstack {0}'.format(cmd))
+        return utils.oscmd('openstack {0}'.format(cmd))
 
     def create_tenant(self, name, description):
         self.init()
-        tenant_list = self.cmd('project list', True)
+        tenant_list = self.cmd('project list')
         if ' {0} '.format(name) not in tenant_list:
             self.cmd('project create --description="{1}" {0}'.format(
                 name, description))
 
     def create_role(self, name):
         self.init()
-        role_list = self.cmd('role list', True)
+        role_list = self.cmd('role list')
         if ' {0} '.format(name) not in role_list:
             self.cmd('role create {0}'.format(name))
 
-    def create_user(self, name, password, tenant_roles, use_admin_token=True):
+    def create_user(self, name, password, tenant_roles):
         self.init()
-        user_list = self.cmd('user list', use_admin_token)
+        user_list = self.cmd('user list')
         if ' {0} '.format(name) not in user_list:
-            self.cmd('user create --password={1} {0}'.format(name, password), use_admin_token)
+            self.cmd('user create --password={1} {0}'.format(name, password))
             for tenant_role in tenant_roles:
                 self.cmd('role add --user={0} --project={1} {2}'.format(
-                    name, tenant_role[0], tenant_role[1]), use_admin_token)
+                    name, tenant_role[0], tenant_role[1]))
 
     def create_service(self, name, service):
         self.init()
@@ -169,9 +158,9 @@ class Keystone(SimpleBase):
             self.cmd('service create --name={0} --description="{1[description]}" {1[type]}'.format(name, service))  # noqa
 
         if ' {0} '.format(name) not in endpoint_list:
-            self.cmd('''endpoint create \\
-            --publicurl={0[publicurl]} \\
-            --internalurl={0[internalurl]} \\
-            --adminurl={0[adminurl]} \\
-            --region {0[region]} \\
-            {0[type]}'''.format(service))
+            utils.oscmd('openstack endpoint create --region {0[region]}'
+                        ' {0[type]} public {0[publicurl]};'
+                        'openstack endpoint create --region {0[region]}'
+                        ' {0[type]} internal {0[internalurl]};'
+                        'openstack endpoint create --region {0[region]}'
+                        ' {0[type]} admin {0[adminurl]};'.format(service))

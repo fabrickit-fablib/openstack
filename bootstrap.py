@@ -52,7 +52,7 @@ export OS_PASSWORD={0}
 export OS_TENANT_NAME=admin
 export OS_AUTH_URL={1}'''.format(
             keystone_data['admin_password'],
-            keystone_data['services']['keystone']['adminurl']))
+            keystone_data['service_map']['keystone']['adminurl']))
 
         sudo('''cat << _EOT_ > /root/openstackrcv3
 export OS_USERNAME=admin

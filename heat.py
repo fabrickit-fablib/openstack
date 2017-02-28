@@ -39,7 +39,7 @@ class Heat(SimpleBase):
             # setup conf files
             is_updated = filer.template(
                 '/etc/heat/heat.conf',
-                src='{0}/heat.conf.j2'.format(data['version']),
+                src='{0}/heat/heat.conf'.format(data['version']),
                 data=data,
             )
 

@@ -39,25 +39,29 @@ class Cinder(SimpleBase):
     def setup(self):
         data = self.init()
 
-        self.install_packages()
+        if self.is_tag('package'):
+            self.install_packages()
 
-        self.python.setup()
-        self.python.setup_package(**self.package)
+            self.python.setup()
+            self.python.setup_package(**self.package)
 
-        self.setup_lvm()
+            self.setup_lvm()
 
-        # setup conf files
-        is_updated = filer.template(
-            '/etc/cinder/cinder.conf',
-            src='{0}/cinder.conf.j2'.format(self.package['version']),
-            data=data,
-        )
+        if self.is_tag('conf'):
+            # setup conf files
+            is_updated = filer.template(
+                '/etc/cinder/cinder.conf',
+                src='{0}/cinder/cinder.conf'.format(self.package['version']),
+                data=data,
+            )
 
-        sudo('{0}/bin/cinder-manage db sync'.format(self.prefix))
+        if self.is_tag('data'):
+            sudo('{0}/bin/cinder-manage db sync'.format(self.prefix))
 
-        self.enable_services().start_services(pty=False)
-        if is_updated:
-            self.restart_services(pty=False)
+        if self.is_tag('service'):
+            self.enable_services().start_services(pty=False)
+            if is_updated:
+                self.restart_services(pty=False)
 
     def cmd(self, cmd):
         return utils.oscmd('cinder {0}'.format(cmd))

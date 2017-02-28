@@ -21,7 +21,7 @@ class Test(SimpleBase):
             return
 
         keystone = Keystone()
-        keystone.create_user(data['user'], data['password'], [['admin', 'admin']], False)
+        keystone.create_user(data['user'], data['password'], [['admin', 'admin']])
 
         glance = Glance()
         image_id = glance.create_image(
@@ -29,8 +29,9 @@ class Test(SimpleBase):
             data['image']['src_url'],
         )
 
-        net_id = utils.oscmd("neutron net-list | grep ' {0} ' | awk '{{print $2}}'".format(
-            env.cluster['neutron']['test_net']))
+        net_id = utils.oscmd("neutron net-list 2>/dev/null "
+                             "| grep ' {0} ' | awk '{{print $2}}'".format(
+                                 env.cluster['neutron']['test_net']))
 
         nova = Nova()
         nova.create_flavor('test-flavor', 62, 2, 1)
