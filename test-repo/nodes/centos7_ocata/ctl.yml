@@ -330,11 +330,7 @@ heat:
   verbose: true
   database:
     connection: ${#openstack.database.connection}/heat
-  rabbit_host: ${#rabbitmq.cluster_map.common.host}
-  rabbit_port: ${#rabbitmq.cluster_map.common.port}
-  rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
-  rabbit_password: ${#rabbitmq.cluster_map.common.user_map.openstack.password}
-  rabbit_virtual_host: ${#rabbitmq.cluster_map.common.vhost_map.openstack}
+  transport_url: ${#rabbitmq.cluster_map.common.transport_url}
   heat_metadata_server_url: ${#openstack.protocol}://${#openstack.endpoint}:8000
   heat_waitcondition_server_url: ${#openstack.protocol}://${#openstack.endpoint}:8000/v1/waitcondition
   stack_domain_admin: heat

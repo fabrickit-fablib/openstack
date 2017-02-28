@@ -35,13 +35,11 @@ class Heat(SimpleBase):
             self.python.setup()
             self.python.setup_package(**self.package)
 
-        return
-
         if self.is_tag('conf'):
             # setup conf files
             is_updated = filer.template(
                 '/etc/heat/heat.conf',
-                src='{0}/heat.conf.j2'.format(data['version']),
+                src='{0}/heat/heat.conf'.format(data['version']),
                 data=data,
             )
 

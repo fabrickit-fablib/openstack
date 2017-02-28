@@ -18,6 +18,7 @@ node_map:
       - openstack/neutron:
           enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
       - openstack/horizon
+      - openstack/cinder
       - openstack/heat
       - openstack/test
 
