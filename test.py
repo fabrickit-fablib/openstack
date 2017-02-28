@@ -21,7 +21,7 @@ class Test(SimpleBase):
             return
 
         keystone = Keystone()
-        keystone.create_user(data['user'], data['password'], [['admin', 'admin']], False)
+        keystone.create_user(data['user'], data['password'], [['admin', 'admin']])
 
         glance = Glance()
         image_id = glance.create_image(
@@ -34,6 +34,8 @@ class Test(SimpleBase):
 
         nova = Nova()
         nova.create_flavor('test-flavor', 62, 2, 1)
+
+        return
 
         test_stack = {
             'image_id': image_id,

@@ -91,6 +91,12 @@ haproxy:
           server_hosts: ${#node_map.openstack.hosts}
           server_port: 16080
           server_option: check inter 2000 rise 2 fall 5
+        - name: nova_placement
+          port: 8780
+          options: ${#haproxy.ctl_options}
+          server_hosts: ${#node_map.openstack.hosts}
+          server_port: 18780
+          server_option: check inter 2000 rise 2 fall 5
 
         - name: neutron_api
           port: 9696

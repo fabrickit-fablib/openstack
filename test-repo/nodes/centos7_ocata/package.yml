@@ -120,6 +120,7 @@ os_package_map:
     mk_links:
       - { src: /opt/nova/bin/nova-manage, dest: /usr/bin/nova-manage }
       - { src: /opt/nova/bin/privsep-helper, dest: /usr/bin/privsep-helper }  # for cinder
+      - { src: /opt/nova/bin/nova-rootwrap, dest: /usr/bin/nova-rootwrap }
     services:
       - name: nova-api
         description: OpenStack Nova Service

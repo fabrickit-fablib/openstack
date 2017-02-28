@@ -35,6 +35,8 @@ class Heat(SimpleBase):
             self.python.setup()
             self.python.setup_package(**self.package)
 
+        return
+
         if self.is_tag('conf'):
             # setup conf files
             is_updated = filer.template(

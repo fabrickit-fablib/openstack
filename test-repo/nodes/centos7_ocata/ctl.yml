@@ -57,6 +57,13 @@ keystone:
       publicurl: ${#nova.endpoint}/v2/%\(tenant_id\)s
       internalurl: ${#nova.endpoint}/v2/%\(tenant_id\)s
       adminurl: ${#nova.endpoint}/v2/%\(tenant_id\)s
+    placement:
+      type: placement
+      region: RegionOne
+      description: Openstack Placement Service
+      publicurl: ${#nova.placement_endpoint}
+      internalurl: ${#nova.placement_endpoint}
+      adminurl: ${#nova.placement_endpoint}
     neutron:
       type: network
       region: RegionOne
@@ -170,11 +177,13 @@ glance:
 
 nova:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8774
+  placement_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8780
   vncproxy_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6080
   ec2_port: 18773
   api_port: 18774
   metadata_port: 18775
   novncproxy_port: 16080
+  placement_port: 18780
   version: ocata
   debug: True
   api_database:
@@ -262,7 +271,7 @@ neutron:
         - name: test_subnet
           cidr: 192.168.122.0/24
           options:
-            - allocation-pool start=192.168.122.100,end=192.168.122.120
+            - allocation-pool start=192.168.122.200,end=192.168.122.220
 
 horizon:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:443

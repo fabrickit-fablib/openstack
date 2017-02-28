@@ -19,6 +19,7 @@ class Nova(SimpleBase):
         }
 
         default_services = [
+            'nova-placement',
             'nova-api',
             'nova-scheduler',
             'nova-conductor',
@@ -27,12 +28,17 @@ class Nova(SimpleBase):
             'nova-compute',
         ]
 
+        self.enable_httpd = False
         self.packages = []
         self.services = []
         for service in default_services:
             for enable_service in enable_services:
                 if re.search(enable_service, service):
-                    self.services.append(service)
+                    if service == 'nova-placement':
+                        self.services.append('httpd')
+                        self.enable_httpd = True
+                    else:
+                        self.services.append(service)
                     break
 
         if 'nova-api' in self.services:
@@ -110,10 +116,32 @@ class Nova(SimpleBase):
                     ):
                 self.handlers['restart_nova'] = True
 
+            data.update({
+                'httpd_port': data['placement_port'],
+                'prefix': self.prefix,
+                'wsgi_name': 'nova-placement',
+                'wsgi_script_alias': '{0}/bin/nova-placement-api'.format(self.prefix),
+                'wsgi_script_dir': '{0}/bin/'.format(self.prefix),
+                'log_name': 'nova-placement'
+            })
+
+            if self.enable_httpd:
+                if filer.template(
+                    '/etc/httpd/conf.d/wsgi-nova-placement.conf',
+                    src='wsgi-httpd.conf',
+                    data=data,
+                ):
+                    self.handlers['restart_httpd'] = True
+
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
                 sudo('nova-manage db sync')
                 sudo('nova-manage api_db sync')
+
+                # cetup cell0
+                sudo('nova-manage cell_v2 list_cells | grep cell0 || nova-manage cell_v2 map_cell0')
+                sudo('nova-manage db sync')
+                sudo('nova-manage cell_v2 list_cells | grep cell1 || nova-manage cell_v2 create_cell --name cell1')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
