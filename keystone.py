@@ -21,11 +21,10 @@ class Keystone(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'httpd',
-                'mod_wsgi',
+                'nginx',
             ]
         }
-        self.services = ['httpd']
+        self.services = ['nginx', 'keystone-admin', 'keystone-public']
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['keystone']
@@ -57,49 +56,45 @@ class Keystone(SimpleBase):
                 src='{0}/keystone/keystone.conf'.format(version),
                 data=data,
                     ):
-                self.handlers['restart_httpd'] = True
+                self.handlers['restart_keystone-public'] = True
+                self.handlers['restart_keystone-admin'] = True
 
             data.update({
                 'httpd_port': data['public_port'],
-                'prefix': self.prefix,
-                'wsgi_name': 'keystone-public',
-                'wsgi_script_alias': '{0}/bin/keystone-wsgi-public'.format(self.prefix),
-                'wsgi_script_dir': '{0}/bin/'.format(self.prefix),
-                'log_name': 'keystone'
+                'uwsgi_port': data['public_port'] + 1,
             })
 
             if filer.template(
-                '/etc/httpd/conf/httpd.conf',
+                '/etc/nginx/nginx.conf',
                 data=data,
             ):
-                self.handlers['restart_httpd'] = True
+                self.handlers['restart_nginx'] = True
 
             if filer.template(
-                '/etc/httpd/conf.d/wsgi-keystone-public.conf',
-                src='wsgi-httpd.conf',
+                '/etc/nginx/conf.d/uwsgi-keystone-public.conf',
+                src='uwsgi-nginx.conf',
                 data=data,
             ):
-                self.handlers['restart_httpd'] = True
+                self.handlers['restart_keystone-public'] = True
 
             data.update({
                 'httpd_port': data['admin_port'],
-                'wsgi_name': 'keystone-admin',
-                'wsgi_script_alias': '{0}/bin/keystone-wsgi-admin'.format(self.prefix),
+                'uwsgi_port': data['admin_port'] + 1,
             })
             if filer.template(
-                '/etc/httpd/conf.d/wsgi-keystone-admin.conf',
-                src='wsgi-httpd.conf',
+                '/etc/nginx/conf.d/uwsgi-keystone-admin.conf',
+                src='uwsgi-nginx.conf',
                 data=data,
             ):
-                self.handlers['restart_httpd'] = True
+                self.handlers['restart_keystone-admin'] = True
 
         if self.is_tag('data'):
             sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
 
             sudo('keystone-manage fernet_setup '
-                 '--keystone-user apache --keystone-group apache ')
+                 '--keystone-user nobody --keystone-group nginx ')
             sudo('keystone-manage credential_setup '
-                 '--keystone-user apache --keystone-group apache ')
+                 '--keystone-user nobody --keystone-group apache ')
 
             sudo('keystone-manage bootstrap --bootstrap-password {0} '
                  '--bootstrap-admin-url {1[adminurl]} '

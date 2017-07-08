@@ -6,8 +6,8 @@ haproxy:
   cluster_map:
     common:
       hosts: ${#node_map.haproxy.hosts}
-      host: 192.168.122.110
-      vip: 192.168.122.110
+      host: 192.168.122.150
+      vip: 192.168.122.150
       cidr_netmask: 24
       monitor_interval: 30
       defaults:
@@ -50,7 +50,7 @@ haproxy:
             - timeout client 1000000
             - timeout server 1000000
           server_hosts: ${#node_map.mysql.hosts}
-          server_port: 13306
+          server_port: 3306
           server_option: check inter 2000 rise 2 fall 5 backup
 
         - name: glance_api
@@ -70,13 +70,13 @@ haproxy:
           port: 5000
           options: ${#haproxy.ctl_options}
           server_hosts: ${#node_map.openstack.hosts}
-          server_port: 15000
+          server_port: 5000
           server_option: check inter 2000 rise 2 fall 5
         - name: keystone_admin
           port: 35357
           options: ${#haproxy.ctl_options}
           server_hosts: ${#node_map.openstack.hosts}
-          server_port: 45357
+          server_port: 35357
           server_option: check inter 2000 rise 2 fall 5
 
         - name: nova_api

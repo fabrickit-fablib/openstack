@@ -1,0 +1,64 @@
+node_map:
+  bootstrap:
+    hosts:
+      - 192.168.122.131
+      - 192.168.122.132
+    fabruns:
+      - openstack/bootstrap
+
+  openstack:
+    hosts:
+      - 192.168.122.131
+    fabruns:
+      - openstack/keystone
+      - openstack/glance
+      - openstack/nova:
+          enable_services: ['api', 'conductor', 'scheduler', 'placement']
+      - openstack/neutron:
+          enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
+      - openstack/horizon
+      - openstack/cinder
+      - openstack/heat
+      - openstack/test
+
+  openstack_compute:
+    hosts:
+      - 192.168.122.131
+    fabruns:
+      - openstack/nova:
+          enable_services: ['compute']
+      - openstack/neutron:
+          enable_services: ['linuxbridge-agent']
+
+  mysql:
+    hosts:
+      - 192.168.122.131
+      - 192.168.122.132
+    fabruns:
+      - openstack/mysql
+
+  memcache:
+    hosts:
+      - 192.168.122.131
+    fabruns:
+      - openstack/memcache
+
+  mongodb:
+    hosts:
+      - 192.168.122.111
+    fabruns:
+      - openstack/mongodb
+
+  rabbitmq:
+    hosts:
+      - 192.168.122.131
+      - 192.168.122.132
+    fabruns:
+      - openstack/rabbitmq
+
+  haproxy:
+    hosts:
+      - 192.168.122.131
+      - 192.168.122.132
+    fabruns:
+      - openstack/haproxy

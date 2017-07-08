@@ -13,8 +13,8 @@ class Horizon(SimpleBase):
             'allowed_hosts': "['*']",
         }
 
-        self.services = ['httpd']
-        self.packages = ['httpd', 'mod_wsgi']
+        self.services = ['nginx', 'horizon']
+        self.packages = ['nginx']
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['horizon']
@@ -42,21 +42,21 @@ class Horizon(SimpleBase):
                 data=data,
             )
 
-            is_updated = filer.template(
-                '/etc/httpd/conf.d/horizon_httpd.conf',
-                src='{0}/horizon/httpd.conf'.format(data['version']),
+            data.update({
+                'httpd_port': 10080,
+                'uwsgi_port': 10081,
+            })
+
+            if filer.template(
+                '/etc/nginx/conf.d/uwsgi-horizon.conf',
+                src='uwsgi-horizon-nginx.conf',
                 data=data,
-            ) or is_updated
+            ):
+                self.handlers['restart_nginx'] = True
 
             sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py collectstatic --noinput"'.format(
                 self.prefix, self.python.get_cmd()))
             sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py compress --force"'.format(
-                self.prefix, self.python.get_cmd()))
-
-            sudo('chown -R apache:apache {0}/lib/horizon'.format(self.prefix))
-
-        if self.is_tag('data'):
-            sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py syncdb --noinput"'.format(
                 self.prefix, self.python.get_cmd()))
 
         if self.is_tag('service'):

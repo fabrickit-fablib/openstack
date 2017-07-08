@@ -1,9 +1,8 @@
 node_map:
   bootstrap:
     hosts:
-      - 192.168.122.111
-      - 192.168.122.112
-      - 192.168.122.113
+      - 192.168.122.131
+      - 192.168.122.132
     fabruns:
       - openstack/bootstrap
 
@@ -24,7 +23,6 @@ node_map:
 
   openstack_compute:
     hosts:
-      - 192.168.122.112
       - 192.168.122.113
     fabruns:
       - openstack/nova:
@@ -32,15 +30,10 @@ node_map:
       - openstack/neutron:
           enable_services: ['linuxbridge-agent']
 
-  gluster:
-    hosts:
-      - 192.168.122.111
-    fabruns:
-      - openstack/gluster
-
   mysql:
     hosts:
-      - 192.168.122.111
+      - 192.168.122.131
+      - 192.168.122.132
     fabruns:
       - openstack/mysql
 
@@ -58,12 +51,14 @@ node_map:
 
   rabbitmq:
     hosts:
-      - 192.168.122.111
+      - 192.168.122.131
+      - 192.168.122.132
     fabruns:
       - openstack/rabbitmq
 
   haproxy:
     hosts:
-      - 192.168.122.111
+      - 192.168.122.131
+      - 192.168.122.132
     fabruns:
       - openstack/haproxy

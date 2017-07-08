@@ -14,11 +14,6 @@ mongodb:
 memcache:
   status_flow: [1]
 
-gluster:
-  require:
-    openstack/bootstrap: 1
-  status_flow: [1]
-
 haproxy:
   require:
     openstack/bootstrap: 1
@@ -40,7 +35,6 @@ glance:
   status_flow: [1]
   require:
     openstack/keystone: 1
-    openstack/gluster: 1
     openstack/mysql: 1
 
 cinder:
@@ -59,7 +53,6 @@ nova:
   status_flow: [1]
   require:
     openstack/keystone: 1
-    openstack/gluster: 1
     openstack/mysql: 1
     openstack/rabbitmq: 1
     openstack/memcache: 1
