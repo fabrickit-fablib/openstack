@@ -19,7 +19,7 @@ class Nova(SimpleBase):
         }
 
         default_services = [
-            'nova-placement',
+            'nova-placement-api',
             'nova-api',
             'nova-scheduler',
             'nova-conductor',
@@ -28,17 +28,17 @@ class Nova(SimpleBase):
             'nova-compute',
         ]
 
-        self.enable_httpd = False
+        self.enable_nginx = False
         self.packages = []
         self.services = []
         for service in default_services:
             for enable_service in enable_services:
                 if re.search(enable_service, service):
-                    if service == 'nova-placement':
-                        self.services.append('httpd')
-                        self.enable_httpd = True
-                    else:
-                        self.services.append(service)
+                    if service == 'nova-placement-api':
+                        self.services.append('nginx')
+                        self.enable_nginx = True
+
+                    self.services.append(service)
                     break
 
         if 'nova-api' in self.services:
@@ -57,9 +57,7 @@ class Nova(SimpleBase):
             self.packages.extend([
                 'libvirt',
                 'sysfsutils',
-                'qemu-kvm',
                 'libvirt-python',
-                'libvirt-devel',
                 'dbus',
             ])
 
@@ -118,20 +116,16 @@ class Nova(SimpleBase):
 
             data.update({
                 'httpd_port': data['placement_port'],
-                'prefix': self.prefix,
-                'wsgi_name': 'nova-placement',
-                'wsgi_script_alias': '{0}/bin/nova-placement-api'.format(self.prefix),
-                'wsgi_script_dir': '{0}/bin/'.format(self.prefix),
-                'log_name': 'nova-placement'
+                'uwsgi_port': data['placement_port'] + 10000,
             })
 
-            if self.enable_httpd:
+            if self.enable_nginx:
                 if filer.template(
-                    '/etc/httpd/conf.d/wsgi-nova-placement.conf',
-                    src='wsgi-httpd.conf',
+                    '/etc/nginx/conf.d/uwsgi-nova-placement-api.conf',
+                    src='uwsgi-nginx.conf',
                     data=data,
                 ):
-                    self.handlers['restart_httpd'] = True
+                    self.handlers['restart_nginx'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:

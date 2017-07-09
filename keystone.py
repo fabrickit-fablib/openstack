@@ -75,7 +75,7 @@ class Keystone(SimpleBase):
                 src='uwsgi-nginx.conf',
                 data=data,
             ):
-                self.handlers['restart_keystone-public'] = True
+                self.handlers['restart_nginx'] = True
 
             data.update({
                 'httpd_port': data['admin_port'],
@@ -92,9 +92,9 @@ class Keystone(SimpleBase):
             sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
 
             sudo('keystone-manage fernet_setup '
-                 '--keystone-user nobody --keystone-group nginx ')
+                 '--keystone-user nobody --keystone-group nobody ')
             sudo('keystone-manage credential_setup '
-                 '--keystone-user nobody --keystone-group apache ')
+                 '--keystone-user nobody --keystone-group nobody ')
 
             sudo('keystone-manage bootstrap --bootstrap-password {0} '
                  '--bootstrap-admin-url {1[adminurl]} '
@@ -103,8 +103,8 @@ class Keystone(SimpleBase):
                  '--bootstrap-region-id {1[region]}'.format(
                      data['admin_password'], data['service_map']['keystone']))
 
-            sudo('chown -R apache:apache /etc/keystone/fernet-keys/')
-            sudo('chown -R apache:apache /etc/keystone/credential-keys/')
+            sudo('chown -R nobody:nobody /etc/keystone/fernet-keys/')
+            sudo('chown -R nobody:nobody /etc/keystone/credential-keys/')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)

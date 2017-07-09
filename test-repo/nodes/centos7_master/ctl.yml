@@ -177,13 +177,13 @@ glance:
 
 nova:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8774
-  placement_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8780
+  placement_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8778
   vncproxy_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6080
   ec2_port: 18773
   api_port: 18774
   metadata_port: 18775
   novncproxy_port: 16080
-  placement_port: 18780
+  placement_port: 8778
   version: ocata
   debug: True
   api_database:

@@ -21,6 +21,7 @@ os_package_map:
       - flake8
       - diskimage-builder
       - dib-utils
+      - uwsgi
     mk_links:
       - { src: /opt/os-tools/bin/openstack, dest: /usr/bin/openstack }
       - { src: /opt/os-tools/bin/glance, dest: /usr/bin/glance }
@@ -36,6 +37,7 @@ os_package_map:
       - { src: /opt/os-tools/bin/designate, dest: /usr/bin/designate }
       - { src: /opt/os-tools/bin/barbican, dest: /usr/bin/barbican }
       - { src: /opt/os-tools/bin/tox, dest: /usr/bin/tox }
+      - { src: /opt/os-tools/bin/uwsgi, dest: /usr/bin/uwsgi }
       - { src: /opt/os-tools/bin/flake8, dest: /usr/bin/flake8 }
       - { src: /opt/os-tools/bin/disk-image-create, dest: /usr/bin/disk-image-create }
       - { src: /opt/os-tools/bin/dib-lint, dest: /usr/bin/dib-lint }
@@ -66,11 +68,13 @@ os_package_map:
         exec: /usr/bin/uwsgi --socket 127.0.0.1:5001 --master --home /opt/keystone
               --wsgi-file /opt/keystone/bin/keystone-wsgi-public
               --processes 2 --threads 1
+        type: notify
       - name: keystone-admin
         description: OpenStack Identity Service
         exec: /usr/bin/uwsgi --socket 127.0.0.1:35358 --master --home /opt/keystone
               --wsgi-file /opt/keystone/bin/keystone-wsgi-public
               --processes 2 --threads 1
+        type: notify
 
   glance:
     name: glance
@@ -167,6 +171,12 @@ os_package_map:
         exec: ${#os_package_map.nova.prefix}/bin/nova-compute
               --config-file=/etc/nova/nova.conf
               --log-file=/var/log/nova/compute.log
+      - name: nova-placement-api
+        description: OpenStack Identity Service
+        exec: /usr/bin/uwsgi --socket 127.0.0.1:18778 --master --home /opt/nova
+              --wsgi-file /opt/nova/bin/nova-placement-api
+              --processes 2 --threads 1
+        type: notify
 
   neutron:
     name: neutron

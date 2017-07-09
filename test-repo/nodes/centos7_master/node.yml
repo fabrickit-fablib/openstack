@@ -23,7 +23,7 @@ node_map:
 
   openstack_compute:
     hosts:
-      - 192.168.122.131
+      - 192.168.122.132
     fabruns:
       - openstack/nova:
           enable_services: ['compute']
