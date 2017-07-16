@@ -11,7 +11,7 @@ mongodb:
     openstack/bootstrap: 1
   status_flow: [1]
 
-memcache:
+memcached:
   status_flow: [1]
 
 haproxy:
@@ -47,7 +47,7 @@ swift:
   status_flow: [1]
   require:
     openstack/keystone: 1
-    openstack/memcache: 1
+    openstack/memcached: 1
 
 nova:
   status_flow: [1]
@@ -55,7 +55,13 @@ nova:
     openstack/keystone: 1
     openstack/mysql: 1
     openstack/rabbitmq: 1
-    openstack/memcache: 1
+    openstack/memcached: 1
+
+compute:
+  status_flow: [1]
+  require:
+    openstack/nova: 1
+    openstack/neutron: 1
 
 neutron:
   status_flow: [1]
@@ -94,7 +100,7 @@ horizon:
   require:
     openstack/keystone: 1
     openstack/mysql: 1
-    openstack/memcache: 1
+    openstack/memcached: 1
 
 ironic:
   status_flow: [1]

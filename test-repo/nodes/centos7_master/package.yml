@@ -267,7 +267,7 @@ os_package_map:
       #   branch: master
     requirements:
       - python-memcached
-      - mysqlclient
+      - mysql-python
     mk_dirs:
       - { path: /etc/horizon }
     cp_files:
@@ -281,8 +281,9 @@ os_package_map:
       - { src: /opt/horizon/lib/horizon/openstack_dashboard/local/local_settings.py, dest: /etc/horizon/local_settings.py }
     services:
       - name: horizon
+        type: notify
         description: OpenStack Dashboard Service
-        exec: /usr/bin/uwsgi --socket 127.0.0.1:8001 --master --home /opt/horizon
+        exec: /usr/bin/uwsgi --socket 127.0.0.1:10081 --master --home /opt/horizon
               --wsgi-file /opt/horizon/lib/horizon/openstack_dashboard/wsgi/django.wsgi
               --chdir /opt/horizon/lib/horizon
               --env DJANGO_SETTINGS_MODULE=openstack_dashboard.settings

@@ -53,6 +53,18 @@ haproxy:
           server_port: 3306
           server_option: check inter 2000 rise 2 fall 5 backup
 
+        - name: memcached
+          port: 11211
+          options:
+            - mode tcp
+            - maxconn 1024
+            - timeout connect 500000
+            - timeout client 1000000
+            - timeout server 1000000
+          server_hosts: ${#node_map.mysql.hosts}
+          server_port: 11211
+          server_option: check inter 2000 rise 2 fall 5 backup
+
         - name: glance_api
           port: 9292
           options: ${#haproxy.ctl_options}

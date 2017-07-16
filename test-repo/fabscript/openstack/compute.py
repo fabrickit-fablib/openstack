@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from fabkit import task, parallel
-from fablib.openstack import Nova, Neutron
+from fablib.openstack import Nova
 
 
 @task
@@ -9,8 +9,5 @@ from fablib.openstack import Nova, Neutron
 def setup(enable_services=['.*']):
     nova = Nova(enable_services)
     nova.setup()
-
-    neutron = Neutron(enable_services)
-    neutron.setup()
 
     return {'status': 1}

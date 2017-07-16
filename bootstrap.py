@@ -17,7 +17,7 @@ class Bootstrap(SimpleBase):
                     'path': 'https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-5.noarch.rpm',  # noqa
                 },
                 'epel-release',
-                'mysql-devel',
+                'mysql-community-devel',
                 'vim',
             ]
         }

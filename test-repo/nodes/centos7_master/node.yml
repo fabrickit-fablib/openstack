@@ -25,10 +25,8 @@ node_map:
     hosts:
       - 192.168.122.132
     fabruns:
-      - openstack/nova:
-          enable_services: ['compute']
-      - openstack/neutron:
-          enable_services: ['linuxbridge-agent']
+      - openstack/compute:
+          enable_services: ['compute', 'linuxbridge-agent']
 
   mysql:
     hosts:
@@ -37,17 +35,12 @@ node_map:
     fabruns:
       - openstack/mysql
 
-  memcache:
+  memcached:
     hosts:
       - 192.168.122.131
+      - 192.168.122.132
     fabruns:
-      - openstack/memcache
-
-  mongodb:
-    hosts:
-      - 192.168.122.111
-    fabruns:
-      - openstack/mongodb
+      - openstack/memcached
 
   rabbitmq:
     hosts:

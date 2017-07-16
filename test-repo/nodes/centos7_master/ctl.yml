@@ -7,7 +7,7 @@ openstack:
   endpoint: ${#haproxy.cluster_map.common.host}
   database:
     connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.endpoint}
-    mongodb_connection: mongodb://${#mongodb.cluster_map.common.user_map.openstack.user}:${#mongodb.cluster_map.common.user_map.openstack.password}@${#mongodb.cluster_map.common.endpoint}
+  memcached_servers: ${#haproxy.cluster_map.common.vip}:11211
 
 test_openstack:
   enable: true
@@ -23,7 +23,7 @@ keystone:
   admin_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:35357
   public_port: 5000
   admin_port: 35357
-  version: ocata
+  version: master
   debug: True
   admin_user: admin
   admin_password: adminpass
@@ -167,7 +167,7 @@ glance:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9292
   api_port: 19292
   registry_port: 19191
-  version: ocata
+  version: master
   debug: True
   glance_store:
     stores: file
@@ -184,7 +184,7 @@ nova:
   metadata_port: 18775
   novncproxy_port: 16080
   placement_port: 8778
-  version: ocata
+  version: master
   debug: True
   api_database:
     connection: ${#openstack.database.connection}/novaapi
@@ -220,7 +220,7 @@ nova:
 neutron:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9696
   port: 19696
-  version: ocata
+  version: master
   debug: True
   database:
     connection: ${#openstack.database.connection}/neutron
@@ -276,8 +276,8 @@ neutron:
 horizon:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:443
   port: 10080
-  memcached_servers: ${#node_map.openstack.hosts}
-  version: ocata
+  memcached_servers: ${#openstack.memcached_servers}
+  version: master
   time_zone: Asia/Tokyo
   debug: True
   template_debug: True
@@ -292,7 +292,7 @@ horizon:
 cinder:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8776
   port: 18776
-  version: ocata
+  version: master
   debug: True
   verbose: True
   transport_url: ${#rabbitmq.cluster_map.common.transport_url}
@@ -311,7 +311,7 @@ swift:
   object_port: 6000
   container_port: 6001
   account_port: 6002
-  version: ocata
+  version: master
   debug: True
   verbose: True
   memcache_servers: ${#node_map.openstack.hosts}
@@ -321,7 +321,7 @@ heat:
   cfn_endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8000
   api_port: 18004
   cfn_port: 18000
-  version: ocata
+  version: master
   debug: true
   verbose: true
   database:
@@ -337,14 +337,9 @@ heat:
 ceilometer:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8777
   port: 18777
-  version: ocata
+  version: master
   debug: true
   verbose: true
-  database:
-    connection: ${#openstack.database.connection}/ceilometer
-    metering_connection: ${#openstack.database.mongodb_connection}/metering
-    alarm_connection: ${#openstack.database.connection}/alarm
-    event_connection: ${#openstack.database.mongodb_connection}/event
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -357,7 +352,7 @@ ceilometer:
 aodh:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8042
   port: 18042
-  version: ocata
+  version: master
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -369,7 +364,7 @@ aodh:
 ironic:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:6385
   port: 16385
-  version: ocata
+  version: master
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -382,7 +377,7 @@ ironic:
 manila:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8786
   port: 18786
-  version: ocata
+  version: master
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -401,7 +396,7 @@ manila:
 trove:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:8779
   port: 18779
-  version: ocata
+  version: master
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -419,7 +414,7 @@ trove:
 designate:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9001
   port: 19001
-  version: ocata
+  version: master
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -431,7 +426,7 @@ designate:
 barbican:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:9311
   port: 19311
-  version: ocata
+  version: master
   rabbit_host: ${#rabbitmq.cluster_map.common.host}
   rabbit_port: ${#rabbitmq.cluster_map.common.port}
   rabbit_userid: ${#rabbitmq.cluster_map.common.user_map.openstack.user}
@@ -441,6 +436,6 @@ barbican:
     connection: ${#openstack.database.connection}/designate
 
 rally:
-  version: ocata
+  version: master
   database:
     connection: mysql+pymysql://${#mysql.cluster_map.common.user_map.openstack.user}:${#mysql.cluster_map.common.user_map.openstack.password}@${#mysql.cluster_map.common.endpoint}/rally

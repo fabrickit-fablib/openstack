@@ -22,23 +22,11 @@ SECRET_KEY = secret_key.generate_or_read_from_file(
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': [{% for server in memcached_servers %}'{{ server }}:11211',{% endfor %}],
+        'LOCATION': ['{{ memcached_servers }}'],
     }
 }
 
-# https://docs.djangoproject.com/en/1.10/ref/databases/#mysql-db-api-drivers
-DATABASES = {
-    'default': {
-        'ENGINE': '{{ database.engine }}',
-        'NAME': '{{ database.name }}',
-        'USER': '{{ database.user }}',
-        'PASSWORD': '{{ database.password }}',
-        'HOST': '{{ database.host }}',
-        'PORT': '{{ database.port }}',
-    }
-}
-
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 REST_API_REQUIRED_SETTINGS = ['OPENSTACK_HYPERVISOR_FEATURES',
                               'LAUNCH_INSTANCE_DEFAULTS',
