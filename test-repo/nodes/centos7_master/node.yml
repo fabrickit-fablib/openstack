@@ -13,7 +13,7 @@ node_map:
       - openstack/keystone
       - openstack/glance
       - openstack/nova:
-          enable_services: ['api', 'conductor', 'scheduler', 'placement']
+          enable_services: ['api', 'conductor', 'scheduler', 'placement', 'consoleauth', 'novncproxy']
       - openstack/neutron:
           enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
       - openstack/horizon

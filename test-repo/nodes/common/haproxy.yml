@@ -95,13 +95,13 @@ haproxy:
           port: 8774
           options: ${#haproxy.ctl_options}
           server_hosts: ${#node_map.openstack.hosts}
-          server_port: 18774
+          server_port: 8774
           server_option: check inter 2000 rise 2 fall 5
         - name: nova_vncproxy
           port: 6080
           options: ${#haproxy.ctl_options}
           server_hosts: ${#node_map.openstack.hosts}
-          server_port: 16080
+          server_port: 6080
           server_option: check inter 2000 rise 2 fall 5
         - name: nova_placement
           port: 8778
