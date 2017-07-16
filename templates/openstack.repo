@@ -1,0 +1,5 @@
+[syunkitadarepo]
+name=CentOS-$releasever - syunkitadarepo
+baseurl=http://syunkitada.github.io/yumrepo/centos/7/x86_64/
+enabled=1
+gpgcheck=0

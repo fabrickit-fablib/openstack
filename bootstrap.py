@@ -1,6 +1,6 @@
 # coding:utf-8
 
-from fabkit import sudo, env, Service, Editor
+from fabkit import sudo, env, filer, Service, Editor
 from fablib.python import Python
 from fablib.base import SimpleBase
 
@@ -34,6 +34,8 @@ class Bootstrap(SimpleBase):
         Editor('/etc/selinux/config').s('SELINUX=enforcing', 'SELINUX=disable')
 
         Service('firewalld').stop().disable()
+
+        filer.template('/etc/yum.repos.d/openstack.repo')
 
         if self.is_tag('package'):
             self.install_packages()

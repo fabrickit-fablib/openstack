@@ -15,6 +15,7 @@ class Nova(SimpleBase):
             'verbose': 'true',
             'timeout_nbd': 1,
             'is_nova-api': False,
+            'is_nova-compute': False,
             'is_master': False,
         }
 
@@ -48,6 +49,8 @@ class Nova(SimpleBase):
             self.packages.append('novnc')
 
         if 'nova-compute' in self.services:
+            self.data['is_nova-compute'] = True
+
             self.services.extend([
                 'libvirtd',
                 'messagebus',
@@ -55,6 +58,8 @@ class Nova(SimpleBase):
             ])
 
             self.packages.extend([
+                'vde2-2.3.2',
+                'qemu-2.9.0',
                 'libvirt',
                 'sysfsutils',
                 'libvirt-python',
@@ -108,10 +113,9 @@ class Nova(SimpleBase):
             #     self.handlers['restart_nova'] = True
 
             if filer.template(
-                '/etc/nova/nova.conf',
-                src='{0}/nova/nova.conf'.format(data['version']),
-                data=data,
-                    ):
+                    '/etc/nova/nova.conf',
+                    src='{0}/nova/nova.conf'.format(data['version']),
+                    data=data):
                 self.handlers['restart_nova'] = True
 
             data.update({
@@ -126,6 +130,12 @@ class Nova(SimpleBase):
                     data=data,
                 ):
                     self.handlers['restart_nginx'] = True
+
+            if self.data['is_nova-compute']:
+                if filer.template(
+                        '/etc/libvirt/qemu.conf',
+                        data=data):
+                    self.handlers['restart_libvirtd'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
