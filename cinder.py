@@ -15,15 +15,15 @@ class Cinder(SimpleBase):
 
         self.services = [
             'cinder-api',
-            'cinder-volume',
             'cinder-scheduler',
+            'cinder-volume',
             'target',
         ]
 
         self.packages = [
             'targetcli',
-            'qemu-kvm',
-            'lvm2'
+            'lvm2',
+            'qemu-2.9.0',
         ]
 
     def init_before(self):

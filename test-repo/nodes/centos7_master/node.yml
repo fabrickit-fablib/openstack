@@ -15,7 +15,7 @@ node_map:
       - openstack/nova:
           enable_services: ['api', 'conductor', 'scheduler', 'placement', 'consoleauth', 'novncproxy']
       - openstack/neutron:
-          enable_services: ['server', 'dhcp-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
+          enable_services: ['server']
       - openstack/horizon
       - openstack/cinder
       - openstack/heat
@@ -27,6 +27,13 @@ node_map:
     fabruns:
       - openstack/compute:
           enable_services: ['compute', 'linuxbridge-agent']
+
+  openstack_network:
+    hosts:
+      - 192.168.122.132
+    fabruns:
+      - openstack/neutron_network:
+          enable_services: ['dhcp-agent', 'metadata-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
 
   mysql:
     hosts:

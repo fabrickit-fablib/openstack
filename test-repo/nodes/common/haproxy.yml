@@ -102,7 +102,7 @@ haproxy:
           options: ${#haproxy.ctl_options}
           server_hosts: ${#node_map.openstack.hosts}
           server_port: 6080
-          server_option: check inter 2000 rise 2 fall 5
+          server_option: check inter 2000 rise 2 fall 5 backup
         - name: nova_placement
           port: 8778
           options: ${#haproxy.ctl_options}

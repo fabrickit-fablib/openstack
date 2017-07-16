@@ -63,6 +63,11 @@ compute:
     openstack/nova: 1
     openstack/neutron: 1
 
+network:
+  status_flow: [1]
+  require:
+    openstack/neutron: 1
+
 neutron:
   status_flow: [1]
   require:
