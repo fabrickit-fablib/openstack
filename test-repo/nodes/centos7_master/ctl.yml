@@ -235,6 +235,7 @@ neutron:
   nova_url: ${#nova.endpoint}/v2/
   service_plugins: [router, neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2]
   agent_down_time: 120
+  nova_metadata_ip: ${#haproxy.cluster_map.common.vip}
   agent:
     # report_interval should be half or less than agent_down_time
     report_interval: 60
