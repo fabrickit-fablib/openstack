@@ -147,6 +147,5 @@ test:
   require:
     openstack/nova: 1
     openstack/neutron: 1
-    openstack/heat: 1
     openstack/glance: 1
     openstack/keystone: 1

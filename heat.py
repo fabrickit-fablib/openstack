@@ -12,6 +12,10 @@ class Heat(SimpleBase):
         self.data = {
         }
 
+        self.packages = [
+            'heat-9.0.0.0b2',
+        ]
+
         self.services = [
             'heat-api',
             'heat-api-cfn',
@@ -32,8 +36,7 @@ class Heat(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.python.setup()
-            self.python.setup_package(**self.package)
+            self.install_packages()
 
         if self.is_tag('conf'):
             # setup conf files

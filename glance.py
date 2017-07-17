@@ -16,6 +16,12 @@ class Glance(SimpleBase):
             }
         }
 
+        self.packages = {
+            'CentOS Linux 7.*': [
+                'glance-15.0.0.0b2',
+            ]
+        }
+
         self.services = [
             'glance-api',
             'glance-registry',
@@ -35,8 +41,9 @@ class Glance(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.python.setup()
-            self.python.setup_package(**self.package)
+            # self.python.setup()
+            # self.python.setup_package(**self.package)
+            self.install_packages()
 
             filer.mkdir(data['glance_store']['filesystem_store_datadir'])
 

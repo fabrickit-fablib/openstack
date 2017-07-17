@@ -12,12 +12,12 @@ node_map:
     fabruns:
       - openstack/keystone
       - openstack/glance
-      - openstack/nova:
-          enable_services: ['api', 'conductor', 'scheduler', 'placement', 'consoleauth', 'novncproxy']
       - openstack/neutron:
           enable_services: ['server']
-      - openstack/horizon
+      - openstack/nova:
+          enable_services: ['api', 'conductor', 'scheduler', 'placement', 'consoleauth', 'novncproxy']
       - openstack/cinder
+      - openstack/horizon
       - openstack/heat
       - openstack/test
 

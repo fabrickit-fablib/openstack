@@ -21,10 +21,11 @@ class Keystone(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
+                'keystone-12.0.0.0b2',
                 'nginx',
             ]
         }
-        self.services = ['nginx', 'keystone-admin', 'keystone-public']
+        self.services = ['nginx', 'keystone-admin-uwsgi', 'keystone-public-uwsgi']
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['keystone']
@@ -46,8 +47,8 @@ class Keystone(SimpleBase):
         version = data['version']
 
         if self.is_tag('package'):
-            self.python.setup()
-            self.python.setup_package(**self.package)
+            # self.python.setup()
+            # self.python.setup_package(**self.package)
             self.install_packages()
 
         if self.is_tag('conf'):
@@ -89,14 +90,14 @@ class Keystone(SimpleBase):
                 self.handlers['restart_keystone-admin'] = True
 
         if self.is_tag('data'):
-            sudo('{0}/bin/keystone-manage db_sync'.format(self.prefix))
+            sudo('/opt/keystone/bin/keystone-manage db_sync')
 
-            sudo('keystone-manage fernet_setup '
+            sudo('/opt/keystone/bin/keystone-manage fernet_setup '
                  '--keystone-user nobody --keystone-group nobody ')
-            sudo('keystone-manage credential_setup '
+            sudo('/opt/keystone/bin/keystone-manage credential_setup '
                  '--keystone-user nobody --keystone-group nobody ')
 
-            sudo('keystone-manage bootstrap --bootstrap-password {0} '
+            sudo('/opt/keystone/bin/keystone-manage bootstrap --bootstrap-password {0} '
                  '--bootstrap-admin-url {1[adminurl]} '
                  '--bootstrap-internal-url {1[internalurl]} '
                  '--bootstrap-public-url {1[publicurl]} '

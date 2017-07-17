@@ -23,7 +23,9 @@ class Neutron(SimpleBase):
             'is_neutron-server': False,
             'is_master': False,
         }
-        self.packages = ['openvswitch', 'haproxy', 'ebtables', 'ipset']
+        self.packages = [
+            'neutron-11.0.0.0b2',
+            'openvswitch', 'haproxy', 'ebtables', 'ipset']
 
         default_services = [
             'neutron-server',
@@ -65,9 +67,7 @@ class Neutron(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            self.python.setup()
             self.install_packages()
-            self.python.setup_package(**self.package)
             sudo('modprobe tun')  # for vhost_net
 
             self.setup_network_bridge()

@@ -21,6 +21,7 @@ class Cinder(SimpleBase):
         ]
 
         self.packages = [
+            'cinder-11.0.0.0b2',
             'targetcli',
             'lvm2',
             'qemu-2.9.0',
@@ -41,9 +42,6 @@ class Cinder(SimpleBase):
 
         if self.is_tag('package'):
             self.install_packages()
-
-            self.python.setup()
-            self.python.setup_package(**self.package)
 
             self.setup_lvm()
 

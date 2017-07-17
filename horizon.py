@@ -13,8 +13,8 @@ class Horizon(SimpleBase):
             'allowed_hosts': "['*']",
         }
 
-        self.services = ['nginx', 'horizon']
-        self.packages = ['nginx']
+        self.services = ['nginx', 'horizon-uwsgi']
+        self.packages = ['horizon-12.0.0.0b2', 'nginx']
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['horizon']
@@ -32,12 +32,10 @@ class Horizon(SimpleBase):
 
         if self.is_tag('package'):
             self.install_packages()
-            self.python.setup()
-            self.python.setup_package(**self.package)
 
         if self.is_tag('conf'):
             is_updated = filer.template(
-                self.prefix + '/lib/horizon/openstack_dashboard/local/local_settings.py',
+                '/etc/horizon/local_settings.py',
                 src='{0}/horizon/local_settings.py'.format(data['version']),
                 data=data,
             )
@@ -54,10 +52,10 @@ class Horizon(SimpleBase):
             ):
                 self.handlers['restart_nginx'] = True
 
-            sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py collectstatic --noinput"'.format(
-                self.prefix, self.python.get_cmd()))
-            sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py compress --force"'.format(
-                self.prefix, self.python.get_cmd()))
+            # sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py collectstatic --noinput"'.format(
+            #     self.prefix, self.python.get_cmd()))
+            # sudo('sh -c "cd {0}/lib/horizon/ && {1} manage.py compress --force"'.format(
+            #     self.prefix, self.python.get_cmd()))
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)

@@ -20,7 +20,7 @@ class Nova(SimpleBase):
         }
 
         default_services = [
-            'nova-placement-api',
+            'nova-placement-api-uwsgi',
             'nova-api',
             'nova-scheduler',
             'nova-conductor',
@@ -30,12 +30,12 @@ class Nova(SimpleBase):
         ]
 
         self.enable_nginx = False
-        self.packages = []
+        self.packages = ['nova-16.0.0.0b2']
         self.services = []
         for service in default_services:
             for enable_service in enable_services:
                 if re.search(enable_service, service):
-                    if service == 'nova-placement-api':
+                    if service == 'nova-placement-api-uwsgi':
                         self.services.append('nginx')
                         self.enable_nginx = True
 
@@ -64,6 +64,7 @@ class Nova(SimpleBase):
                 'sysfsutils',
                 'libvirt-python',
                 'dbus',
+                'genisoimage',
             ])
 
     def init_before(self):
@@ -93,8 +94,6 @@ class Nova(SimpleBase):
 
         if self.is_tag('package'):
             self.install_packages()
-            self.python.setup()
-            self.python.setup_package(**self.package)
 
             # for cinder
             if not filer.exists('/usr/bin/scsi_id'):
@@ -139,13 +138,13 @@ class Nova(SimpleBase):
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
-                sudo('nova-manage db sync')
-                sudo('nova-manage api_db sync')
+                sudo('/opt/nova/bin/nova-manage db sync')
+                sudo('/opt/nova/bin/nova-manage api_db sync')
 
                 # cetup cell0
-                sudo('nova-manage cell_v2 list_cells | grep cell0 || nova-manage cell_v2 map_cell0')
-                sudo('nova-manage db sync')
-                sudo('nova-manage cell_v2 list_cells | grep cell1 || nova-manage cell_v2 create_cell --name cell1')
+                sudo('/opt/nova/bin/nova-manage cell_v2 list_cells | grep cell0 || /opt/nova/bin/nova-manage cell_v2 map_cell0')
+                sudo('/opt/nova/bin/nova-manage db sync')
+                sudo('/opt/nova/bin/nova-manage cell_v2 list_cells | grep cell1 || /opt/nova/bin/nova-manage cell_v2 create_cell --name cell1')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
@@ -171,11 +170,11 @@ class Nova(SimpleBase):
 
     def enable_nova_services(self):
         return
-        result = sudo("nova-manage service list 2>/dev/null | grep disabled | awk '{print $1,$2}'")
+        result = sudo("/opt/nova/bin/nova-manage service list 2>/dev/null | grep disabled | awk '{print $1,$2}'")
         services = result.split('\r\n')
         services = map(lambda s: s.split(' '), services)
         for service in services:
-            sudo("nova-manage service enable --service {0} --host {1}".format(
+            sudo("/opt/nova/bin/nova-manage service enable --service {0} --host {1}".format(
                 service[0], service[1]))
 
     def sync_flavors(self):
