@@ -21,7 +21,7 @@ class Keystone(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'keystone-12.0.0.0b2',
+                'keystone-12.0.0.0rc2',
                 'nginx',
             ]
         }

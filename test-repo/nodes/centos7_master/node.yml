@@ -1,14 +1,14 @@
 node_map:
   bootstrap:
     hosts:
-      - 192.168.122.131
-      - 192.168.122.132
+      - openstack-centos7-1.example.com
+      - openstack-centos7-2.example.com
     fabruns:
       - openstack/bootstrap
 
   openstack:
     hosts:
-      - 192.168.122.131
+      - openstack-centos7-1.example.com
     fabruns:
       - openstack/keystone
       - openstack/glance
@@ -23,42 +23,38 @@ node_map:
 
   openstack_compute:
     hosts:
-      - 192.168.122.132
+      - openstack-centos7-2.example.com
     fabruns:
       - openstack/compute:
           enable_services: ['compute', 'linuxbridge-agent']
 
   openstack_network:
     hosts:
-      - 192.168.122.132
+      - openstack-centos7-2.example.com
     fabruns:
       - openstack/neutron_network:
           enable_services: ['dhcp-agent', 'metadata-agent', 'linuxbridge-agent', 'neutron-lbaasv2-agent']
 
   mysql:
     hosts:
-      - 192.168.122.131
-      - 192.168.122.132
+      - openstack-centos7-[1-2].example.com
     fabruns:
       - openstack/mysql
 
   memcached:
     hosts:
-      - 192.168.122.131
-      - 192.168.122.132
+      - openstack-centos7-[1-2].example.com
     fabruns:
       - openstack/memcached
 
   rabbitmq:
     hosts:
-      - 192.168.122.131
-      - 192.168.122.132
+      - openstack-centos7-[1-2].example.com
     fabruns:
       - openstack/rabbitmq
 
   haproxy:
     hosts:
-      - 192.168.122.131
-      - 192.168.122.132
+      - openstack-centos7-[1-2].example.com
     fabruns:
       - openstack/haproxy

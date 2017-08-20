@@ -11,13 +11,13 @@ mysql:
           user: slave
           password: slavepass
           src_hosts:
-            - '192.168.122.0/255.255.255.0'
+            - '172.16.100.0/255.255.255.0'
           previleges: 'REPLICATION SLAVE'
         openstack:
           user: openstack
           password: openstackpass
           src_hosts:
-            - '192.168.122.0/255.255.255.0'
+            - '172.16.100.0/255.255.255.0'
           previleges: 'ALL PREVILEGES'
 
       replication:

@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import time
 from fabkit import sudo, env, filer, api
 from fablib.python import Python
 from fablib.base import SimpleBase
@@ -30,7 +31,7 @@ class Nova(SimpleBase):
         ]
 
         self.enable_nginx = False
-        self.packages = ['nova-16.0.0.0b2']
+        self.packages = ['nova-16.0.0.0rc1']
         self.services = []
         for service in default_services:
             for enable_service in enable_services:
@@ -60,9 +61,9 @@ class Nova(SimpleBase):
             self.packages.extend([
                 'vde2-2.3.2',
                 'qemu-2.9.0',
-                'libvirt',
+                'libvirt-3.6.0',
                 'sysfsutils',
-                'libvirt-python',
+                'libvirt-python-3.6.0',
                 'dbus',
                 'genisoimage',
             ])
@@ -179,6 +180,16 @@ class Nova(SimpleBase):
 
     def sync_flavors(self):
         data = self.init()
+        with api.warn_only():
+            ttl = 3
+            while True:
+                result = self.cmd("flavor-list")
+                if result.return_code == 0:
+                    break
+                time.sleep(10)
+                ttl -= 1
+                if ttl == 0:
+                    raise Exception("nova is not available.")
 
         result = self.cmd("flavor-list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
         flavor_list = result.split('\r\n')

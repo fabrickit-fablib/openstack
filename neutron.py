@@ -24,7 +24,7 @@ class Neutron(SimpleBase):
             'is_master': False,
         }
         self.packages = [
-            'neutron-11.0.0.0b2',
+            'neutron-11.0.0.0rc1',
             'openvswitch', 'haproxy', 'ebtables', 'ipset']
 
         default_services = [

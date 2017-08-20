@@ -18,7 +18,7 @@ class Glance(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'glance-15.0.0.0b2',
+                'glance-15.0.0.0rc1',
             ]
         }
 
