@@ -270,9 +270,9 @@ neutron:
         - shared
       subnets:
         - name: test_subnet
-          cidr: 192.168.122.0/24
+          cidr: 172.16.100.0/24
           options:
-            - allocation-pool start=192.168.122.200,end=192.168.122.220
+            - allocation-pool start=172.16.100.200,end=172.16.100.220
 
 horizon:
   endpoint: ${#openstack.protocol}://${#openstack.endpoint}:443
