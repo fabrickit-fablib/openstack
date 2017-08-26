@@ -14,10 +14,10 @@ class Neutron(SimpleBase):
     def __init__(self, enable_services=['.*']):
         self.data_key = 'neutron'
         self.data = {
+            'user': 'root',
             'sudoers_cmd': 'ALL',
             'debug': True,
             'verbose': True,
-            'user': 'neutron',
             'auth_strategy': 'keystone',
             'core_plugin': 'ml2',
             'is_neutron-server': False,
@@ -73,11 +73,7 @@ class Neutron(SimpleBase):
             self.setup_network_bridge()
 
         if self.is_tag('conf'):
-            filer.template(
-                '/etc/sudoers.d/neutron',
-                data=data,
-                src='sudoers.j2',
-            )
+            filer.template('/etc/sudoers.d/neutron', data=data, src='sudoers')
 
             if filer.template(
                 '/etc/neutron/neutron.conf',

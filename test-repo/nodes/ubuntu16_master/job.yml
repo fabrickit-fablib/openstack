@@ -1,0 +1,43 @@
+job:
+  pipelines:
+    - name: bootstrap
+      runs:
+        - delete container1
+        - create container1
+        - if status == 0:
+          - sh echo success bootstrap
+        - else:
+          - sh echo failed bootstrap
+    - name: setup
+      runs:
+        - setup
+    - name: clean
+      runs:
+        - delete container1
+
+container1:
+  provider: libvirt
+  libvirt:
+    gateway: 172.16.100.1
+    netmask: 255.255.255.0
+  libvirt_vms:
+    - name: openstack-ubuntu16-1
+      ports:
+        - {ip: 172.16.100.131, queues: 1, type: virtio}
+      nameservers:
+        - 172.16.100.1
+      template: user-data_ubuntu16
+      src_image: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
+      vcpus: 1
+      ram: 6144
+      disk_size: 40
+    - name: openstack-ubuntu16-2
+      ports:
+        - {ip: 172.16.100.132, queues: 1, type: virtio}
+      nameservers:
+        - 172.16.100.1
+      template: user-data_ubuntu16
+      src_image: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
+      vcpus: 1
+      ram: 6144
+      disk_size: 40

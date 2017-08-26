@@ -1,0 +1,8 @@
+# You must put a newline at the end of sudoers file.
+# If you don't put a new line, sudo isn't available by syntax error.
+#    sudo: >>> /etc/sudoers.d/hoge: syntax error near line 2 <<<
+# In this case, you must exec following command, and edit sudoers file.
+#    $ pkexec visudo -f /etc/sudoers.d/hoge
+Defaults:{{ user }} !requiretty
+{{ user }} ALL = (root) NOPASSWD: {{ sudoers_cmd }}
+secure_path

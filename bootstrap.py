@@ -1,8 +1,11 @@
 # coding:utf-8
 
+import re
 from fabkit import sudo, env, filer, Service, Editor
-from fablib.python import Python
 from fablib.base import SimpleBase
+
+RE_CENTOS7 = re.compile('CentOS Linux 7.*')
+RE_UBUNTU16 = re.compile('Ubuntu 16.*')
 
 
 class Bootstrap(SimpleBase):
@@ -18,29 +21,24 @@ class Bootstrap(SimpleBase):
                 },
                 'epel-release',
                 'vim',
+            ],
+            'Ubuntu 16.*': [
+                'vim'
             ]
         }
-
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['os-tools']
-        self.prefix = self.package.get('prefix', '/opt/os-tools')
-        self.python = Python(self.prefix)
 
     def setup(self):
         self.init()
 
-        sudo('setenforce 0')
-        Editor('/etc/selinux/config').s('SELINUX=enforcing', 'SELINUX=disable')
+        if RE_CENTOS7.match(env.node['os']):
+            sudo('setenforce 0')
+            Editor('/etc/selinux/config').s('SELINUX=enforcing', 'SELINUX=disable')
 
-        Service('firewalld').stop().disable()
-
-        filer.template('/etc/yum.repos.d/openstack.repo')
+            Service('firewalld').stop().disable()
+            filer.template('/etc/yum.repos.d/openstack.repo')
 
         if self.is_tag('package'):
             self.install_packages()
-
-            self.python.setup()
-            self.python.setup_package(**self.package)
 
         if self.is_tag('conf'):
             self.dump_openstackrc

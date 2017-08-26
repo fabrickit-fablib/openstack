@@ -1,9 +1,0 @@
-env:
-  port: 32022
-
-node_map:
-  ubuntu14:
-    hosts:
-      - localhost
-    fabruns:
-      - test/base

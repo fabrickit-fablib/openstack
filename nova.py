@@ -12,6 +12,8 @@ class Nova(SimpleBase):
     def __init__(self, enable_services=['.*']):
         self.data_key = 'nova'
         self.data = {
+            'user': 'root',
+            'sudoers_cmd': 'ALL',
             'debug': 'true',
             'verbose': 'true',
             'timeout_nbd': 1,
@@ -31,7 +33,7 @@ class Nova(SimpleBase):
         ]
 
         self.enable_nginx = False
-        self.packages = ['nova-16.0.0.0rc1']
+        self.packages = ['nova-16.0.0.0rc2']
         self.services = []
         for service in default_services:
             for enable_service in enable_services:
@@ -75,7 +77,6 @@ class Nova(SimpleBase):
 
     def init_after(self):
         self.data.update({
-            'user': 'nova',
             'timeout_nbd': 1,
             'sudoers_cmd': '/usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
             'lock_path': '/var/lock/subsys/nova',
@@ -100,17 +101,14 @@ class Nova(SimpleBase):
             if not filer.exists('/usr/bin/scsi_id'):
                 sudo('ln -s /lib/udev/scsi_id /usr/bin/')
 
+            if not filer.exists('/usr/bin/privsep-helper'):
+                sudo('ln -s /opt/nova/bin/privsep-helper /usr/bin/')
+
+            if not filer.exists('/usr/bin/nova-rootwrap'):
+                sudo('ln -s /opt/nova/bin/nova-rootwrap /usr/bin/')
+
         if self.is_tag('conf'):
-            # sudoersファイルは最後に改行入れないと、シンタックスエラーとなりsudo実行できなくなる
-            # sudo: >>> /etc/sudoers.d/nova: syntax error near line 2 <<<
-            # この場合は以下のコマンドでvisudoを実行し、編集する
-            # $ pkexec visudo -f /etc/sudoers.d/nova
-            # if filer.template(
-            #     '/etc/sudoers.d/nova',
-            #     data=data,
-            #     src='sudoers.j2',
-            #         ):
-            #     self.handlers['restart_nova'] = True
+            filer.template('/etc/sudoers.d/nova', data=data, src='sudoers')
 
             if filer.template(
                     '/etc/nova/nova.conf',
