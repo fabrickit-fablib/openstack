@@ -23,9 +23,23 @@ class Neutron(SimpleBase):
             'is_neutron-server': False,
             'is_master': False,
         }
-        self.packages = [
-            'neutron-11.0.0.0rc1',
-            'openvswitch', 'haproxy', 'ebtables', 'ipset']
+
+        self.packages = {
+            'CentOS Linux 7.*': [
+                'neutron-11.0.0.0rc1',
+                'openvswitch',
+                'haproxy',
+                'ebtables',
+                'ipset',
+            ],
+            'Ubuntu 16.*': [
+                'neutron=11.0*'
+                'openvswitch',
+                'haproxy',
+                'ebtables',
+                'ipset',
+            ],
+        }
 
         default_services = [
             'neutron-server',

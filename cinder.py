@@ -20,12 +20,19 @@ class Cinder(SimpleBase):
             'target',
         ]
 
-        self.packages = [
-            'cinder-11.0.0.0b2',
-            'targetcli',
-            'lvm2',
-            'qemu-2.9.0',
-        ]
+        self.packages = {
+            'CentOS Linux 7.*': [
+                'cinder-11.0.0.0b2',
+                'targetcli',
+                'lvm2',
+                'qemu-2.9.0',
+            ],
+            'Ubuntu 16.*': [
+                'cinder=11.0*'
+                'targetcli',
+                'qemu',
+            ],
+        }
 
     def init_before(self):
         self.package = env['cluster']['os_package_map']['cinder']

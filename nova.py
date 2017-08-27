@@ -33,7 +33,15 @@ class Nova(SimpleBase):
         ]
 
         self.enable_nginx = False
-        self.packages = ['nova-16.0.0.0rc2']
+
+        self.packages = {
+            'CentOS Linux 7.*': [
+                'nova-16.0.0.0rc2'
+            ],
+            'Ubuntu 16.*': [
+                'nova=16.0*'
+            ],
+        }
         self.services = []
         for service in default_services:
             for enable_service in enable_services:
@@ -60,12 +68,21 @@ class Nova(SimpleBase):
                 'nova-compute',
             ])
 
-            self.packages.extend([
+            self.packages['CentOS Linux 7.*'].extend([
                 'vde2-2.3.2',
                 'qemu-2.9.0',
                 'libvirt-3.6.0',
                 'sysfsutils',
                 'libvirt-python-3.6.0',
+                'dbus',
+                'genisoimage',
+            ])
+
+            self.packages['Ubuntu 16.*'].extend([
+                'qemu',
+                'libvirt',
+                'sysfsutils',
+                'libvirt-python',
                 'dbus',
                 'genisoimage',
             ])
