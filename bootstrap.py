@@ -21,9 +21,12 @@ class Bootstrap(SimpleBase):
                 },
                 'epel-release',
                 'vim',
+                'opentstack-tools',
             ],
             'Ubuntu 16.*': [
-                'vim'
+                'vim',
+                'openstack-tools',
+                'python-dev',
             ]
         }
 
@@ -36,6 +39,10 @@ class Bootstrap(SimpleBase):
 
             Service('firewalld').stop().disable()
             filer.template('/etc/yum.repos.d/openstack.repo')
+
+        elif RE_UBUNTU16.match(env.node['os']):
+            filer.template('/etc/apt/sources.list.d/openstack-aptrepo.list')
+            sudo('apt-get update')
 
         if self.is_tag('package'):
             self.install_packages()

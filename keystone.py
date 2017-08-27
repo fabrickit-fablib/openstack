@@ -1,10 +1,12 @@
 # coding:utf-8
 
+import re
 import time
-from fabkit import sudo, filer, env
-from fablib.python import Python
+from fabkit import sudo, filer, env, api
 from fablib.base import SimpleBase
 import utils
+
+RE_UBUNTU = re.compile('Ubuntu.*')
 
 
 class Keystone(SimpleBase):
@@ -23,14 +25,14 @@ class Keystone(SimpleBase):
             'CentOS Linux 7.*': [
                 'keystone-12.0.0.0rc2',
                 'nginx',
+            ],
+            'Ubuntu 16.*': [
+                'keystone=12.0.0.0rc2*',
+                'nginx',
             ]
         }
-        self.services = ['nginx', 'keystone-admin-uwsgi', 'keystone-public-uwsgi']
 
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['keystone']
-        self.prefix = self.package.get('prefix', '/opt/keystone')
-        self.python = Python(self.prefix)
+        self.services = ['nginx', 'keystone-admin-uwsgi', 'keystone-public-uwsgi']
 
     def init_after(self):
         self.data.update({
@@ -47,9 +49,12 @@ class Keystone(SimpleBase):
         version = data['version']
 
         if self.is_tag('package'):
-            # self.python.setup()
-            # self.python.setup_package(**self.package)
-            self.install_packages()
+            if RE_UBUNTU.match(env.node['os']):
+                with api.warn_only():
+                    self.install_packages()
+                    sudo('rm -rf /etc/nginx/sites-available/default')
+            else:
+                self.install_packages()
 
         if self.is_tag('conf'):
             if filer.template(
@@ -65,9 +70,16 @@ class Keystone(SimpleBase):
                 'uwsgi_port': data['public_port'] + 1,
             })
 
+            if RE_UBUNTU.match(env.node['os']):
+                nginx_user = 'www-data'
+            else:
+                nginx_user = 'nginx'
+
             if filer.template(
                 '/etc/nginx/nginx.conf',
-                data=data,
+                data={
+                    'user': nginx_user
+                },
             ):
                 self.handlers['restart_nginx'] = True
 
@@ -93,9 +105,9 @@ class Keystone(SimpleBase):
             sudo('/opt/keystone/bin/keystone-manage db_sync')
 
             sudo('/opt/keystone/bin/keystone-manage fernet_setup '
-                 '--keystone-user nobody --keystone-group nobody ')
+                 '--keystone-user root --keystone-group root ')
             sudo('/opt/keystone/bin/keystone-manage credential_setup '
-                 '--keystone-user nobody --keystone-group nobody ')
+                 '--keystone-user root --keystone-group root ')
 
             sudo('/opt/keystone/bin/keystone-manage bootstrap --bootstrap-password {0} '
                  '--bootstrap-admin-url {1[adminurl]} '
@@ -104,8 +116,8 @@ class Keystone(SimpleBase):
                  '--bootstrap-region-id {1[region]}'.format(
                      data['admin_password'], data['service_map']['keystone']))
 
-            sudo('chown -R nobody:nobody /etc/keystone/fernet-keys/')
-            sudo('chown -R nobody:nobody /etc/keystone/credential-keys/')
+            sudo('chown -R root:root /etc/keystone/fernet-keys/')
+            sudo('chown -R root:root /etc/keystone/credential-keys/')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
