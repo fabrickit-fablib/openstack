@@ -5,4 +5,4 @@
 #    $ pkexec visudo -f /etc/sudoers.d/hoge
 Defaults:{{ user }} !requiretty
 {{ user }} ALL = (root) NOPASSWD: {{ sudoers_cmd }}
-secure_path
+

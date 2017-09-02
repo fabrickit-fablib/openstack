@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from fabkit import *  # noqa
-from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
 
@@ -28,16 +27,11 @@ class Cinder(SimpleBase):
                 'qemu-2.9.0',
             ],
             'Ubuntu 16.*': [
-                'cinder=11.0*'
+                'cinder=11.0*',
                 'targetcli',
                 'qemu',
             ],
         }
-
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['cinder']
-        self.prefix = self.package.get('prefix', '/opt/cinder')
-        self.python = Python(self.prefix)
 
     def init_after(self):
         self.data.update({
@@ -46,6 +40,7 @@ class Cinder(SimpleBase):
 
     def setup(self):
         data = self.init()
+        version = data['version']
 
         if self.is_tag('package'):
             self.install_packages()
@@ -56,12 +51,12 @@ class Cinder(SimpleBase):
             # setup conf files
             is_updated = filer.template(
                 '/etc/cinder/cinder.conf',
-                src='{0}/cinder/cinder.conf'.format(self.package['version']),
+                src='{0}/cinder/cinder.conf'.format(version),
                 data=data,
             )
 
         if self.is_tag('data'):
-            sudo('{0}/bin/cinder-manage db sync'.format(self.prefix))
+            sudo('/opt/cinder/bin/cinder-manage db sync')
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)

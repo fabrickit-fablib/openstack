@@ -17,7 +17,6 @@ node_map:
           enable_services: ['api', 'conductor', 'scheduler', 'placement', 'consoleauth', 'novncproxy']
       - openstack/cinder
       - openstack/horizon
-      - openstack/heat
       - openstack/test
 
   openstack_compute:

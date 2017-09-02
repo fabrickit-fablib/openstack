@@ -33,21 +33,18 @@ class Test(SimpleBase):
                              "| grep ' {0} ' | awk '{{print $2}}'".format(
                                  env.cluster['neutron']['test_net']))
 
-        nova = Nova()
-        nova.create_flavor('test-flavor', 62, 2, 1)
+        # test_stack = {
+        #     'image_id': image_id,
+        #     'net_id': net_id,
+        #     'flavor': 'test-flavor',
+        # }
 
-        test_stack = {
-            'image_id': image_id,
-            'net_id': net_id,
-            'flavor': 'test-flavor',
-        }
+        # filer.template('/tmp/stack-nova.yml', src='stack/stack-nova.yml', data=test_stack)
+        # filer.template('/tmp/autoscale.yml', src='stack/autoscale.yml', data=test_stack)
 
-        filer.template('/tmp/stack-nova.yml', src='stack/stack-nova.yml', data=test_stack)
-        filer.template('/tmp/autoscale.yml', src='stack/autoscale.yml', data=test_stack)
-
-        with api.warn_only():
-            result = utils.oscmd('heat stack-list | grep stack-nova')
-            if result.return_code == 0:
-                utils.oscmd('heat stack-delete -y stack-nova')
-                time.sleep(3)
-            utils.oscmd('heat stack-create -f /tmp/stack-nova.yml stack-nova')
+        # with api.warn_only():
+        #     result = utils.oscmd('heat stack-list | grep stack-nova')
+        #     if result.return_code == 0:
+        #         utils.oscmd('heat stack-delete -y stack-nova')
+        #         time.sleep(3)
+        #     utils.oscmd('heat stack-create -f /tmp/stack-nova.yml stack-nova')

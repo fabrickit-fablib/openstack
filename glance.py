@@ -21,7 +21,7 @@ class Glance(SimpleBase):
                 'glance-15.0.0.0rc1',
             ],
             'Ubuntu 16.*': [
-                'glance=15.0*',
+                'glance=15.0.0*',
             ],
         }
 
@@ -29,11 +29,6 @@ class Glance(SimpleBase):
             'glance-api',
             'glance-registry',
         ]
-
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['glance']
-        self.prefix = self.package.get('prefix', '/opt/glance')
-        self.python = Python(self.prefix)
 
     def init_after(self):
         self.data.update({
@@ -44,8 +39,6 @@ class Glance(SimpleBase):
         data = self.init()
 
         if self.is_tag('package'):
-            # self.python.setup()
-            # self.python.setup_package(**self.package)
             self.install_packages()
 
             filer.mkdir(data['glance_store']['filesystem_store_datadir'])
@@ -65,7 +58,7 @@ class Glance(SimpleBase):
                 self.handlers['restart_glance-registry'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
-            sudo('{0}/bin/glance-manage db_sync'.format(self.prefix))
+            sudo('/opt/glance/bin/glance-manage db_sync')
 
         if self.is_tag('conf', 'service'):
             self.enable_services().start_services(pty=False)

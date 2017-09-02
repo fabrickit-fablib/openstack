@@ -2,7 +2,6 @@
 
 import time
 from fabkit import sudo, env, filer, api
-from fablib.python import Python
 from fablib.base import SimpleBase
 import re
 import utils
@@ -57,12 +56,14 @@ class Nova(SimpleBase):
             self.data['is_nova-api'] = True
 
         if 'nova-novncproxy' in self.services:
-            self.packages.append('novnc')
+            self.packages['CentOS Linux 7.*'].append('novnc')
+            self.packages['Ubuntu 16.*'].append('novnc')
 
         if 'nova-compute' in self.services:
             self.data['is_nova-compute'] = True
 
             self.services.extend([
+                'virtlogd',
                 'libvirtd',
                 'messagebus',
                 'nova-compute',
@@ -72,25 +73,20 @@ class Nova(SimpleBase):
                 'vde2-2.3.2',
                 'qemu-2.9.0',
                 'libvirt-3.6.0',
-                'sysfsutils',
                 'libvirt-python-3.6.0',
+                'sysfsutils',
                 'dbus',
                 'genisoimage',
             ])
 
             self.packages['Ubuntu 16.*'].extend([
                 'qemu',
-                'libvirt',
+                'libvirt-bin',
+                'python-libvirt',
                 'sysfsutils',
-                'libvirt-python',
                 'dbus',
                 'genisoimage',
             ])
-
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['nova']
-        self.prefix = self.package.get('prefix', '/usr')
-        self.python = Python(self.prefix)
 
     def init_after(self):
         self.data.update({
@@ -174,7 +170,7 @@ class Nova(SimpleBase):
 
     def cmd(self, cmd):
         self.init()
-        return utils.oscmd('nova {0}'.format(cmd))
+        return utils.oscmd('openstack {0}'.format(cmd))
 
     def check(self):
         self.nova_api.status()
@@ -198,7 +194,7 @@ class Nova(SimpleBase):
         with api.warn_only():
             ttl = 3
             while True:
-                result = self.cmd("flavor-list")
+                result = self.cmd("flavor list")
                 if result.return_code == 0:
                     break
                 time.sleep(10)
@@ -206,27 +202,14 @@ class Nova(SimpleBase):
                 if ttl == 0:
                     raise Exception("nova is not available.")
 
-        result = self.cmd("flavor-list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
+        result = self.cmd("flavor list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
         flavor_list = result.split('\r\n')
         sub_set = set(flavor_list) - set(data['flavors'].keys())
         for flavor_name in sub_set:
             if len(flavor_name) == 0:
                 continue
-            self.cmd("flavor-delete {0}".format(flavor_name))
+            self.cmd("flavor delete {0}".format(flavor_name))
 
         for flavor_name, flavor in data['flavors'].items():
             if flavor_name not in flavor_list:
-                flavor = map(lambda f: str(f), flavor)
-                options = ' '.join(flavor)
-                self.cmd("flavor-create --is-public true {0} auto {1}".format(flavor_name, options))
-
-    def create_flavor(self, name, ram, disk, vcpu):
-        with api.warn_only():
-            result = self.cmd("flavor-list 2>/dev/null | grep ' {0} '".format(name))
-
-        if result.return_code == 0:
-            return
-
-        else:
-            self.cmd("flavor-create --is-public true {0} auto {1} {2} {3}".format(
-                name, ram, disk, vcpu))
+                self.cmd("flavor create {0} {1}".format(flavor['options'], flavor_name))

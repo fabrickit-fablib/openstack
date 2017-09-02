@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from fabkit import sudo, env, filer
-from fablib.python import Python
 from fablib.base import SimpleBase
 
 
@@ -14,17 +13,20 @@ class Horizon(SimpleBase):
         }
 
         self.services = ['nginx', 'horizon-uwsgi']
-        self.packages = ['horizon-12.0.0.0b2', 'nginx']
-
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['horizon']
-        self.prefix = self.package.get('prefix', '/usr')
-        self.python = Python(self.prefix)
+        self.packages = {
+            'CentOS Linux 7.*': [
+                'horizon-12.0.0',
+                'nginx',
+            ],
+            'Ubuntu 16.*': [
+                'horizon=12.0.0*',
+                'nginx',
+            ],
+        }
 
     def init_after(self):
         self.data.update({
             'keystone': env.cluster['keystone'],
-            'prefix': self.prefix,
         })
 
     def setup(self):

@@ -5,7 +5,6 @@ import socket
 import struct
 import time
 from fabkit import sudo, env, filer, run, Service, api
-from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
 
@@ -33,9 +32,7 @@ class Neutron(SimpleBase):
                 'ipset',
             ],
             'Ubuntu 16.*': [
-                'neutron=11.0*'
-                'openvswitch',
-                'haproxy',
+                'neutron=11.0*',
                 'ebtables',
                 'ipset',
             ],
@@ -60,11 +57,6 @@ class Neutron(SimpleBase):
 
         if 'neutron-server' in self.services:
             self.data['is_neutron-server'] = True
-
-    def init_before(self):
-        self.package = env['cluster']['os_package_map']['neutron']
-        self.prefix = self.package.get('prefix', '/opt/neutron')
-        self.python = Python(self.prefix)
 
     def init_after(self):
         self.data.update({
@@ -166,7 +158,7 @@ class Neutron(SimpleBase):
         if self.is_tag('data') and env.host == env.hosts[0]:
             if data['is_master']:
                 option = '--config-file /etc/neutron/neutron.conf'
-                run('{0}/bin/neutron-db-manage {1} upgrade head'.format(self.prefix, option))
+                run('/opt/neutron/bin/neutron-db-manage {0} upgrade head'.format(option))
 
         if self.is_tag('service'):
             self.enable_services().start_services(pty=False)
@@ -181,28 +173,28 @@ class Neutron(SimpleBase):
         return 0
 
     def cmd(self, cmd):
-        return utils.oscmd('neutron {0}'.format(cmd))
+        return utils.oscmd('openstack {0}'.format(cmd))
 
     def create_nets(self):
         data = self.init()
 
-        result = self.cmd("net-list 2>/dev/null | grep '| ' | grep -v '| id' | awk '{print $4}'")
+        result = self.cmd("network list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
         net_list = result.split('\r\n')
-        result = self.cmd("subnet-list 2>/dev/null | grep '| ' | grep -v '| id' | awk '{print $4}'")
+        result = self.cmd("subnet list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
         subnet_list = result.split('\r\n')
 
         for network in data.get('networks'):
             if network['name'] not in net_list:
                 tmp_options = map(lambda opt: '--' + opt, network.get('options', []))
                 options = ' '.join(tmp_options)
-                self.cmd('net-create {0} {1}'.format(options, network['name']))
+                self.cmd('network create {0} {1}'.format(options, network['name']))
 
             for subnet in network['subnets']:
                 if subnet['name'] not in subnet_list:
                     tmp_options = map(lambda opt: '--' + opt, subnet.get('options', []))
                     options = ' '.join(tmp_options)
-                    self.cmd('subnet-create {0} {1} --name {2} {3}'.format(
-                        network['name'], subnet['cidr'], subnet['name'], options))
+                    self.cmd('subnet create --network {0} {1} {2}'.format(
+                        network['name'], options, subnet['name']))
 
     def create_routers(self):
         data = self.init()
