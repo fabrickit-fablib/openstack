@@ -13,7 +13,7 @@ class Heat(SimpleBase):
         }
 
         self.packages = [
-            'heat-9.0.0.0b2',
+            'heat-9.0.0',
         ]
 
         self.services = [

@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from fabkit import env, sudo, filer, run
-from fablib.python import Python
 from fablib.base import SimpleBase
 import utils
 
@@ -18,7 +17,7 @@ class Glance(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'glance-15.0.0.0rc1',
+                'glance-15.0.0',
             ],
             'Ubuntu 16.*': [
                 'glance=15.0.0*',
@@ -66,14 +65,14 @@ class Glance(SimpleBase):
 
     def cmd(self, cmd):
         self.init()
-        return utils.oscmd('glance {0}'.format(cmd))
+        return utils.oscmd('openstack {0}'.format(cmd))
 
     def create_image(self, image_name, image_url, disk_format='qcow2', container_format='bare',
                      property='is_public=True'):
         self.init()
 
         result = self.cmd(
-            "image-list 2>/dev/null | grep ' {0} ' | awk '{{print $2}}'".format(image_name))
+            "image list 2>/dev/null | grep ' {0} ' | awk '{{print $2}}'".format(image_name))
 
         if len(result) > 0:
             return result
@@ -82,15 +81,14 @@ class Glance(SimpleBase):
         if not filer.exists(image_file):
             run('wget {0} -O {1}'.format(image_url, image_file))
 
-        create_cmd = 'image-create --name "{0}" --disk-format {1}' \
-            + ' --container-format {2}' \
-            + ' --property "{3}"' \
-            + ' --file {4}'
+        create_cmd = 'image create --disk-format {0}' \
+            + ' --container-format {1}' \
+            + ' --file {2} {3}'
         result = self.cmd(create_cmd.format(
-            image_name, disk_format, container_format, property, image_file))
+            disk_format, container_format, image_file, image_name))
 
         result = self.cmd(
-            "image-list 2>/dev/null | grep ' {0} ' | awk '{{print $2}}'".format(image_name))
+            "image list 2>/dev/null | grep ' {0} ' | awk '{{print $2}}'".format(image_name))
 
         if len(result) > 0:
             return result

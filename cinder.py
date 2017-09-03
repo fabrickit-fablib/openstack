@@ -21,7 +21,7 @@ class Cinder(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'cinder-11.0.0.0b2',
+                'cinder-11.0.0',
                 'targetcli',
                 'lvm2',
                 'qemu-2.9.0',

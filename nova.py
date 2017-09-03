@@ -35,7 +35,7 @@ class Nova(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'nova-16.0.0.0rc2'
+                'nova-16.0.0'
             ],
             'Ubuntu 16.*': [
                 'nova=16.0*'

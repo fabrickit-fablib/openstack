@@ -25,7 +25,7 @@ class Neutron(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'neutron-11.0.0.0rc1',
+                'neutron-11.0.0',
                 'openvswitch',
                 'haproxy',
                 'ebtables',
@@ -178,7 +178,8 @@ class Neutron(SimpleBase):
     def create_nets(self):
         data = self.init()
 
-        result = self.cmd("network list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
+        result = self.cmd(
+            "network list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
         net_list = result.split('\r\n')
         result = self.cmd("subnet list 2>/dev/null | grep '| ' | grep -v '| ID' | awk '{print $4}'")
         subnet_list = result.split('\r\n')

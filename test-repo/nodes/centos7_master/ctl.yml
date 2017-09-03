@@ -209,12 +209,9 @@ nova:
   libvirt:
     virt_type: kvm
   flavors:
-    RAM_64M-DISC_2G-VCPUS_1: [64, 2, 1]
-    RAM_512M-DISC_10G-VCPUS_1: [512, 10, 1]
-    RAM_512M-DISC_20G-VCPUS_2: [512, 20, 2]
-    RAM_1024M-DISC_20G-VCPUS_2: [1024, 20, 2]
-    RAM_1024M-DISC_40G-VCPUS_4: [1024, 40, 4]
-    RAM_2048M-DISC_60G-VCPUS_6: [2048, 60, 6]
+    1v-64M-2G:
+      options: --public --vcpus 1 --ram 64 --disk 2
+      flavor-keys: test
 
 
 neutron:
@@ -265,13 +262,13 @@ neutron:
   networks:
     - name: test_net
       options:
-        - provider:physical_network=physnet1
-        - provider:network_type=flat
-        - shared
+        - provider-physical-network physnet1
+        - provider-network-type flat
+        - share
       subnets:
         - name: test_subnet
-          cidr: 172.16.100.0/24
           options:
+            - subnet-range 172.16.100.0/24
             - allocation-pool start=172.16.100.200,end=172.16.100.220
 
 horizon:

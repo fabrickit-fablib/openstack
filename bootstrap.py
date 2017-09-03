@@ -21,7 +21,8 @@ class Bootstrap(SimpleBase):
                 },
                 'epel-release',
                 'vim',
-                'opentstack-tools',
+                'wget',
+                'openstack-tools',
             ],
             'Ubuntu 16.*': [
                 'vim',
@@ -39,6 +40,7 @@ class Bootstrap(SimpleBase):
 
             Service('firewalld').stop().disable()
             filer.template('/etc/yum.repos.d/openstack.repo')
+            sudo('yum clean all')
 
         elif RE_UBUNTU16.match(env.node['os']):
             filer.template('/etc/apt/sources.list.d/openstack-aptrepo.list')

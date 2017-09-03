@@ -29,9 +29,9 @@ class Test(SimpleBase):
             data['image']['src_url'],
         )
 
-        net_id = utils.oscmd("neutron net-list 2>/dev/null "
-                             "| grep ' {0} ' | awk '{{print $2}}'".format(
-                                 env.cluster['neutron']['test_net']))
+        # net_id = utils.oscmd("neutron net-list 2>/dev/null "
+        #                      "| grep ' {0} ' | awk '{{print $2}}'".format(
+        #                          env.cluster['neutron']['test_net']))
 
         # test_stack = {
         #     'image_id': image_id,
