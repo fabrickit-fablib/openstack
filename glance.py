@@ -1,8 +1,12 @@
 # coding: utf-8
 
+import re
+
 from fabkit import env, sudo, filer, run
 from fablib.base import SimpleBase
 import utils
+
+RE_UBUNTU = re.compile('Ubuntu.*')
 
 
 class Glance(SimpleBase):
@@ -15,19 +19,34 @@ class Glance(SimpleBase):
             }
         }
 
-        self.packages = {
-            'CentOS Linux 7.*': [
-                'glance-15.0.0',
-            ],
-            'Ubuntu 16.*': [
-                'glance=15.0.0*',
-            ],
-        }
-
         self.services = [
-            'glance-api',
+            'nginx',
+            'glance-api-uwsgi',
             'glance-registry',
         ]
+
+        self.packages = {
+            'CentOS Linux 7.*': ['nginx'],
+            'Ubuntu 16.*': ['nginx'],
+        }
+
+    def init_before(self):
+        self.version = env.cluster[self.data_key]['version']
+
+        if self.version == 'master':
+            self.packages['CentOS Linux 7.*'].extend([
+                'glance-17.0.0.0b1',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'glance=17.0.0.0b1',
+            ])
+        elif self.version == 'pike':
+            self.packages['CentOS Linux 7.*'].extend([
+                'glance-15.0.0',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'glance=15.0.0*',
+            ])
 
     def init_after(self):
         self.data.update({
@@ -41,6 +60,8 @@ class Glance(SimpleBase):
             self.install_packages()
 
             filer.mkdir(data['glance_store']['filesystem_store_datadir'])
+            filer.template('/usr/lib/systemd/system/glance-api-uwsgi.service')
+            sudo('systemctl daemon-reload')
 
         if self.is_tag('conf'):
             # setup conf files
@@ -55,6 +76,17 @@ class Glance(SimpleBase):
                     src='{0}/glance/glance-registry.conf'.format(data['version']),
                     data=data):
                 self.handlers['restart_glance-registry'] = True
+
+            data.update({
+                'httpd_port': data['api_port'],
+                'uwsgi_socket': '/var/run/glance-api-uwsgi.sock',
+            })
+
+            if filer.template(
+                '/etc/glance/glance-api-uwsgi.ini',
+                data=data,
+            ):
+                self.handlers['restart_glance-api-uwsgi'] = True
 
         if self.is_tag('data') and env.host == env.hosts[0]:
             sudo('/opt/glance/bin/glance-manage db_sync')

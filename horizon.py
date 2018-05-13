@@ -15,14 +15,30 @@ class Horizon(SimpleBase):
         self.services = ['nginx', 'horizon-uwsgi']
         self.packages = {
             'CentOS Linux 7.*': [
-                'horizon-12.0.0',
                 'nginx',
             ],
             'Ubuntu 16.*': [
-                'horizon=12.0.0*',
                 'nginx',
             ],
         }
+
+    def init_before(self):
+        self.version = env.cluster[self.data_key]['version']
+        if self.version == 'master':
+            self.packages['CentOS Linux 7.*'].extend([
+                'horizon-14.0.0.0b1',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'horizon=14.0.0.0b1',
+            ])
+
+        elif self.version == 'pike':
+            self.packages['CentOS Linux 7.*'].extend([
+                'horizon-12.0.0',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'horizon=12.0.0*',
+            ])
 
     def init_after(self):
         self.data.update({
@@ -34,6 +50,8 @@ class Horizon(SimpleBase):
 
         if self.is_tag('package'):
             self.install_packages()
+            filer.template('/usr/lib/systemd/system/horizon-uwsgi.service')
+            sudo('systemctl daemon-reload')
 
         if self.is_tag('conf'):
             is_updated = filer.template(
@@ -44,8 +62,14 @@ class Horizon(SimpleBase):
 
             data.update({
                 'httpd_port': 10080,
-                'uwsgi_port': 10081,
+                'uwsgi_socket': '/var/run/horizon-uwsgi.sock',
             })
+
+            if filer.template(
+                '/etc/horizon/horizon-uwsgi.ini',
+                data=data,
+            ):
+                self.handlers['restart_horizon-uwsgi'] = True
 
             if filer.template(
                 '/etc/nginx/conf.d/uwsgi-horizon.conf',

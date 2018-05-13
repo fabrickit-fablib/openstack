@@ -11,14 +11,8 @@ RE_UBUNTU16 = re.compile('Ubuntu 16.*')
 class Bootstrap(SimpleBase):
     def __init__(self):
 
-        # 'https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-5.noarch.rpm'
-        # 'https://repos.fedorapeople.org/repos/openstack/openstack-liberty/rdo-release-liberty-3.noarch.rpm'
         self.packages = {
             'CentOS Linux 7.*': [
-                {
-                    'name': 'rdo-release-mitaka-5.noarch',
-                    'path': 'https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-5.noarch.rpm',  # noqa
-                },
                 'epel-release',
                 'vim',
                 'wget',
@@ -27,7 +21,6 @@ class Bootstrap(SimpleBase):
             'Ubuntu 16.*': [
                 'vim',
                 'openstack-tools',
-                'python-dev',
             ]
         }
 

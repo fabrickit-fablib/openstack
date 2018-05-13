@@ -21,32 +21,43 @@ class Keystone(SimpleBase):
             },
         }
 
+        self.services = [
+            'nginx',
+            'keystone-admin-uwsgi',
+            'keystone-public-uwsgi',
+        ]
+
         self.packages = {
-            'CentOS Linux 7.*': [
-                'keystone-12.0.0',
-                'nginx',
-            ],
-            'Ubuntu 16.*': [
-                'keystone=12.0.0*',
-                'nginx',
-            ]
+            'CentOS Linux 7.*': ['nginx'],
+            'Ubuntu 16.*': ['nginx'],
         }
 
-        self.services = ['nginx', 'keystone-admin-uwsgi', 'keystone-public-uwsgi']
+    def init_before(self):
+        self.version = env.cluster[self.data_key]['version']
+        if self.version == 'master':
+            self.packages['CentOS Linux 7.*'].extend([
+                'keystone-14.0.0.0b1',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'keystone=14.0.0.0b1',
+            ])
+        elif self.version == 'pike':
+            self.packages['CentOS Linux 7.*'].extend([
+                'keystone-12.0.0',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'keystone=12.0.0*',
+            ])
 
     def init_after(self):
         self.data.update({
             'tmp_admin_token': 'admin_token = {0}'.format(self.data['admin_token']),
         })
 
-        if self.data['version'] == 'juno':
-            self.client = 'keystone'
-        else:
-            self.client = 'openstack'
+        self.client = 'openstack'
 
     def setup(self):
         data = self.init()
-        version = data['version']
 
         if self.is_tag('package'):
             if RE_UBUNTU.match(env.node['os']):
@@ -55,20 +66,18 @@ class Keystone(SimpleBase):
                     sudo('rm -rf /etc/nginx/sites-available/default')
             else:
                 self.install_packages()
+                filer.template('/usr/lib/systemd/system/keystone-public-uwsgi.service')
+                filer.template('/usr/lib/systemd/system/keystone-admin-uwsgi.service')
+                sudo('systemctl daemon-reload')
 
         if self.is_tag('conf'):
             if filer.template(
                 '/etc/keystone/keystone.conf',
-                src='{0}/keystone/keystone.conf'.format(version),
+                src='{0}/keystone/keystone.conf'.format(self.version),
                 data=data,
                     ):
                 self.handlers['restart_keystone-public'] = True
                 self.handlers['restart_keystone-admin'] = True
-
-            data.update({
-                'httpd_port': data['public_port'],
-                'uwsgi_port': data['public_port'] + 1,
-            })
 
             if RE_UBUNTU.match(env.node['os']):
                 nginx_user = 'www-data'
@@ -83,23 +92,43 @@ class Keystone(SimpleBase):
             ):
                 self.handlers['restart_nginx'] = True
 
+            # For keystone public
+            data.update({
+                'httpd_port': data['public_port'],
+                'uwsgi_socket': '/var/run/keystone-public-uwsgi.sock',
+            })
+
             if filer.template(
-                '/etc/nginx/conf.d/uwsgi-keystone-public.conf',
+                '/etc/keystone/keystone-public-uwsgi.ini',
+                data=data,
+            ):
+                self.handlers['restart_keystone-public-uwsgi'] = True
+
+            if filer.template(
+                '/etc/nginx/conf.d/keystone-public-uwsgi.conf',
                 src='uwsgi-nginx.conf',
                 data=data,
             ):
                 self.handlers['restart_nginx'] = True
 
+            # For admin conf
             data.update({
                 'httpd_port': data['admin_port'],
-                'uwsgi_port': data['admin_port'] + 1,
+                'uwsgi_socket': '/var/run/keystone-admin-uwsgi.sock',
             })
+
             if filer.template(
-                '/etc/nginx/conf.d/uwsgi-keystone-admin.conf',
+                '/etc/keystone/keystone-admin-uwsgi.ini',
+                data=data,
+            ):
+                self.handlers['restart_keystone-admin-uwsgi'] = True
+
+            if filer.template(
+                '/etc/nginx/conf.d/keystone-admin-uwsgi.conf',
                 src='uwsgi-nginx.conf',
                 data=data,
             ):
-                self.handlers['restart_keystone-admin'] = True
+                self.handlers['restart_nginx'] = True
 
         if self.is_tag('data'):
             sudo('/opt/keystone/bin/keystone-manage db_sync')

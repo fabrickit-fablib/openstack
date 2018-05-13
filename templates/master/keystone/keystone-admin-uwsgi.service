@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenStack Identity Service
+After=syslog.target network.target
+
+[Service]
+Type=notify
+ExecStart=/opt/keystone/bin/uwsgi --ini /etc/keystone/keystone-admin-uwsgi.ini
+ExecStop=/bin/kill -WINCH ${MAINPID}
+User=root
+Restart=always
+KillSignal=SIGQUIT
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenStack Image Service
+After=syslog.target network.target
+
+[Service]
+Type=notify
+ExecStart=/opt/glance/bin/uwsgi --ini /etc/glance/glance-api-uwsgi.ini
+ExecStop=/bin/kill -WINCH ${MAINPID}
+User=root
+Restart=always
+KillSignal=SIGQUIT
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

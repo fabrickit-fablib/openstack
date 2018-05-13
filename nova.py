@@ -22,8 +22,9 @@ class Nova(SimpleBase):
         }
 
         default_services = [
+            'nova-api-uwsgi',
+            'nova-metadata-api-uwsgi',
             'nova-placement-api-uwsgi',
-            'nova-api',
             'nova-scheduler',
             'nova-conductor',
             'nova-consoleauth',
@@ -34,12 +35,8 @@ class Nova(SimpleBase):
         self.enable_nginx = False
 
         self.packages = {
-            'CentOS Linux 7.*': [
-                'nova-16.0.0'
-            ],
-            'Ubuntu 16.*': [
-                'nova=16.0*'
-            ],
+            'CentOS Linux 7.*': [],
+            'Ubuntu 16.*': [],
         }
         self.services = []
         for service in default_services:
@@ -53,6 +50,9 @@ class Nova(SimpleBase):
                     break
 
         if 'nova-api' in self.services:
+            self.data['is_nova-api'] = True
+
+        if 'nova-api-uwsgi' in self.services:
             self.data['is_nova-api'] = True
 
         if 'nova-novncproxy' in self.services:
@@ -88,6 +88,24 @@ class Nova(SimpleBase):
                 'genisoimage',
             ])
 
+    def init_before(self):
+        self.version = env.cluster[self.data_key]['version']
+        if self.version == 'master':
+            self.packages['CentOS Linux 7.*'].extend([
+                'nova-18.0.0.0b1',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'nova-18.0.0.0b1',
+            ])
+
+        elif self.version == 'pike':
+            self.packages['CentOS Linux 7.*'].extend([
+                'nova-16.0.0',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'nova=16.0.0',
+            ])
+
     def init_after(self):
         self.data.update({
             'timeout_nbd': 1,
@@ -114,33 +132,29 @@ class Nova(SimpleBase):
             if not filer.exists('/usr/bin/scsi_id'):
                 sudo('ln -s /lib/udev/scsi_id /usr/bin/')
 
-            if not filer.exists('/usr/bin/privsep-helper'):
-                sudo('ln -s /opt/nova/bin/privsep-helper /usr/bin/')
+            # if not filer.exists('/usr/bin/privsep-helper'):
+            #     sudo('ln -s /opt/nova/bin/privsep-helper /usr/bin/')
 
-            if not filer.exists('/usr/bin/nova-rootwrap'):
-                sudo('ln -s /opt/nova/bin/nova-rootwrap /usr/bin/')
+            # if not filer.exists('/usr/bin/nova-rootwrap'):
+            #     sudo('ln -s /opt/nova/bin/nova-rootwrap /usr/bin/')
+
+            filer.template('/usr/lib/systemd/system/nova-api-uwsgi.service')
+            filer.template('/usr/lib/systemd/system/nova-metadata-api-uwsgi.service')
+            filer.template('/usr/lib/systemd/system/nova-placement-api-uwsgi.service')
+            sudo('systemctl daemon-reload')
 
         if self.is_tag('conf'):
             filer.template('/etc/sudoers.d/nova', data=data, src='sudoers')
+
+            self.setup_api_conf()
+            self.setup_metadata_api_conf()
+            self.setup_placement_api_conf()
 
             if filer.template(
                     '/etc/nova/nova.conf',
                     src='{0}/nova/nova.conf'.format(data['version']),
                     data=data):
                 self.handlers['restart_nova'] = True
-
-            data.update({
-                'httpd_port': data['placement_port'],
-                'uwsgi_port': data['placement_port'] + 10000,
-            })
-
-            if self.enable_nginx:
-                if filer.template(
-                    '/etc/nginx/conf.d/uwsgi-nova-placement-api.conf',
-                    src='uwsgi-nginx.conf',
-                    data=data,
-                ):
-                    self.handlers['restart_nginx'] = True
 
             if self.data['is_nova-compute']:
                 if filer.template(
@@ -167,6 +181,69 @@ class Nova(SimpleBase):
                 self.sync_flavors()
 
         return 0
+
+    def setup_api_conf(self):
+        data = self.data
+        data.update({
+            'httpd_port': data['api_port'],
+            'uwsgi_socket': '/var/run/nova-api-uwsgi.sock',
+        })
+
+        if filer.template(
+            '/etc/nova/nova-api-uwsgi.ini',
+            data=data,
+        ):
+            self.handlers['restart_nova-api-uwsgi'] = True
+
+        if self.enable_nginx:
+            if filer.template(
+                '/etc/nginx/conf.d/nova-api-uwsgi.conf',
+                src='uwsgi-nginx.conf',
+                data=data,
+            ):
+                self.handlers['restart_nginx'] = True
+
+    def setup_metadata_api_conf(self):
+        data = self.data
+        data.update({
+            'httpd_port': data['metadata_port'],
+            'uwsgi_socket': '/var/run/nova-metadata-api-uwsgi.sock',
+        })
+
+        if filer.template(
+            '/etc/nova/nova-metadata-api-uwsgi.ini',
+            data=data,
+        ):
+            self.handlers['restart_nova-metadata-api-uwsgi'] = True
+
+        if self.enable_nginx:
+            if filer.template(
+                '/etc/nginx/conf.d/nova-metadata-api-uwsgi.conf',
+                src='uwsgi-nginx.conf',
+                data=data,
+            ):
+                self.handlers['restart_nginx'] = True
+
+    def setup_placement_api_conf(self):
+        data = self.data
+        data.update({
+            'httpd_port': data['placement_port'],
+            'uwsgi_socket': '/var/run/nova-placement-api-uwsgi.sock',
+        })
+
+        if filer.template(
+            '/etc/nova/nova-placement-api-uwsgi.ini',
+            data=data,
+        ):
+            self.handlers['restart_nova-placement-api-uwsgi'] = True
+
+        if self.enable_nginx:
+            if filer.template(
+                '/etc/nginx/conf.d/nova-placement-api-uwsgi.conf',
+                src='uwsgi-nginx.conf',
+                data=data,
+            ):
+                self.handlers['restart_nginx'] = True
 
     def cmd(self, cmd):
         self.init()

@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenStack Compute Service
+After=syslog.target network.target
+
+[Service]
+Type=notify
+ExecStart=/opt/nova/bin/uwsgi --ini /etc/nova/nova-api-uwsgi.ini
+ExecStop=/bin/kill -WINCH ${MAINPID}
+User=root
+Restart=always
+KillSignal=SIGQUIT
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

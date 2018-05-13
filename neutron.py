@@ -25,14 +25,12 @@ class Neutron(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'neutron-11.0.0',
                 'openvswitch',
                 'haproxy',
                 'ebtables',
                 'ipset',
             ],
             'Ubuntu 16.*': [
-                'neutron=11.0*',
                 'ebtables',
                 'ipset',
             ],
@@ -57,6 +55,24 @@ class Neutron(SimpleBase):
 
         if 'neutron-server' in self.services:
             self.data['is_neutron-server'] = True
+
+    def init_before(self):
+        self.version = env.cluster[self.data_key]['version']
+        if self.version == 'master':
+            self.packages['CentOS Linux 7.*'].extend([
+                'neutron-13.0.0.0b1',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'neutron=13.0.0.0b1',
+            ])
+
+        elif self.version == 'pike':
+            self.packages['CentOS Linux 7.*'].extend([
+                'neutron-11.0.0',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'neutron=11.0*',
+            ])
 
     def init_after(self):
         self.data.update({

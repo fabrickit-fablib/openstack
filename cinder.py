@@ -21,17 +21,33 @@ class Cinder(SimpleBase):
 
         self.packages = {
             'CentOS Linux 7.*': [
-                'cinder-11.0.0',
                 'targetcli',
                 'lvm2',
                 'qemu-2.9.0',
             ],
             'Ubuntu 16.*': [
-                'cinder=11.0*',
                 'targetcli',
                 'qemu',
             ],
         }
+
+    def init_before(self):
+        self.version = env.cluster[self.data_key]['version']
+
+        if self.version == 'master':
+            self.packages['CentOS Linux 7.*'].extend([
+                'cinder-13.0.0.0b1',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'cinder=13.0.0.0b1',
+            ])
+        elif self.version == 'pike':
+            self.packages['CentOS Linux 7.*'].extend([
+                'cinder-11.0.0',
+            ])
+            self.packages['Ubuntu 16.*'].extend([
+                'cinder=11.0*',
+            ])
 
     def init_after(self):
         self.data.update({

@@ -39,5 +39,5 @@ container1:
       template: user-data_centos7
       src_image: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1511.qcow2c.xz
       vcpus: 1
-      ram: 6144
+      ram: 4096
       disk_size: 40
